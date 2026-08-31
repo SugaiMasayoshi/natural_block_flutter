@@ -44,6 +44,6 @@ class NaturalBlockView extends StatelessWidget {
     final columnNode = NaturalBlockParser().parse(source);
     final children = registry.buildAll(context, columnNode.children, theme);
 
-    return ColumnNodeView(children: children);
+    return ColumnNodeView(align: columnNode.align, children: children);
   }
 }

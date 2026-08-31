@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:natural_block/natural_block.dart';
 import 'package:natural_block_flutter/natural_block_flutter.dart';
 
 void main() {
@@ -30,5 +31,28 @@ void main() {
       expect(column.children, isEmpty);
       expect(tester.takeException(), isNull);
     });
+
+    for (final entry in {
+      BlockAlign.start: CrossAxisAlignment.start,
+      BlockAlign.center: CrossAxisAlignment.center,
+      BlockAlign.end: CrossAxisAlignment.end,
+    }.entries) {
+      testWidgets(
+        'align: ${entry.key} maps to crossAxisAlignment: ${entry.value}',
+        (tester) async {
+          await tester.pumpWidget(
+            MaterialApp(
+              home: ColumnNodeView(
+                align: entry.key,
+                children: const [Text('only')],
+              ),
+            ),
+          );
+
+          final column = tester.widget<Column>(find.byType(Column));
+          expect(column.crossAxisAlignment, entry.value);
+        },
+      );
+    }
   });
 }

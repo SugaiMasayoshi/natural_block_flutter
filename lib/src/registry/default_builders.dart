@@ -19,7 +19,8 @@ Widget buildRowNode(
 }
 
 /// Default builder for [ColumnNode]: renders it via [ColumnNodeView], with
-/// children recursively built through [registry].
+/// children recursively built through [registry] and `ColumnNode.align`
+/// passed through so the block honors its alignment marker.
 Widget buildColumnNode(
   BuildContext context,
   NaturalBlockNode node,
@@ -28,7 +29,7 @@ Widget buildColumnNode(
 ) {
   final column = node as ColumnNode;
   final children = registry.buildAll(context, column.children, theme);
-  return ColumnNodeView(children: children);
+  return ColumnNodeView(align: column.align, children: children);
 }
 
 /// Default builder for [TextNode]: renders it via [TextNodeView].

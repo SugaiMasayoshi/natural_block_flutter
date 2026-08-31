@@ -12,6 +12,22 @@ const source = '見出し|:!危険:!普通のテキスト|左のセル=右のセ
 
 `|` starts a new vertical block, `=` starts a new horizontal cell, and a `:`-led cluster like `:!` toggles semantic decoration (color, emphasis, size) on a run of text. See the [`natural_block` README](https://github.com/SugaiMasayoshi/natural_block#readme) for the full syntax reference -- this package only concerns itself with rendering.
 
+A row is properly written wrapped in `|`, e.g. `|A=B=C|`. Omitting the leading `|` (`A=B=C`) only works when nothing precedes the row on its own line -- otherwise the preceding line gets absorbed into the row's first cell instead of staying its own block. When in doubt, wrap the row in `|`.
+
+### Block alignment
+
+An alignment marker -- `<` (start), `^` (center), or `>` (end) -- placed immediately after an unescaped `|` or `=` configures how the block starting there is aligned within the space it's given:
+
+```dart
+const source = '|<品名=^数量=>価格|'
+    '|<りんご=^3=>150|'
+    '|<みかん=^12=>480|';
+```
+
+This renders a table-like row layout where the price column (`>`-aligned) sits flush against the right edge of its cell, regardless of how many digits each price has -- the classic motivating case being a right-aligned numeric column, such as prices in a product table.
+
+Alignment is rendered by moving the block itself (its cross-axis alignment), not the text inside it, so it works the same whether the aligned block is a whole document, a `|`-separated line, or a `=`-separated row cell.
+
 ## Getting started
 
 ```yaml
