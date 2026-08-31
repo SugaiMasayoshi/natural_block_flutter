@@ -6,8 +6,10 @@ import 'package:natural_block_flutter/natural_block_flutter.dart';
 void main() {
   group('RowNodeView', () {
     testWidgets(
-      'wraps each RowNode child in Expanded and ignores non-TextNode content',
+      'gives one RowNode one Expanded cell, stacking its own lines vertically',
       (tester) async {
+        // A single RowNode is a single *cell*; its children are the lines
+        // inside that cell, so they must stack -- not become sibling cells.
         final node = RowNode(
           children: [
             TextNode(children: [TextSpanNode(text: 'a')]),
@@ -23,10 +25,42 @@ void main() {
         );
 
         expect(find.byType(Row), findsOneWidget);
-        expect(find.byType(Expanded), findsNWidgets(2));
+        expect(find.byType(Expanded), findsOneWidget);
         expect(find.byType(TextNodeView), findsNWidgets(2));
+
+        // The two lines are stacked inside the one cell.
+        final column = tester.widget<Column>(
+          find.descendant(
+            of: find.byType(Expanded),
+            matching: find.byType(Column),
+          ),
+        );
+        expect(column.children, hasLength(2));
       },
     );
+
+    testWidgets('a single-line cell needs no Column wrapper', (tester) async {
+      final node = RowNode(
+        children: [
+          TextNode(children: [TextSpanNode(text: 'only')]),
+        ],
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: RowNodeView(nodes: [node], theme: const NaturalBlockTheme()),
+        ),
+      );
+
+      expect(find.byType(Expanded), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byType(Expanded),
+          matching: find.byType(Column),
+        ),
+        findsNothing,
+      );
+    });
 
     testWidgets('merges multiple RowNodes into one Row, one cell each', (
       tester,

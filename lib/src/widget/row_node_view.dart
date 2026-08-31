@@ -45,18 +45,28 @@ class RowNodeView extends StatelessWidget {
       }
     }
 
-    final children = nodes
-        .expand((node) => node.children.whereType<TextNode>())
-        .map(
-          (textNode) => Expanded(
-            child: TextNodeView(node: textNode, theme: theme),
-          ),
-        )
-        .toList();
+    // One cell per RowNode -- a node's own children are the lines *within*
+    // that cell, so they stack vertically rather than becoming cells of
+    // their own.
+    final cells = nodes.map((node) {
+      final lines = node.children
+          .whereType<TextNode>()
+          .map((textNode) => TextNodeView(node: textNode, theme: theme))
+          .toList();
+      return Expanded(
+        child: lines.length == 1
+            ? lines.single
+            : Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: lines,
+              ),
+      );
+    }).toList();
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: children,
+      children: cells,
     );
   }
 }

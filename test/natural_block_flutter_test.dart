@@ -16,6 +16,17 @@ void main() {
   );
 
   group('structural rendering', () {
+    testWidgets('a multi-line row cell stacks its lines instead of splitting '
+        'them into separate cells', (tester) async {
+      // Regression: RowNodeView used to flatten every RowNode's children into
+      // the Row, so a two-line left cell rendered as two side-by-side cells.
+      await pump(tester, 'left line 1\nleft line 2=right');
+
+      final row = tester.widget<Row>(find.byType(Row));
+      expect(row.children, hasLength(2), reason: 'two cells, not three');
+      expect(find.byType(TextNodeView), findsNWidgets(3));
+    });
+
     testWidgets('renders plain text as a single RichText', (tester) async {
       await pump(tester, 'Hello world');
 
