@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:natural_block/natural_block.dart';
 
@@ -105,13 +106,12 @@ class NaturalBlockRegistry {
     NaturalBlockTheme theme,
     NaturalBlockRegistry registry,
   ) {
-    assert(() {
+    if (kDebugMode) {
       debugPrint(
         'NaturalBlockRegistry: no builder registered for '
         '${siblings[index].runtimeType}; rendering nothing.',
       );
-      return true;
-    }());
+    }
     return const NodeBuildResult(widget: SizedBox.shrink());
   }
 }

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:natural_block/natural_block.dart';
 
@@ -31,7 +32,7 @@ class RowNodeView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    assert(() {
+    if (kDebugMode) {
       final dropped = nodes
           .expand((node) => node.children)
           .where((child) => child is! TextNode)
@@ -42,8 +43,7 @@ class RowNodeView extends StatelessWidget {
           '(e.g. a bare TextSpanNode) with no corresponding rendering.',
         );
       }
-      return true;
-    }());
+    }
 
     final children = nodes
         .expand((node) => node.children.whereType<TextNode>())
