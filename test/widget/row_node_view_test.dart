@@ -4,23 +4,28 @@ import 'package:natural_block/natural_block.dart';
 import 'package:natural_block_flutter/natural_block_flutter.dart';
 
 void main() {
+  const theme = NaturalBlockTheme();
+  const registry = NaturalBlockRegistry.defaults;
+
   group('RowNodeView', () {
     testWidgets(
-      'gives one RowNode one Expanded cell, stacking its own lines vertically',
+      'gives each cell (ColumnNode) one Expanded, stacking a multi-line '
+      "cell's lines vertically",
       (tester) async {
-        // A single RowNode is a single *cell*; its children are the lines
-        // inside that cell, so they must stack -- not become sibling cells.
         final node = RowNode(
           children: [
-            TextNode(children: [TextSpanNode(text: 'a')]),
-            TextSpanNode(text: 'x'), // non-TextNode child: filtered out
-            TextNode(children: [TextSpanNode(text: 'b')]),
+            ColumnNode(
+              children: [
+                TextNode(children: [TextSpanNode(text: 'a')]),
+                TextNode(children: [TextSpanNode(text: 'b')]),
+              ],
+            ),
           ],
         );
 
         await tester.pumpWidget(
           MaterialApp(
-            home: RowNodeView(nodes: [node], theme: const NaturalBlockTheme()),
+            home: RowNodeView(node: node, theme: theme, registry: registry),
           ),
         );
 
@@ -28,7 +33,7 @@ void main() {
         expect(find.byType(Expanded), findsOneWidget);
         expect(find.byType(TextNodeView), findsNWidgets(2));
 
-        // The two lines are stacked inside the one cell.
+        // The two lines of the one cell are stacked.
         final column = tester.widget<Column>(
           find.descendant(
             of: find.byType(Expanded),
@@ -39,40 +44,21 @@ void main() {
       },
     );
 
-    testWidgets('a single-line cell needs no Column wrapper', (tester) async {
+    testWidgets('renders one Expanded cell per ColumnNode child', (
+      tester,
+    ) async {
       final node = RowNode(
         children: [
-          TextNode(children: [TextSpanNode(text: 'only')]),
+          ColumnNode(children: [TextNode(children: [TextSpanNode(text: 'left')])]),
+          ColumnNode(
+            children: [TextNode(children: [TextSpanNode(text: 'right')])],
+          ),
         ],
       );
 
       await tester.pumpWidget(
         MaterialApp(
-          home: RowNodeView(nodes: [node], theme: const NaturalBlockTheme()),
-        ),
-      );
-
-      expect(find.byType(Expanded), findsOneWidget);
-      expect(
-        find.descendant(
-          of: find.byType(Expanded),
-          matching: find.byType(Column),
-        ),
-        findsNothing,
-      );
-    });
-
-    testWidgets('merges multiple RowNodes into one Row, one cell each', (
-      tester,
-    ) async {
-      final nodes = [
-        RowNode(children: [TextNode(children: [TextSpanNode(text: 'left')])]),
-        RowNode(children: [TextNode(children: [TextSpanNode(text: 'right')])]),
-      ];
-
-      await tester.pumpWidget(
-        MaterialApp(
-          home: RowNodeView(nodes: nodes, theme: const NaturalBlockTheme()),
+          home: RowNodeView(node: node, theme: theme, registry: registry),
         ),
       );
 
@@ -80,12 +66,38 @@ void main() {
       expect(find.byType(Expanded), findsNWidgets(2));
     });
 
-    testWidgets('an empty nodes list renders an empty Row without throwing', (
+    testWidgets('an empty cell renders as an empty Expanded', (tester) async {
+      final node = RowNode(
+        children: [
+          ColumnNode(children: [TextNode(children: [TextSpanNode(text: 'left')])]),
+          ColumnNode(children: []), // middle cell deliberately blank
+          ColumnNode(
+            children: [TextNode(children: [TextSpanNode(text: 'right')])],
+          ),
+        ],
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: RowNodeView(node: node, theme: theme, registry: registry),
+        ),
+      );
+
+      expect(find.byType(Expanded), findsNWidgets(3));
+      expect(find.byType(TextNodeView), findsNWidgets(2));
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('an empty RowNode renders an empty Row without throwing', (
       tester,
     ) async {
       await tester.pumpWidget(
         MaterialApp(
-          home: RowNodeView(nodes: const [], theme: const NaturalBlockTheme()),
+          home: RowNodeView(
+            node: RowNode(children: []),
+            theme: theme,
+            registry: registry,
+          ),
         ),
       );
 
@@ -93,5 +105,34 @@ void main() {
       expect(row.children, isEmpty);
       expect(tester.takeException(), isNull);
     });
+
+    testWidgets(
+      'cells are built through the registry, so a custom builder applies '
+      'to row cells too',
+      (tester) async {
+        final customRegistry = NaturalBlockRegistry.defaults.register(
+          ColumnNode,
+          (context, node, theme, registry) => const Placeholder(),
+        );
+        final node = RowNode(
+          children: [
+            ColumnNode(children: [TextNode(children: [])]),
+          ],
+        );
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: RowNodeView(
+              node: node,
+              theme: theme,
+              registry: customRegistry,
+            ),
+          ),
+        );
+
+        expect(find.byType(Placeholder), findsOneWidget);
+        expect(find.byType(ColumnNodeView), findsNothing);
+      },
+    );
   });
 }

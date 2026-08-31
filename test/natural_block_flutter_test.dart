@@ -37,9 +37,7 @@ void main() {
     });
 
     testWidgets(
-      'renders row-separated content as one Row with Expanded cells '
-      '(the parser emits sibling RowNodes, one per cell, which the '
-      'registry merges back into a single Row)',
+      'renders row-separated content as one Row with Expanded cells',
       (tester) async {
         await pump(tester, 'left=right');
 
@@ -49,7 +47,8 @@ void main() {
       },
     );
 
-    testWidgets('renders column-separated content stacked vertically', (
+    testWidgets(
+      'renders column-separated content stacked vertically', (
       tester,
     ) async {
       await pump(tester, 'first|second');
@@ -57,6 +56,26 @@ void main() {
       expect(find.byType(ColumnNodeView), findsOneWidget);
       expect(find.byType(TextNodeView), findsNWidgets(2));
     });
+
+    testWidgets(
+      '"a=b|c=d" renders as two separate two-cell Rows, not one '
+      'four-cell Row',
+      (tester) async {
+        // Regression: RowNode boundaries used to be implicit in sibling
+        // adjacency, so a column of two row-blocks in a row could collapse
+        // into a single merged Row of every cell.
+        await pump(tester, 'a=b|c=d');
+
+        expect(find.byType(RowNodeView), findsNWidgets(2));
+        expect(find.byType(Row), findsNWidgets(2));
+
+        final rows = tester.widgetList<Row>(find.byType(Row)).toList();
+        for (final row in rows) {
+          expect(row.children, hasLength(2));
+        }
+        expect(find.byType(Expanded), findsNWidgets(4));
+      },
+    );
   });
 
   group('decoration rendering (end-to-end)', () {
@@ -127,8 +146,7 @@ void main() {
     ) async {
       final registry = NaturalBlockRegistry.defaults.register(
         TextNode,
-        (context, siblings, index, theme, registry) =>
-            const NodeBuildResult(widget: Placeholder()),
+        (context, node, theme, registry) => const Placeholder(),
       );
 
       await pump(tester, 'Hello world', registry: registry);

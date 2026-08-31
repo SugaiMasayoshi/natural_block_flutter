@@ -30,7 +30,11 @@ void main() {
       tester,
     ) async {
       final nodes = <NaturalBlockNode>[
-        RowNode(children: [TextNode(children: [TextSpanNode(text: 'a')])]),
+        RowNode(
+          children: [
+            ColumnNode(children: [TextNode(children: [TextSpanNode(text: 'a')])]),
+          ],
+        ),
         ColumnNode(children: [TextNode(children: [TextSpanNode(text: 'b')])]),
         TextNode(children: [TextSpanNode(text: 'c')]),
       ];
@@ -38,35 +42,43 @@ void main() {
       await buildWith(tester, NaturalBlockRegistry.defaults, nodes);
 
       expect(find.byType(RowNodeView), findsOneWidget);
-      expect(find.byType(ColumnNodeView), findsOneWidget);
-      // One direct TextNode, one nested in ColumnNode, one nested in RowNode.
+      // One direct ColumnNode, one wrapping the RowNode's single cell.
+      expect(find.byType(ColumnNodeView), findsNWidgets(2));
+      // One direct TextNode, one nested in the top-level ColumnNode, one
+      // nested in the RowNode's cell.
       expect(find.byType(TextNodeView), findsNWidgets(3));
     });
 
-    testWidgets(
-      'buildRowNode merges consecutive RowNode siblings into one Row, '
-      'but keeps non-adjacent groups separate',
-      (tester) async {
-        final nodes = <NaturalBlockNode>[
-          RowNode(children: [TextNode(children: [TextSpanNode(text: 'a')])]),
-          RowNode(children: [TextNode(children: [TextSpanNode(text: 'b')])]),
-          TextNode(children: [TextSpanNode(text: 'between')]),
-          RowNode(children: [TextNode(children: [TextSpanNode(text: 'c')])]),
-        ];
+    testWidgets('one RowNode renders as one Row, keeping other nodes separate', (
+      tester,
+    ) async {
+      final nodes = <NaturalBlockNode>[
+        RowNode(
+          children: [
+            ColumnNode(children: [TextNode(children: [TextSpanNode(text: 'a')])]),
+            ColumnNode(children: [TextNode(children: [TextSpanNode(text: 'b')])]),
+          ],
+        ),
+        TextNode(children: [TextSpanNode(text: 'between')]),
+        RowNode(
+          children: [
+            ColumnNode(children: [TextNode(children: [TextSpanNode(text: 'c')])]),
+          ],
+        ),
+      ];
 
-        final built = await buildWith(
-          tester,
-          NaturalBlockRegistry.defaults,
-          nodes,
-        );
+      final built = await buildWith(
+        tester,
+        NaturalBlockRegistry.defaults,
+        nodes,
+      );
 
-        // 2 Row groups + 1 plain text = 3 top-level widgets, not 4.
-        expect(built.length, 3);
-        expect(find.byType(RowNodeView), findsNWidgets(2));
-        expect(find.byType(Row), findsNWidgets(2));
-        expect(find.byType(Expanded), findsNWidgets(3)); // a+b in one Row, c alone in the other
-      },
-    );
+      // 2 RowNodes + 1 plain text = 3 top-level widgets.
+      expect(built.length, 3);
+      expect(find.byType(RowNodeView), findsNWidgets(2));
+      expect(find.byType(Row), findsNWidgets(2));
+      expect(find.byType(Expanded), findsNWidgets(3)); // a+b in one Row, c alone in the other
+    });
   });
 
   group('register / registerAll (custom builders)', () {
@@ -75,8 +87,7 @@ void main() {
     ) async {
       final registry = NaturalBlockRegistry.defaults.register(
         TextNode,
-        (context, siblings, index, theme, registry) =>
-            const NodeBuildResult(widget: Placeholder()),
+        (context, node, theme, registry) => const Placeholder(),
       );
       final nodes = <NaturalBlockNode>[TextNode(children: [])];
 
@@ -86,41 +97,32 @@ void main() {
       expect(find.byType(TextNodeView), findsNothing);
     });
 
-    testWidgets('a builder can consume multiple siblings', (tester) async {
-      final registry = NaturalBlockRegistry.defaults.register(TextNode, (
-        context,
-        siblings,
-        index,
-        theme,
-        registry,
-      ) {
-        final isFirstOfPair =
-            index + 1 < siblings.length && siblings[index + 1] is TextNode;
-        if (isFirstOfPair) {
-          return const NodeBuildResult(
-            widget: Placeholder(),
-            consumedCount: 2,
-          );
-        }
-        return buildTextNode(context, siblings, index, theme, registry);
-      });
-      final nodes = <NaturalBlockNode>[
-        TextNode(children: []),
-        TextNode(children: []),
-        TextNode(children: []),
-      ];
+    testWidgets(
+      'a custom ColumnNode builder also applies to row cells, since cells '
+      'are built through the registry',
+      (tester) async {
+        final registry = NaturalBlockRegistry.defaults.register(
+          ColumnNode,
+          (context, node, theme, registry) => const Placeholder(),
+        );
+        final nodes = <NaturalBlockNode>[
+          RowNode(
+            children: [
+              ColumnNode(children: [TextNode(children: [])]),
+            ],
+          ),
+        ];
 
-      final built = await buildWith(tester, registry, nodes);
+        await buildWith(tester, registry, nodes);
 
-      expect(built.length, 2); // pair merged into one + one remaining
-      expect(find.byType(Placeholder), findsOneWidget);
-      expect(find.byType(TextNodeView), findsOneWidget);
-    });
+        expect(find.byType(Placeholder), findsOneWidget);
+        expect(find.byType(TextNodeView), findsNothing);
+      },
+    );
 
     testWidgets(
       'buildRowNode throws immediately when registered for a non-RowNode '
-      'type, instead of silently returning consumedCount: 0 (which would '
-      'spin buildAll\'s loop forever in release mode)',
+      'type, instead of silently misbehaving',
       (tester) async {
         final registry = NaturalBlockRegistry.defaults.register(
           TextNode,

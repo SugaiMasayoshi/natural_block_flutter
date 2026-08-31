@@ -72,18 +72,14 @@ Maps each AST node type to the function that builds a widget for it. This is how
 ```dart
 final registry = NaturalBlockRegistry.defaults.register(
   TextNode,
-  (context, siblings, index, theme, registry) {
-    final node = siblings[index] as TextNode;
-    return NodeBuildResult(
-      widget: MyCustomTextWidget(node: node, theme: theme),
-    );
-  },
+  (context, node, theme, registry) =>
+      MyCustomTextWidget(node: node as TextNode, theme: theme),
 );
 
 NaturalBlockView(source: source, registry: registry);
 ```
 
-A `NodeBuilder` receives the full sibling list and the index of the node it's building, so it can look ahead and consume more than one sibling in a single widget -- this is how the default `RowNode` builder merges every consecutive `RowNode` sibling into one `Row` (the parser emits one `RowNode` per cell, not one `RowNode` per row). Report how many siblings you consumed via `NodeBuildResult.consumedCount` (it must be at least 1).
+A `NodeBuilder` receives the node to render, the ambient theme, and the registry itself (so it can recurse into a node's own children, e.g. a `ColumnNode` builder rendering each of its children via `registry.buildAll`), and returns the widget for that node directly.
 
 Use `NaturalBlockRegistry.empty()` to start from nothing and register only the node types you care about, or `registerAll` to register several builders at once. The default builders (`buildRowNode`, `buildColumnNode`, `buildTextNode`) are exported too, so a custom builder can delegate back to the default for the cases it doesn't want to change.
 

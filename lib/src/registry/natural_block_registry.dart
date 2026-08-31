@@ -5,28 +5,14 @@ import 'package:natural_block/natural_block.dart';
 import '../widget/natural_block_theme.dart';
 import 'default_builders.dart';
 
-/// Builds widget(s) for the node at [siblings]\[index\], optionally consuming
-/// more than one sibling starting at that index.
+/// Builds the widget for a single [NaturalBlockNode].
 typedef NodeBuilder =
-    NodeBuildResult Function(
+    Widget Function(
       BuildContext context,
-      List<NaturalBlockNode> siblings,
-      int index,
+      NaturalBlockNode node,
       NaturalBlockTheme theme,
       NaturalBlockRegistry registry,
     );
-
-/// The result of a [NodeBuilder] call.
-class NodeBuildResult {
-  /// The widget rendered for the consumed sibling(s).
-  final Widget widget;
-
-  /// How many entries of `siblings`, starting at `index`, this result covers.
-  final int consumedCount;
-
-  const NodeBuildResult({required this.widget, this.consumedCount = 1})
-    : assert(consumedCount >= 1);
-}
 
 /// Maps [NaturalBlockNode] types to the [NodeBuilder] that renders them.
 ///
@@ -75,43 +61,36 @@ class NaturalBlockRegistry {
   NaturalBlockRegistry registerAll(Map<Type, NodeBuilder> builders) =>
       NaturalBlockRegistry._({..._builders, ...builders});
 
-  /// Builds widgets for every node in [nodes], letting each builder decide
-  /// how many consecutive nodes it consumes.
+  /// Builds one widget per entry of [nodes], in order.
   ///
-  /// The builder for each node is looked up by `nodes[index].runtimeType`
-  /// -- an exact type match, not `is`/subtype matching. A node whose
-  /// runtime type isn't a key of this registry (including a subclass of a
-  /// registered type) hits the fallback builder, which renders nothing and
-  /// -- in debug mode only -- prints a warning via `debugPrint`.
+  /// The builder for each node is looked up by `node.runtimeType` -- an
+  /// exact type match, not `is`/subtype matching. A node whose runtime type
+  /// isn't a key of this registry (including a subclass of a registered
+  /// type) hits the fallback builder, which renders nothing and -- in debug
+  /// mode only -- prints a warning via `debugPrint`.
   List<Widget> buildAll(
     BuildContext context,
     List<NaturalBlockNode> nodes,
     NaturalBlockTheme theme,
   ) {
-    final widgets = <Widget>[];
-    var index = 0;
-    while (index < nodes.length) {
-      final builder = _builders[nodes[index].runtimeType] ?? _buildFallback;
-      final result = builder(context, nodes, index, theme, this);
-      widgets.add(result.widget);
-      index += result.consumedCount;
-    }
-    return widgets;
+    return nodes.map((node) {
+      final builder = _builders[node.runtimeType] ?? _buildFallback;
+      return builder(context, node, theme, this);
+    }).toList();
   }
 
-  static NodeBuildResult _buildFallback(
+  static Widget _buildFallback(
     BuildContext context,
-    List<NaturalBlockNode> siblings,
-    int index,
+    NaturalBlockNode node,
     NaturalBlockTheme theme,
     NaturalBlockRegistry registry,
   ) {
     if (kDebugMode) {
       debugPrint(
         'NaturalBlockRegistry: no builder registered for '
-        '${siblings[index].runtimeType}; rendering nothing.',
+        '${node.runtimeType}; rendering nothing.',
       );
     }
-    return const NodeBuildResult(widget: SizedBox.shrink());
+    return const SizedBox.shrink();
   }
 }

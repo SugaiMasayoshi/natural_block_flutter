@@ -1,72 +1,43 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:natural_block/natural_block.dart';
 
+import '../registry/natural_block_registry.dart';
 import 'natural_block_theme.dart';
-import 'text_node_view.dart';
 
-/// Renders one or more consecutive [RowNode]s as a single horizontal [Row].
+/// Renders one [RowNode] as a horizontal [Row], one [Expanded] cell per
+/// child [ColumnNode].
 ///
-/// The parser represents "a=b" as two sibling [RowNode]s (each holding one
-/// cell), not as one [RowNode] holding two cells -- so a Row's cells come
-/// from a *group* of consecutive RowNode siblings, one cell per node.
-///
-/// **Non-`TextNode` cell content is dropped.** Each [RowNode]'s `children`
-/// is `List<ContentNode>`, which the `natural_block` package defines as
-/// sealed over both [TextNode] and `TextSpanNode`. This view renders only
-/// the [TextNode] children (`whereType<TextNode>()`), so a bare
-/// `TextSpanNode` cell produces no widget. The drop happens in both debug
-/// and release builds; in debug it is announced via `debugPrint`, matching
-/// how `NaturalBlockRegistry`'s fallback reports an unhandled node, while
-/// release stays silent.
+/// Each cell is built through [registry] (via `buildAll`), the same way
+/// [NaturalBlockRegistry.buildAll] builds any other list of nodes -- so a
+/// builder registered for [ColumnNode], or for any node type nested inside
+/// a cell, applies to row cells too instead of row rendering being a
+/// special case that bypasses the registry.
 class RowNodeView extends StatelessWidget {
-  /// The [RowNode] siblings whose cells make up this Row, one cell per
-  /// node -- see the class doc for why this is a list rather than a
-  /// single node.
-  final List<RowNode> nodes;
+  /// The row to render; each entry of [RowNode.children] becomes one
+  /// [Expanded] cell, in order.
+  final RowNode node;
 
-  /// Styling passed through to each cell's [TextNodeView].
+  /// Styling passed through to each cell.
   final NaturalBlockTheme theme;
 
-  const RowNodeView({super.key, required this.nodes, required this.theme});
+  /// Registry used to build each cell -- and, recursively, whatever that
+  /// cell's own [ColumnNode] children contain.
+  final NaturalBlockRegistry registry;
+
+  const RowNodeView({
+    super.key,
+    required this.node,
+    required this.theme,
+    required this.registry,
+  });
 
   @override
   Widget build(BuildContext context) {
-    if (kDebugMode) {
-      final dropped = nodes
-          .expand((node) => node.children)
-          .where((child) => child is! TextNode)
-          .length;
-      if (dropped > 0) {
-        debugPrint(
-          'RowNodeView: dropped $dropped non-TextNode cell(s) '
-          '(e.g. a bare TextSpanNode) with no corresponding rendering.',
-        );
-      }
-    }
+    final cells = registry
+        .buildAll(context, node.children, theme)
+        .map((cell) => Expanded(child: cell))
+        .toList();
 
-    // One cell per RowNode -- a node's own children are the lines *within*
-    // that cell, so they stack vertically rather than becoming cells of
-    // their own.
-    final cells = nodes.map((node) {
-      final lines = node.children
-          .whereType<TextNode>()
-          .map((textNode) => TextNodeView(node: textNode, theme: theme))
-          .toList();
-      return Expanded(
-        child: lines.length == 1
-            ? lines.single
-            : Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: lines,
-              ),
-      );
-    }).toList();
-
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: cells,
-    );
+    return Row(crossAxisAlignment: CrossAxisAlignment.start, children: cells);
   }
 }
