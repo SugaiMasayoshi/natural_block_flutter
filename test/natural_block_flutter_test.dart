@@ -3,6 +3,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:natural_block/natural_block.dart';
 import 'package:natural_block_flutter/natural_block_flutter.dart';
 
+import 'rendered_spans.dart';
+
 void main() {
   Future<void> pump(
     WidgetTester tester,
@@ -86,9 +88,7 @@ void main() {
     testWidgets(':! toggles danger (red) color on and off', (tester) async {
       await pump(tester, ':!danger:!plain');
 
-      final richText = tester.widget<RichText>(find.byType(RichText).first);
-      final root = richText.text as TextSpan;
-      final spans = root.children!.cast<TextSpan>();
+      final spans = renderedSpans(tester);
 
       expect(spans[0].text, 'danger');
       expect(spans[0].style!.color, Colors.red);
@@ -99,9 +99,7 @@ void main() {
     testWidgets(':* toggles bold emphasis on and off', (tester) async {
       await pump(tester, ':*bold:*');
 
-      final richText = tester.widget<RichText>(find.byType(RichText).first);
-      final root = richText.text as TextSpan;
-      final span = root.children!.cast<TextSpan>().first;
+      final span = renderedSpans(tester).first;
 
       expect(span.text, 'bold');
       expect(span.style!.fontWeight, FontWeight.bold);
@@ -120,9 +118,7 @@ void main() {
         ),
       );
 
-      final richText = tester.widget<RichText>(find.byType(RichText).first);
-      final root = richText.text as TextSpan;
-      final span = root.children!.cast<TextSpan>().first;
+      final span = renderedSpans(tester).first;
 
       expect(span.text, 'big');
       expect(span.style!.fontSize, ambientFontSize + theme.fontSizeStep);
@@ -134,9 +130,7 @@ void main() {
       const customTheme = NaturalBlockTheme(danger: TextStyle(color: Colors.purple));
       await pump(tester, ':!alert:!', theme: customTheme);
 
-      final richText = tester.widget<RichText>(find.byType(RichText).first);
-      final root = richText.text as TextSpan;
-      final span = root.children!.cast<TextSpan>().first;
+      final span = renderedSpans(tester).first;
 
       expect(span.style!.color, Colors.purple);
     });
@@ -153,6 +147,41 @@ void main() {
 
       expect(find.byType(Placeholder), findsOneWidget);
       expect(find.byType(TextNodeView), findsNothing);
+    });
+  });
+
+  group('text selection', () {
+    // Built with Text.rich rather than a bare RichText specifically so the
+    // rendered text takes part in selection. A directly-constructed
+    // RichText never registers with the selection machinery, so wrapping it
+    // in a SelectionArea would silently do nothing.
+    testWidgets(
+      'text registers for selection when wrapped in a SelectionArea, '
+      'across every cell and row',
+      (tester) async {
+        await tester.pumpWidget(
+          const MaterialApp(
+            home: SelectionArea(child: NaturalBlockView(source: 'a=b|c=d')),
+          ),
+        );
+
+        final texts = tester.widgetList<RichText>(find.byType(RichText));
+        expect(texts, hasLength(4));
+        expect(
+          texts.every((t) => t.selectionRegistrar != null),
+          isTrue,
+          reason: 'every cell of every row must be selectable',
+        );
+      },
+    );
+
+    testWidgets('without a SelectionArea nothing registers for selection', (
+      tester,
+    ) async {
+      await pump(tester, 'hello');
+
+      final text = tester.widget<RichText>(find.byType(RichText));
+      expect(text.selectionRegistrar, isNull);
     });
   });
 

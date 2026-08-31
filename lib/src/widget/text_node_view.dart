@@ -3,9 +3,15 @@ import 'package:natural_block/natural_block.dart';
 
 import 'natural_block_theme.dart';
 
-/// Renders a [TextNode]'s [TextSpanNode] children as a single [RichText],
-/// mapping each span's [SemanticColor], emphasis flag, and `sizeOffset`
-/// onto [TextStyle] via [theme].
+/// Renders a [TextNode]'s [TextSpanNode] children as a single rich text
+/// run, mapping each span's [SemanticColor], emphasis flag, and
+/// `sizeOffset` onto [TextStyle] via [theme].
+///
+/// Built with [Text.rich] rather than a bare [RichText] so the result takes
+/// part in text selection: a consumer who wraps a `NaturalBlockView` in a
+/// `SelectionArea` gets selectable, copyable text, including drags that
+/// cross cell and row boundaries. A directly-constructed [RichText] does
+/// not register with the selection machinery and would be unselectable.
 class TextNodeView extends StatelessWidget {
   /// The node whose [TextNode.children] spans are rendered.
   final TextNode node;
@@ -30,8 +36,8 @@ class TextNodeView extends StatelessWidget {
       return TextSpan(text: span.text, style: style);
     }).toList();
 
-    return RichText(
-      text: TextSpan(
+    return Text.rich(
+      TextSpan(
         style: DefaultTextStyle.of(context).style.merge(theme.base),
         children: spans,
       ),

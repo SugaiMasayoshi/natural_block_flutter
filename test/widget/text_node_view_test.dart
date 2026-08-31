@@ -3,6 +3,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:natural_block/natural_block.dart';
 import 'package:natural_block_flutter/natural_block_flutter.dart';
 
+import '../rendered_spans.dart';
+
 void main() {
   group('color and emphasis', () {
     testWidgets('renders each TextSpanNode with its semantic style', (
@@ -22,9 +24,7 @@ void main() {
         ),
       );
 
-      final richText = tester.widget<RichText>(find.byType(RichText));
-      final root = richText.text as TextSpan;
-      final spans = root.children!.cast<TextSpan>();
+      final spans = renderedSpans(tester);
 
       expect(spans[0].text, 'danger');
       expect(spans[0].style!.color, theme.danger.color);
@@ -49,9 +49,7 @@ void main() {
         MaterialApp(home: TextNodeView(node: node, theme: theme)),
       );
 
-      final richText = tester.widget<RichText>(find.byType(RichText));
-      final root = richText.text as TextSpan;
-      final span = root.children!.cast<TextSpan>().first;
+      final span = renderedSpans(tester).first;
 
       expect(span.style!.color, theme.danger.color);
       expect(span.style!.fontWeight, theme.emphasis.fontWeight);
@@ -76,9 +74,7 @@ void main() {
         ),
       );
 
-      final richText = tester.widget<RichText>(find.byType(RichText));
-      final root = richText.text as TextSpan;
-      final span = root.children!.cast<TextSpan>().first;
+      final span = renderedSpans(tester).first;
 
       expect(span.style!.fontSize, 14 + 2 * theme.fontSizeStep);
     });
@@ -103,9 +99,7 @@ void main() {
 
         expect(tester.takeException(), isNull);
 
-        final richText = tester.widget<RichText>(find.byType(RichText));
-        final root = richText.text as TextSpan;
-        final span = root.children!.cast<TextSpan>().first;
+        final span = renderedSpans(tester).first;
 
         expect(span.style!.fontSize, theme.minFontSize);
         expect(span.style!.fontSize, greaterThan(0));
