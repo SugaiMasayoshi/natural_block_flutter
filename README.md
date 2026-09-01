@@ -86,12 +86,13 @@ class Example extends StatelessWidget {
 }
 ```
 
-`NaturalBlockView` takes four parameters:
+`NaturalBlockView` takes five parameters:
 
 * `source` (required) -- the markup text to parse and render.
 * `theme` -- a [`NaturalBlockTheme`](#naturalblocktheme) controlling how semantic colors, emphasis, and base text look. Defaults to `const NaturalBlockTheme()`.
 * `registry` -- a [`NaturalBlockRegistry`](#naturalblockregistry) controlling which widget renders each node type. Defaults to `NaturalBlockRegistry.defaults`.
 * `onActionTap` -- called with a span's own text when an [actionable span](#actionable-text) is tapped. Defaults to `null` (actionable spans render styled but aren't tappable).
+* `onActionBuild` -- renders an actionable span as something other than styled text (an image, a chip). Defaults to `null`. See [Rendering an actionable span yourself](#rendering-an-actionable-span-yourself).
 
 ### `NaturalBlockTheme`
 
@@ -119,14 +120,14 @@ Maps each AST node type to the function that builds a widget for it. This is how
 ```dart
 final registry = NaturalBlockRegistry.defaults.register(
   TextNode,
-  (context, node, theme, registry, onActionTap) =>
+  (context, node, theme, registry, actions) =>
       MyCustomTextWidget(node: node as TextNode, theme: theme),
 );
 
 NaturalBlockView(source: source, registry: registry);
 ```
 
-A `NodeBuilder` receives the node to render, the ambient theme, the registry itself, and the `onActionTap` callback to forward to any actionable spans inside it (so it can recurse into a node's own children, e.g. a `ColumnNode` builder rendering each of its children via `registry.buildAll`), and returns the widget for that node directly.
+A `NodeBuilder` receives the node to render, the ambient theme, the registry itself, and a `NaturalBlockActions` to forward to any actionable spans inside it (so it can recurse into a node's own children, e.g. a `ColumnNode` builder rendering each of its children via `registry.buildAll`), and returns the widget for that node directly.
 
 Use `NaturalBlockRegistry.empty()` to start from nothing and register only the node types you care about, or `registerAll` to register several builders at once. The default builders (`buildRowNode`, `buildColumnNode`, `buildTableNode`, `buildTextNode`) are exported too, so a custom builder can delegate back to the default for the cases it doesn't want to change.
 
@@ -159,6 +160,39 @@ NaturalBlockView(
 
 Leaving `onActionTap` unset (the default, `null`) still renders actionable spans with `NaturalBlockTheme.action`'s style, but they get no tap recognizer at all -- they read as tappable but aren't.
 
+#### Rendering an actionable span yourself
+
+`onActionBuild` replaces an actionable span's rendering entirely — text, style and gestures. It is consulted for every actionable span, and returning `null` for one leaves it to the default styled text, so a builder never has to understand every payload it might meet:
+
+```dart
+NaturalBlockView(
+  source: source,
+  onActionBuild: (context, text, style) {
+    if (text.startsWith('@')) return TextSpan(text: text.substring(1), style: style);
+    return null; // not mine -- render it as usual
+  },
+);
+```
+
+The `style` you receive is what the span *would* have been drawn with, including everything the surrounding markup asked for. Reading `style.fontSize` is what lets `:++` / `:--` reach content that is not text at all. Block alignment (`|^`, `=>`) reaches it for free, since that moves the whole block.
+
+#### Images
+
+There is no image syntax, and there is not going to be one. An image is written as an ordinary actionable span using the conventional payload `img(<url>)`, so an implementation that has never heard of images still shows `img(https://...)` — readable text — instead of failing to parse.
+
+`NaturalBlockImages.builder` is the reference rendering for that convention:
+
+```dart
+NaturalBlockView(
+  source: ':@img(https://example.com/a.png):@',
+  onActionBuild: NaturalBlockImages.builder,
+);
+```
+
+**It is off until you pass it, deliberately.** Rendering a remote image is a network request to a third party, made simply by displaying a document. A URL carrying a per-recipient marker turns that into a read receipt; the identical request is a tracking pixel when the reader was not told. This package cannot tell those apart — it never interprets the URL — so the disclosure decision belongs to your app. It is the same reason mail clients block remote images by default.
+
+Shipping the reference implementation anyway is the point: declining to interpret would not prevent dialects, it would guarantee them, with every app inventing its own spelling. `NaturalBlockImages.urlOf` exposes the convention so your own builder can reuse it and fall back to `NaturalBlockImages.builder` for the rest.
+
 #### A convention for what the text means (non-normative)
 
 `natural_block` places no constraint on an actionable span's text. The following convention is not enforced by the parser or this package, but mirrors URI/fragment conventions most readers and authors already know, so it's a reasonable default if you don't already have one:
@@ -169,7 +203,10 @@ Leaving `onActionTap` unset (the default, `null`) still renders actionable spans
 | `#name` | a target inside the same document |
 | `path#name` | a target in another document |
 | `@name` | a mention |
+| `img(<url>)` | an image -- see [Images](#images) |
 | anything else | app-defined |
+
+Whichever shapes you use, **keep the payload human-readable**. That is what makes actions a safe place to extend the language at all: an implementation that does not recognise a payload still renders it as text, so `img(https://example.com/a.png)` degrades into something a person can read and act on, while an opaque identifier would degrade into nothing useful. Note that a span you replace via `onActionBuild` gives up that safety net *within your own app* too -- a `WidgetSpan` copies as `￼`, not as the text that named it.
 
 Resolving any of this -- looking up `#name`, deciding what `@name` refers to, or anything else -- is entirely the app's responsibility; `natural_block` and `natural_block_flutter` only carry the text through.
 

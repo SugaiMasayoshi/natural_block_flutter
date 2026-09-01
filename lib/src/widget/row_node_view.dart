@@ -65,20 +65,21 @@ class RowNodeView extends StatelessWidget {
   /// cell's own [ColumnNode] children contain.
   final NaturalBlockRegistry registry;
 
-  /// Forwarded to each cell -- see `NaturalBlockView.onActionTap`.
-  final OnActionTap? onActionTap;
+  /// What to do with actionable runs inside the cells -- see
+  /// `NaturalBlockView.onActionTap` and `NaturalBlockView.onActionBuild`.
+  final NaturalBlockActions actions;
 
   const RowNodeView({
     super.key,
     required this.node,
     required this.theme,
     required this.registry,
-    this.onActionTap,
+    this.actions = NaturalBlockActions.none,
   });
 
   @override
   Widget build(BuildContext context) {
-    final cells = registry.buildAll(context, node.children, theme, onActionTap);
+    final cells = registry.buildAll(context, node.children, theme, actions);
 
     return LayoutBuilder(
       builder: (context, constraints) {

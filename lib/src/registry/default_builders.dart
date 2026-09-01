@@ -19,13 +19,13 @@ Widget buildRowNode(
   BlockNode node,
   NaturalBlockTheme theme,
   NaturalBlockRegistry registry,
-  OnActionTap? onActionTap,
+  NaturalBlockActions actions,
 ) {
   return RowNodeView(
     node: node as RowNode,
     theme: theme,
     registry: registry,
-    onActionTap: onActionTap,
+    actions: actions,
   );
 }
 
@@ -37,14 +37,14 @@ Widget buildColumnNode(
   BlockNode node,
   NaturalBlockTheme theme,
   NaturalBlockRegistry registry,
-  OnActionTap? onActionTap,
+  NaturalBlockActions actions,
 ) {
   final column = node as ColumnNode;
   final children = registry.buildAll(
     context,
     column.children,
     theme,
-    onActionTap,
+    actions,
   );
   return ColumnNodeView(align: column.align, children: children);
 }
@@ -55,12 +55,12 @@ Widget buildTextNode(
   BlockNode node,
   NaturalBlockTheme theme,
   NaturalBlockRegistry registry,
-  OnActionTap? onActionTap,
+  NaturalBlockActions actions,
 ) {
   return TextNodeView(
     node: node as TextNode,
     theme: theme,
-    onActionTap: onActionTap,
+    actions: actions,
   );
 }
 
@@ -71,12 +71,12 @@ Widget buildTableNode(
   BlockNode node,
   NaturalBlockTheme theme,
   NaturalBlockRegistry registry,
-  OnActionTap? onActionTap,
+  NaturalBlockActions actions,
 ) {
   return TableNodeView(
     node: node as TableNode,
     theme: theme,
     registry: registry,
-    onActionTap: onActionTap,
+    actions: actions,
   );
 }

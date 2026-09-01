@@ -159,7 +159,7 @@ void main() {
             home: TextNodeView(
               node: node,
               theme: theme,
-              onActionTap: (_) {},
+              actions: NaturalBlockActions(onTap: (_) {}),
             ),
           ),
         );
@@ -192,7 +192,11 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
-          home: TextNodeView(node: node, theme: theme, onActionTap: (_) {}),
+          home: TextNodeView(
+            node: node,
+            theme: theme,
+            actions: NaturalBlockActions(onTap: (_) {}),
+          ),
         ),
       );
 
@@ -218,7 +222,7 @@ void main() {
             home: TextNodeView(
               node: node,
               theme: theme,
-              onActionTap: tapped.add,
+              actions: NaturalBlockActions(onTap: tapped.add),
             ),
           ),
         );
@@ -247,7 +251,7 @@ void main() {
           home: TextNodeView(
             node: node,
             theme: theme,
-            onActionTap: tapped.add,
+            actions: NaturalBlockActions(onTap: tapped.add),
           ),
         ),
       );
@@ -287,7 +291,7 @@ void main() {
                 children: [TextSpanNode(text: text, isAction: true)],
               ),
               theme: theme,
-              onActionTap: (_) {},
+              actions: NaturalBlockActions(onTap: (_) {}),
             ),
           ),
         );

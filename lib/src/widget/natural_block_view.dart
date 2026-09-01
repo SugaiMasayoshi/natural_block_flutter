@@ -51,12 +51,26 @@ class NaturalBlockView extends StatelessWidget {
   /// deciding what it means is entirely this callback's responsibility.
   final OnActionTap? onActionTap;
 
+  /// Renders an actionable span as something other than styled text -- an
+  /// image, a chip, a formatted value.
+  ///
+  /// Consulted for every actionable span before the default rendering, and
+  /// returning `null` for a span leaves that span to the default. Pass
+  /// `NaturalBlockImages.builder` to draw the conventional `img(<url>)`
+  /// payload as an actual image; note that doing so lets a document fetch
+  /// from a third party, which is why nothing here is enabled by default.
+  ///
+  /// A span this builds owns its own gestures, so [onActionTap] is not
+  /// called for it.
+  final ActionSpanBuilder? onActionBuild;
+
   const NaturalBlockView({
     super.key,
     required this.source,
     this.theme = const NaturalBlockTheme(),
     this.registry = NaturalBlockRegistry.defaults,
     this.onActionTap,
+    this.onActionBuild,
   });
 
   @override
@@ -66,7 +80,10 @@ class NaturalBlockView extends StatelessWidget {
       context,
       document.children,
       theme,
-      onActionTap,
+      // Flat parameters here, bundled once for the trip down: callers get
+      // the ergonomic shape, while every builder in the chain forwards one
+      // value instead of a growing list of callbacks.
+      NaturalBlockActions(onTap: onActionTap, buildSpan: onActionBuild),
     );
 
     // No alignment is passed: a DocumentNode is the outermost thing there

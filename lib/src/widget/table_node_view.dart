@@ -44,15 +44,16 @@ class TableNodeView extends StatelessWidget {
   /// [ColumnNode] (or anything nested inside a cell) applies here too.
   final NaturalBlockRegistry registry;
 
-  /// Forwarded to each cell -- see `NaturalBlockView.onActionTap`.
-  final OnActionTap? onActionTap;
+  /// What to do with actionable runs inside the cells -- see
+  /// `NaturalBlockView.onActionTap` and `NaturalBlockView.onActionBuild`.
+  final NaturalBlockActions actions;
 
   const TableNodeView({
     super.key,
     required this.node,
     required this.theme,
     required this.registry,
-    this.onActionTap,
+    this.actions = NaturalBlockActions.none,
   });
 
   @override
@@ -75,7 +76,7 @@ class TableNodeView extends StatelessWidget {
                 context,
                 node.children[i].children,
                 theme,
-                onActionTap,
+                actions,
               ))
                 Padding(padding: theme.tableCellPadding, child: cell),
             ],

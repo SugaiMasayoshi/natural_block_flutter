@@ -22,7 +22,7 @@ typedef NodeBuilder =
       BlockNode node,
       NaturalBlockTheme theme,
       NaturalBlockRegistry registry,
-      OnActionTap? onActionTap,
+      NaturalBlockActions actions,
     );
 
 /// Called when an actionable span (`TextSpanNode.isAction == true`, written
@@ -31,6 +31,56 @@ typedef NodeBuilder =
 /// what it means (a URL to open, a section to jump to, a mention to
 /// resolve, ...) is entirely the caller's business.
 typedef OnActionTap = void Function(String text);
+
+/// Builds the span an actionable run renders as, replacing the default
+/// styled text entirely -- an image, a chip, a formatted date.
+///
+/// [text] is the run's own text, exactly as written between `:@` and `:@`;
+/// [style] is what the run *would* have been drawn with, including
+/// everything the surrounding markup asked for. Reading `style.fontSize` is
+/// what lets the language's own size vocabulary (`:++`, `:--`) reach
+/// content that is not text at all -- block alignment reaches it for free,
+/// since that moves the whole block, but size only arrives if the builder
+/// looks.
+///
+/// Returning `null` means "not mine": the run falls back to the default
+/// rendering. That is what keeps a builder from having to understand every
+/// payload it might meet, and what makes an unrecognized one degrade to
+/// readable text rather than disappearing.
+typedef ActionSpanBuilder =
+    InlineSpan? Function(BuildContext context, String text, TextStyle style);
+
+/// What a view does with the actionable runs (`:@...:@`) it renders.
+///
+/// Grouped rather than passed as loose callbacks so that [NodeBuilder]'s
+/// signature does not grow every time actions learn a new trick -- every
+/// builder except the one for `TextNode` only forwards these, and forwarding
+/// one value is less noise than forwarding several.
+class NaturalBlockActions {
+  /// Called with a run's own text when it is tapped. Ignored for a run that
+  /// [buildSpan] rendered, since that span owns its own gestures.
+  final OnActionTap? onTap;
+
+  /// Consulted first for every actionable run; `null`, or a builder that
+  /// returns `null`, leaves the run to the default rendering.
+  final ActionSpanBuilder? buildSpan;
+
+  const NaturalBlockActions({this.onTap, this.buildSpan});
+
+  /// No handling at all: actionable runs render styled but inert.
+  static const NaturalBlockActions none = NaturalBlockActions();
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is NaturalBlockActions &&
+        onTap == other.onTap &&
+        buildSpan == other.buildSpan;
+  }
+
+  @override
+  int get hashCode => Object.hash(onTap, buildSpan);
+}
 
 /// Maps [BlockNode] types to the [NodeBuilder] that renders them.
 ///
@@ -91,11 +141,11 @@ class NaturalBlockRegistry {
     BuildContext context,
     List<BlockNode> nodes,
     NaturalBlockTheme theme, [
-    OnActionTap? onActionTap,
+    NaturalBlockActions actions = NaturalBlockActions.none,
   ]) {
     return nodes.map((node) {
       final builder = _builders[node.runtimeType] ?? _buildFallback;
-      return builder(context, node, theme, this, onActionTap);
+      return builder(context, node, theme, this, actions);
     }).toList();
   }
 
@@ -104,7 +154,7 @@ class NaturalBlockRegistry {
     BlockNode node,
     NaturalBlockTheme theme,
     NaturalBlockRegistry registry,
-    OnActionTap? onActionTap,
+    NaturalBlockActions actions,
   ) {
     if (kDebugMode) {
       debugPrint(

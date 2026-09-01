@@ -43,18 +43,18 @@ class TextNodeView extends StatefulWidget {
   /// `sizeOffset` into a concrete [TextStyle].
   final NaturalBlockTheme theme;
 
-  /// Called with a span's own `text` when a span with
-  /// `TextSpanNode.isAction == true` is tapped. When `null`, actionable
-  /// spans still render with [NaturalBlockTheme.action] but get no tap
-  /// recognizer at all -- nothing is created, so there is nothing to
-  /// dispose.
-  final OnActionTap? onActionTap;
+  /// What to do with this line's actionable runs: replace them with a span
+  /// of the caller's own via [NaturalBlockActions.buildSpan], make them
+  /// tappable via [NaturalBlockActions.onTap], or neither -- in which case
+  /// they still render with [NaturalBlockTheme.action] but get no tap
+  /// recognizer at all, so there is nothing to dispose.
+  final NaturalBlockActions actions;
 
   const TextNodeView({
     super.key,
     required this.node,
     required this.theme,
-    this.onActionTap,
+    this.actions = NaturalBlockActions.none,
   });
 
   @override
@@ -97,12 +97,21 @@ class _TextNodeViewState extends State<TextNodeView> {
                 : null,
           );
 
+      if (span.isAction) {
+        // The caller gets first refusal on every actionable run. A span it
+        // returns replaces the default rendering completely -- text, style
+        // and gestures -- which is how a run can come out as something that
+        // is not text at all, an image say. `style` is handed over so the
+        // markup's own size vocabulary can still reach it.
+        final built = widget.actions.buildSpan?.call(context, span.text, style);
+        if (built != null) return built;
+      }
+
       GestureRecognizer? recognizer;
-      if (span.isAction && widget.onActionTap != null) {
-        final onActionTap = widget.onActionTap!;
+      final onTap = widget.actions.onTap;
+      if (span.isAction && onTap != null) {
         final text = span.text;
-        final tap = TapGestureRecognizer()
-          ..onTap = () => onActionTap(text);
+        final tap = TapGestureRecognizer()..onTap = () => onTap(text);
         _recognizers.add(tap);
         recognizer = tap;
       }
