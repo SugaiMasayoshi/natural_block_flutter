@@ -32,17 +32,31 @@ class NaturalBlockView extends StatelessWidget {
   /// override node rendering.
   final NaturalBlockRegistry registry;
 
+  /// Called when an actionable span (`TextSpanNode.isAction == true`,
+  /// written as `:@...:@` in markup) is tapped, with that span's own
+  /// `text`. Left `null` (the default), actionable spans still render with
+  /// `NaturalBlockTheme.action` but are not tappable. Neither the parser
+  /// nor this package ever opens a URL or otherwise interprets `text` --
+  /// deciding what it means is entirely this callback's responsibility.
+  final OnActionTap? onActionTap;
+
   const NaturalBlockView({
     super.key,
     required this.source,
     this.theme = const NaturalBlockTheme(),
     this.registry = NaturalBlockRegistry.defaults,
+    this.onActionTap,
   });
 
   @override
   Widget build(BuildContext context) {
     final columnNode = NaturalBlockParser().parse(source);
-    final children = registry.buildAll(context, columnNode.children, theme);
+    final children = registry.buildAll(
+      context,
+      columnNode.children,
+      theme,
+      onActionTap,
+    );
 
     return ColumnNodeView(align: columnNode.align, children: children);
   }

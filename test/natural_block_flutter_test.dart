@@ -141,7 +141,7 @@ void main() {
     ) async {
       final registry = NaturalBlockRegistry.defaults.register(
         TextNode,
-        (context, node, theme, registry) => const Placeholder(),
+        (context, node, theme, registry, onActionTap) => const Placeholder(),
       );
 
       await pump(tester, 'Hello world', registry: registry);

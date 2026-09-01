@@ -1,6 +1,8 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/widgets.dart';
 import 'package:natural_block/natural_block.dart';
 
+import '../registry/natural_block_registry.dart';
 import 'natural_block_theme.dart';
 
 /// Renders a [TextNode]'s [TextSpanNode] children as a single rich text
@@ -12,7 +14,14 @@ import 'natural_block_theme.dart';
 /// `SelectionArea` gets selectable, copyable text, including drags that
 /// cross cell and row boundaries. A directly-constructed [RichText] does
 /// not register with the selection machinery and would be unselectable.
-class TextNodeView extends StatelessWidget {
+///
+/// A [StatefulWidget] rather than stateless: a span with
+/// `TextSpanNode.isAction == true` needs a [TapGestureRecognizer] attached
+/// to its [TextSpan], and recognizers are disposable objects that must be
+/// torn down explicitly -- something a stateless build method has nowhere
+/// to do. The state rebuilds its recognizer list on every `build` (disposing
+/// the previous batch first) and disposes whatever's left in `dispose()`.
+class TextNodeView extends StatefulWidget {
   /// The node whose [TextNode.children] spans are rendered.
   final TextNode node;
 
@@ -20,25 +29,76 @@ class TextNodeView extends StatelessWidget {
   /// `sizeOffset` into a concrete [TextStyle].
   final NaturalBlockTheme theme;
 
-  const TextNodeView({super.key, required this.node, required this.theme});
+  /// Called with a span's own `text` when a span with
+  /// `TextSpanNode.isAction == true` is tapped. When `null`, actionable
+  /// spans still render with [NaturalBlockTheme.action] but get no tap
+  /// recognizer at all -- nothing is created, so there is nothing to
+  /// dispose.
+  final OnActionTap? onActionTap;
+
+  const TextNodeView({
+    super.key,
+    required this.node,
+    required this.theme,
+    this.onActionTap,
+  });
+
+  @override
+  State<TextNodeView> createState() => _TextNodeViewState();
+}
+
+class _TextNodeViewState extends State<TextNodeView> {
+  final List<TapGestureRecognizer> _recognizers = [];
+
+  @override
+  void dispose() {
+    _disposeRecognizers();
+    super.dispose();
+  }
+
+  void _disposeRecognizers() {
+    for (final recognizer in _recognizers) {
+      recognizer.dispose();
+    }
+    _recognizers.clear();
+  }
 
   @override
   Widget build(BuildContext context) {
-    final spans = node.children.map((span) {
-      final style = theme
+    // Rebuilt (and any previous recognizers replaced) on every build, not
+    // just in didUpdateWidget: a build can also be triggered by something
+    // that doesn't change the widget instance (e.g. an ambient
+    // InheritedWidget), and a stale recognizer bound to a stale
+    // `widget.onActionTap` would silently call the wrong callback.
+    _disposeRecognizers();
+
+    final spans = widget.node.children.map((span) {
+      final style = widget.theme
           .styleFor(span.color)
-          .merge(span.emphasis ? theme.emphasis : null)
+          .merge(span.emphasis ? widget.theme.emphasis : null)
+          .merge(span.isAction ? widget.theme.action : null)
           .copyWith(
             fontSize: span.sizeOffset != 0
                 ? _fontSizeFor(context, span.sizeOffset)
                 : null,
           );
-      return TextSpan(text: span.text, style: style);
+
+      GestureRecognizer? recognizer;
+      if (span.isAction && widget.onActionTap != null) {
+        final onActionTap = widget.onActionTap!;
+        final text = span.text;
+        final tap = TapGestureRecognizer()
+          ..onTap = () => onActionTap(text);
+        _recognizers.add(tap);
+        recognizer = tap;
+      }
+
+      return TextSpan(text: span.text, style: style, recognizer: recognizer);
     }).toList();
 
     return Text.rich(
       TextSpan(
-        style: DefaultTextStyle.of(context).style.merge(theme.base),
+        style: DefaultTextStyle.of(context).style.merge(widget.theme.base),
         children: spans,
       ),
     );
@@ -54,8 +114,11 @@ class TextNodeView extends StatelessWidget {
   /// [TextStyle] asserts against.
   double _fontSizeFor(BuildContext context, int sizeOffset) {
     final ambient =
-        DefaultTextStyle.of(context).style.fontSize ?? theme.baseFontSize;
-    final scaled = ambient + sizeOffset * theme.fontSizeStep;
-    return scaled < theme.minFontSize ? theme.minFontSize : scaled;
+        DefaultTextStyle.of(context).style.fontSize ??
+        widget.theme.baseFontSize;
+    final scaled = ambient + sizeOffset * widget.theme.fontSizeStep;
+    return scaled < widget.theme.minFontSize
+        ? widget.theme.minFontSize
+        : scaled;
   }
 }

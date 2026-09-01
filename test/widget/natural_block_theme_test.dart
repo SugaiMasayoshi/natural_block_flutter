@@ -38,8 +38,19 @@ void main() {
       expect(copy.success, theme.success);
       expect(copy.info, theme.info);
       expect(copy.emphasis, theme.emphasis);
+      expect(copy.action, theme.action);
       expect(copy.baseFontSize, theme.baseFontSize);
       expect(copy.minFontSize, theme.minFontSize);
+    });
+
+    test('replaces action when given', () {
+      const theme = NaturalBlockTheme();
+      final copy = theme.copyWith(
+        action: const TextStyle(color: Colors.pink),
+      );
+
+      expect(copy.action, const TextStyle(color: Colors.pink));
+      expect(copy.danger, theme.danger);
     });
 
     test('called with no arguments returns an equal copy', () {
@@ -63,6 +74,14 @@ void main() {
 
       expect(a, isNot(b));
     });
+
+    test('themes differing only in action are not equal', () {
+      const a = NaturalBlockTheme();
+      const b = NaturalBlockTheme(action: TextStyle(color: Colors.pink));
+
+      expect(a, isNot(b));
+      expect(a.hashCode, isNot(b.hashCode));
+    });
   });
 
   group('NaturalBlockTheme.fromColorScheme', () {
@@ -82,6 +101,14 @@ void main() {
 
       expect(theme.success.color, Colors.teal);
       expect(theme.info.color, Colors.indigo);
+    });
+
+    test('action picks up primary and is underlined', () {
+      const scheme = ColorScheme.light(primary: Colors.indigo);
+      final theme = NaturalBlockTheme.fromColorScheme(scheme);
+
+      expect(theme.action.color, Colors.indigo);
+      expect(theme.action.decoration, TextDecoration.underline);
     });
   });
 }

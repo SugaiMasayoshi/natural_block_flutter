@@ -26,6 +26,17 @@ class NaturalBlockTheme {
   /// `emphasis == true`.
   final TextStyle emphasis;
 
+  /// The style merged on top of a span's color style when the span has
+  /// `TextSpanNode.isAction == true` -- i.e. it was written inside `:@...:@`.
+  ///
+  /// This package never opens URLs, validates them, or otherwise interprets
+  /// an actionable span's text; it only renders the span so it *reads* as
+  /// tappable and attaches a tap recognizer when a caller supplies
+  /// `NaturalBlockView.onActionTap`. Deciding what the tap means -- open a
+  /// URL, scroll to a heading, resolve a mention -- is entirely up to the
+  /// consuming app.
+  final TextStyle action;
+
   /// The font size used when no ambient [DefaultTextStyle] provides one,
   /// i.e. the fallback base for [TextSpanNode.sizeOffset] scaling.
   final double baseFontSize;
@@ -51,6 +62,10 @@ class NaturalBlockTheme {
     this.success = const TextStyle(color: Colors.green),
     this.info = const TextStyle(color: Colors.blue),
     this.emphasis = const TextStyle(fontWeight: FontWeight.bold),
+    this.action = const TextStyle(
+      color: Colors.blue,
+      decoration: TextDecoration.underline,
+    ),
     this.baseFontSize = 14,
     this.fontSizeStep = 4,
     this.minFontSize = 1,
@@ -69,6 +84,14 @@ class NaturalBlockTheme {
   ///   requirements) to contrast against the scheme's surface, and using
   ///   two different roles keeps success and info visually distinct from
   ///   each other as well as from primary text.
+  /// - [action] also uses [ColorScheme.primary], underlined: `primary` is
+  ///   Material's own role for the app's principal interactive color (the
+  ///   one buttons and active controls use), so reusing it here makes
+  ///   actionable text read as tappable through the same color language the
+  ///   rest of a Material app already uses, rather than introducing a
+  ///   fourth, unrelated hue. It's the same role [info] uses -- info text
+  ///   isn't tappable, so the underline is what actually distinguishes an
+  ///   action from merely-informational text; sharing the color is fine.
   factory NaturalBlockTheme.fromColorScheme(
     ColorScheme scheme, {
     TextStyle base = const TextStyle(),
@@ -83,6 +106,10 @@ class NaturalBlockTheme {
       success: TextStyle(color: scheme.tertiary),
       info: TextStyle(color: scheme.primary),
       emphasis: emphasis,
+      action: TextStyle(
+        color: scheme.primary,
+        decoration: TextDecoration.underline,
+      ),
       baseFontSize: baseFontSize,
       fontSizeStep: fontSizeStep,
       minFontSize: minFontSize,
@@ -115,6 +142,7 @@ class NaturalBlockTheme {
     TextStyle? success,
     TextStyle? info,
     TextStyle? emphasis,
+    TextStyle? action,
     double? baseFontSize,
     double? fontSizeStep,
     double? minFontSize,
@@ -125,6 +153,7 @@ class NaturalBlockTheme {
       success: success ?? this.success,
       info: info ?? this.info,
       emphasis: emphasis ?? this.emphasis,
+      action: action ?? this.action,
       baseFontSize: baseFontSize ?? this.baseFontSize,
       fontSizeStep: fontSizeStep ?? this.fontSizeStep,
       minFontSize: minFontSize ?? this.minFontSize,
@@ -140,6 +169,7 @@ class NaturalBlockTheme {
         success == other.success &&
         info == other.info &&
         emphasis == other.emphasis &&
+        action == other.action &&
         baseFontSize == other.baseFontSize &&
         fontSizeStep == other.fontSizeStep &&
         minFontSize == other.minFontSize;
@@ -152,6 +182,7 @@ class NaturalBlockTheme {
     success,
     info,
     emphasis,
+    action,
     baseFontSize,
     fontSizeStep,
     minFontSize,

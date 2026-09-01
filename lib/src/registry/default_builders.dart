@@ -14,8 +14,14 @@ Widget buildRowNode(
   NaturalBlockNode node,
   NaturalBlockTheme theme,
   NaturalBlockRegistry registry,
+  OnActionTap? onActionTap,
 ) {
-  return RowNodeView(node: node as RowNode, theme: theme, registry: registry);
+  return RowNodeView(
+    node: node as RowNode,
+    theme: theme,
+    registry: registry,
+    onActionTap: onActionTap,
+  );
 }
 
 /// Default builder for [ColumnNode]: renders it via [ColumnNodeView], with
@@ -26,9 +32,15 @@ Widget buildColumnNode(
   NaturalBlockNode node,
   NaturalBlockTheme theme,
   NaturalBlockRegistry registry,
+  OnActionTap? onActionTap,
 ) {
   final column = node as ColumnNode;
-  final children = registry.buildAll(context, column.children, theme);
+  final children = registry.buildAll(
+    context,
+    column.children,
+    theme,
+    onActionTap,
+  );
   return ColumnNodeView(align: column.align, children: children);
 }
 
@@ -38,6 +50,11 @@ Widget buildTextNode(
   NaturalBlockNode node,
   NaturalBlockTheme theme,
   NaturalBlockRegistry registry,
+  OnActionTap? onActionTap,
 ) {
-  return TextNodeView(node: node as TextNode, theme: theme);
+  return TextNodeView(
+    node: node as TextNode,
+    theme: theme,
+    onActionTap: onActionTap,
+  );
 }

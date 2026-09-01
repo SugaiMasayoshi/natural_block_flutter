@@ -12,7 +12,15 @@ typedef NodeBuilder =
       NaturalBlockNode node,
       NaturalBlockTheme theme,
       NaturalBlockRegistry registry,
+      OnActionTap? onActionTap,
     );
+
+/// Called when an actionable span (`TextSpanNode.isAction == true`, written
+/// as `:@...:@` in `natural_block` markup) is tapped, with that span's own
+/// `text`. The parser and this package never interpret [text] -- deciding
+/// what it means (a URL to open, a section to jump to, a mention to
+/// resolve, ...) is entirely the caller's business.
+typedef OnActionTap = void Function(String text);
 
 /// Maps [NaturalBlockNode] types to the [NodeBuilder] that renders them.
 ///
@@ -71,11 +79,12 @@ class NaturalBlockRegistry {
   List<Widget> buildAll(
     BuildContext context,
     List<NaturalBlockNode> nodes,
-    NaturalBlockTheme theme,
-  ) {
+    NaturalBlockTheme theme, [
+    OnActionTap? onActionTap,
+  ]) {
     return nodes.map((node) {
       final builder = _builders[node.runtimeType] ?? _buildFallback;
-      return builder(context, node, theme, this);
+      return builder(context, node, theme, this, onActionTap);
     }).toList();
   }
 
@@ -84,6 +93,7 @@ class NaturalBlockRegistry {
     NaturalBlockNode node,
     NaturalBlockTheme theme,
     NaturalBlockRegistry registry,
+    OnActionTap? onActionTap,
   ) {
     if (kDebugMode) {
       debugPrint(

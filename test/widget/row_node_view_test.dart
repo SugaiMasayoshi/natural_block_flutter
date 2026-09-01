@@ -112,7 +112,7 @@ void main() {
       (tester) async {
         final customRegistry = NaturalBlockRegistry.defaults.register(
           ColumnNode,
-          (context, node, theme, registry) => const Placeholder(),
+          (context, node, theme, registry, onActionTap) => const Placeholder(),
         );
         final node = RowNode(
           children: [

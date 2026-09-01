@@ -87,7 +87,7 @@ void main() {
     ) async {
       final registry = NaturalBlockRegistry.defaults.register(
         TextNode,
-        (context, node, theme, registry) => const Placeholder(),
+        (context, node, theme, registry, onActionTap) => const Placeholder(),
       );
       final nodes = <NaturalBlockNode>[TextNode(children: [])];
 
@@ -103,7 +103,7 @@ void main() {
       (tester) async {
         final registry = NaturalBlockRegistry.defaults.register(
           ColumnNode,
-          (context, node, theme, registry) => const Placeholder(),
+          (context, node, theme, registry, onActionTap) => const Placeholder(),
         );
         final nodes = <NaturalBlockNode>[
           RowNode(

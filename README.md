@@ -57,11 +57,12 @@ class Example extends StatelessWidget {
 }
 ```
 
-`NaturalBlockView` takes three parameters:
+`NaturalBlockView` takes four parameters:
 
 * `source` (required) -- the markup text to parse and render.
 * `theme` -- a [`NaturalBlockTheme`](#naturalblocktheme) controlling how semantic colors, emphasis, and base text look. Defaults to `const NaturalBlockTheme()`.
 * `registry` -- a [`NaturalBlockRegistry`](#naturalblockregistry) controlling which widget renders each node type. Defaults to `NaturalBlockRegistry.defaults`.
+* `onActionTap` -- called with a span's own text when an [actionable span](#actionable-text) is tapped. Defaults to `null` (actionable spans render styled but aren't tappable).
 
 ### `NaturalBlockTheme`
 
@@ -74,6 +75,7 @@ const theme = NaturalBlockTheme(
   success: TextStyle(color: Colors.green),
   info: TextStyle(color: Colors.blue),
   emphasis: TextStyle(fontWeight: FontWeight.bold),
+  action: TextStyle(color: Colors.indigo, decoration: TextDecoration.underline),
 );
 
 NaturalBlockView(source: source, theme: theme);
@@ -98,6 +100,49 @@ NaturalBlockView(source: source, registry: registry);
 A `NodeBuilder` receives the node to render, the ambient theme, and the registry itself (so it can recurse into a node's own children, e.g. a `ColumnNode` builder rendering each of its children via `registry.buildAll`), and returns the widget for that node directly.
 
 Use `NaturalBlockRegistry.empty()` to start from nothing and register only the node types you care about, or `registerAll` to register several builders at once. The default builders (`buildRowNode`, `buildColumnNode`, `buildTextNode`) are exported too, so a custom builder can delegate back to the default for the cases it doesn't want to change.
+
+### Actionable text
+
+Text wrapped in `:@...:@` is parsed as *actionable* -- `TextSpanNode.isAction == true`:
+
+```dart
+const source = ':@https://example.com:@ 参照';
+```
+
+This package deliberately does not call it a "link". `natural_block` only records that a run of text is tappable; the run's own `text` is the payload, and what tapping it *means* -- opening a URL, jumping to a section, resolving a mention, running a command -- is entirely the consuming app's decision. Neither the parser nor this package ever opens a URL, validates one, or otherwise interprets the text; there is no `url_launcher` dependency here and never will be.
+
+Give `NaturalBlockView` an `onActionTap` callback to find out when an actionable span is tapped:
+
+```dart
+NaturalBlockView(
+  source: source,
+  onActionTap: (text) {
+    // `text` is exactly the actionable span's own text -- see the
+    // convention table below for the shapes it commonly takes.
+    if (text.startsWith('https://') || text.startsWith('http://')) {
+      // openUrl(text); -- e.g. via url_launcher, in your own app code.
+    } else {
+      // Any other shape is app-defined; ignore what you don't handle.
+    }
+  },
+);
+```
+
+Leaving `onActionTap` unset (the default, `null`) still renders actionable spans with `NaturalBlockTheme.action`'s style, but they get no tap recognizer at all -- they read as tappable but aren't.
+
+#### A convention for what the text means (non-normative)
+
+`natural_block` places no constraint on an actionable span's text. The following convention is not enforced by the parser or this package, but mirrors URI/fragment conventions most readers and authors already know, so it's a reasonable default if you don't already have one:
+
+| text | meaning |
+|---|---|
+| `https://...` | external URL -- open it |
+| `#name` | a target inside the same document |
+| `path#name` | a target in another document |
+| `@name` | a mention |
+| anything else | app-defined |
+
+Resolving any of this -- looking up `#name`, deciding what `@name` refers to, or anything else -- is entirely the app's responsibility; `natural_block` and `natural_block_flutter` only carry the text through.
 
 ## Additional information
 

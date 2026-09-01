@@ -70,6 +70,10 @@ const _samples = [
     '|<みかん=^12=>480|'
     '|<ぶどう=^1=>1280|',
   ),
+  _Sample(
+    'アクション可能なテキスト(:@...:@で囲む、下のサンプルではタップするとSnackBarを表示)',
+    ':@https://example.com/docs:@ を参照|:@#はじめに:@ にジャンプ',
+  ),
 ];
 
 class NaturalBlockDemoPage extends StatelessWidget {
@@ -112,7 +116,18 @@ class NaturalBlockDemoPage extends StatelessWidget {
                         border: Border.all(color: Theme.of(context).dividerColor),
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: NaturalBlockView(source: sample.source),
+                      // タップされたアクションのテキストをそのままSnackBarで表示する。
+                      // どう解釈する(URLを開く/セクションへ移動する等)かはアプリ側の
+                      // 責務であり、natural_block/natural_block_flutterはテキストを
+                      // 運ぶだけで一切解釈しない。
+                      child: NaturalBlockView(
+                        source: sample.source,
+                        onActionTap: (text) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('タップされたアクション: $text')),
+                          );
+                        },
+                      ),
                     ),
                   ],
                 );

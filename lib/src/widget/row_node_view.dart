@@ -24,17 +24,21 @@ class RowNodeView extends StatelessWidget {
   /// cell's own [ColumnNode] children contain.
   final NaturalBlockRegistry registry;
 
+  /// Forwarded to each cell -- see `NaturalBlockView.onActionTap`.
+  final OnActionTap? onActionTap;
+
   const RowNodeView({
     super.key,
     required this.node,
     required this.theme,
     required this.registry,
+    this.onActionTap,
   });
 
   @override
   Widget build(BuildContext context) {
     final cells = registry
-        .buildAll(context, node.children, theme)
+        .buildAll(context, node.children, theme, onActionTap)
         .map((cell) => Expanded(child: cell))
         .toList();
 
