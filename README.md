@@ -193,6 +193,29 @@ NaturalBlockView(
 
 Shipping the reference implementation anyway is the point: declining to interpret would not prevent dialects, it would guarantee them, with every app inventing its own spelling. `NaturalBlockImages.urlOf` exposes the convention so your own builder can reuse it and fall back to `NaturalBlockImages.builder` for the rest.
 
+##### Local files
+
+`NaturalBlockImages.builder` renders network URLs and declines everything else. Drawing a local file needs `Image.file`, and so `dart:io`, which does not exist on the web — taking that on here would cost this package its web support for a capability only some apps want. Supply it in your own builder instead:
+
+```dart
+onActionBuild: (context, text, style) {
+  final source = NaturalBlockImages.urlOf(text);
+  if (source != null &&
+      NaturalBlockImages.kindOf(source) == ImageSourceKind.file) {
+    return WidgetSpan(child: Image.file(File(source)));
+  }
+  return NaturalBlockImages.builder(context, text, style);
+},
+```
+
+The convention does not fork when you do this — it is still `img(...)`, and only the *resolution* differs — so unlike a new syntax, local file support cannot split the language.
+
+`NaturalBlockImages.kindOf` is provided because the classification has a trap in it: `Uri.parse` reads `C:\Users\a.png` as a URI **whose scheme is `c`**, so the obvious "does it have a scheme, then it's a URL" test mistakes every Windows path for one. It reads the string only — no `dart:io`, works on every platform.
+
+**Write Windows paths with forward slashes**: `img(C:/Users/you/a.png)`. Dart's `File` accepts them on Windows, and it avoids backslashes entirely — relevant because `\` escapes itself in the markup, so a UNC path has to be written `\\\\server` to survive as `\\server`.
+
+Note also that letting documents name local files lets them probe for one: a path that exists draws, one that does not falls back to text. One more reason this is the app's call.
+
 #### A convention for what the text means (non-normative)
 
 `natural_block` places no constraint on an actionable span's text. The following convention is not enforced by the parser or this package, but mirrors URI/fragment conventions most readers and authors already know, so it's a reasonable default if you don't already have one:

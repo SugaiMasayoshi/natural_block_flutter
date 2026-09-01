@@ -51,6 +51,68 @@ void main() {
     });
   });
 
+  group('classifying where a payload points', () {
+    const bs = r'\';
+
+    test('a URL is a network source', () {
+      for (final source in [
+        'https://example.com/a.png',
+        'http://example.com/a.png',
+        'https://e.com/x.png?id=you',
+      ]) {
+        expect(NaturalBlockImages.kindOf(source), ImageSourceKind.network);
+      }
+    });
+
+    test('a Windows path is a file, not a URL with scheme "c"', () {
+      // The trap this helper exists for. `Uri.parse` reads `C:\Users\a.png`
+      // as a URI whose scheme is `c`, so any "has a scheme, therefore a URL"
+      // test mistakes every Windows path for one.
+      expect(Uri.parse('C:${bs}Users${bs}a.png').scheme, 'c');
+
+      for (final source in [
+        'C:${bs}Users${bs}sugai${bs}a.png',
+        'C:/Users/sugai/a.png',
+        'D:${bs}photos${bs}My Pictures${bs}a.png',
+        'c:${bs}lower${bs}a.png',
+      ]) {
+        expect(
+          NaturalBlockImages.kindOf(source),
+          ImageSourceKind.file,
+          reason: '"$source" is a path',
+        );
+      }
+    });
+
+    test('UNC and POSIX absolute paths are files', () {
+      expect(
+        NaturalBlockImages.kindOf('$bs${bs}server${bs}share${bs}a.png'),
+        ImageSourceKind.file,
+      );
+      expect(
+        NaturalBlockImages.kindOf('/home/sugai/a.png'),
+        ImageSourceKind.file,
+      );
+    });
+
+    test('a file: URI is a file', () {
+      expect(
+        NaturalBlockImages.kindOf('file:///C:/Users/a.png'),
+        ImageSourceKind.file,
+      );
+    });
+
+    test('anything with no scheme and no root is left to the app', () {
+      for (final source in ['./assets/a.png', 'assets/a.png', 'a.png', '']) {
+        expect(
+          NaturalBlockImages.kindOf(source),
+          ImageSourceKind.relative,
+          reason: '"$source" is only resolvable by the app',
+        );
+      }
+    });
+  });
+
   group('as an ActionSpanBuilder', () {
     testWidgets('declining leaves the run as ordinary actionable text', (
       tester,
@@ -157,6 +219,59 @@ void main() {
         (bigger.image as NetworkImage).scale,
         lessThan((plain.image as NetworkImage).scale),
       );
+    });
+
+    testWidgets('a local path is declined rather than fetched', (
+      tester,
+    ) async {
+      // Drawing one needs `dart:io`, which the web does not have -- taking
+      // that on would cost this package its web support. Declining leaves a
+      // clean handoff to an app that wants it, and wastes no request in the
+      // meantime.
+      await tester.pumpWidget(
+        wrap(
+          const NaturalBlockView(
+            source: r':@img(C:\Users\sugai\a.png):@',
+            onActionBuild: NaturalBlockImages.builder,
+          ),
+        ),
+      );
+
+      expect(find.byType(Image), findsNothing);
+      expect(renderedSpans(tester).single.text, r'img(C:\Users\sugai\a.png)');
+    });
+
+    testWidgets('an app can render local paths by composing', (tester) async {
+      // The pattern the README documents. Note the convention is unchanged
+      // -- still `img(...)` -- so supporting local files invents no new
+      // spelling and cannot fork the language.
+      InlineSpan? withLocalFiles(
+        BuildContext context,
+        String text,
+        TextStyle style,
+      ) {
+        final source = NaturalBlockImages.urlOf(text);
+        if (source != null &&
+            NaturalBlockImages.kindOf(source) == ImageSourceKind.file) {
+          // Standing in for `Image.file`, which this test cannot use without
+          // pulling `dart:io` into a package that deliberately avoids it.
+          return WidgetSpan(child: Text('local:$source'));
+        }
+        return NaturalBlockImages.builder(context, text, style);
+      }
+
+      await tester.pumpWidget(
+        wrap(
+          NaturalBlockView(
+            source:
+                r':@img(C:\a.png):@ と :@img(https://example.com/b.png):@',
+            onActionBuild: withLocalFiles,
+          ),
+        ),
+      );
+
+      expect(find.text(r'local:C:\a.png'), findsOneWidget);
+      expect(find.byType(Image), findsOneWidget);
     });
 
     testWidgets('a builder of your own can fall back to this one', (

@@ -20,6 +20,28 @@ import 'package:flutter/widgets.dart';
 
 import '../registry/natural_block_registry.dart';
 
+/// Where an image payload points, as far as the string itself can say.
+///
+/// Advisory rather than a promise the target exists: what it settles is the
+/// classification, which is the part with a trap in it (see
+/// `NaturalBlockImages.kindOf`) and which every app would otherwise have to
+/// rediscover.
+enum ImageSourceKind {
+  /// A URL to fetch. The only kind `NaturalBlockImages.builder` renders.
+  network,
+
+  /// A path on the machine doing the rendering: a `file:` URI, a
+  /// drive-lettered or UNC Windows path, or a POSIX absolute path.
+  ///
+  /// Drawing one needs `dart:io`, which does not exist on the web, so it is
+  /// left to the app -- see `NaturalBlockImages.builder`.
+  file,
+
+  /// Neither of the above: a bundled asset, a path relative to wherever the
+  /// document came from, or something else only the app can resolve.
+  relative,
+}
+
 /// The reference rendering for actionable runs that name an image.
 ///
 /// Pass [builder] as `NaturalBlockView.onActionBuild` to draw the
@@ -65,19 +87,43 @@ abstract final class NaturalBlockImages {
   /// nested parentheses in a path survive intact.
   static final RegExp _pattern = RegExp(r'^img\((.+)\)$', dotAll: true);
 
-  /// An [ActionSpanBuilder] that renders `img(<url>)` and declines
-  /// everything else by returning `null`.
+  /// An [ActionSpanBuilder] that renders `img(<url>)` pointing at a
+  /// [ImageSourceKind.network] URL, and declines everything else by
+  /// returning `null`.
   ///
   /// Declining is what lets this compose: pass it on its own, or call it
   /// from a builder of your own that handles further payload shapes and
   /// falls back to this one.
+  ///
+  /// Local paths are declined rather than rendered, and deliberately so.
+  /// Drawing one needs `dart:io`, which does not exist on the web -- taking
+  /// that on here would cost this package its web support for a capability
+  /// only some apps want. An app that wants it supplies it, and because the
+  /// *convention* is unchanged (`img(...)` either way), doing so invents no
+  /// new spelling and so risks no dialect:
+  ///
+  /// ```dart
+  /// onActionBuild: (context, text, style) {
+  ///   final source = NaturalBlockImages.urlOf(text);
+  ///   if (source != null &&
+  ///       NaturalBlockImages.kindOf(source) == ImageSourceKind.file) {
+  ///     return WidgetSpan(child: Image.file(File(source)));
+  ///   }
+  ///   return NaturalBlockImages.builder(context, text, style);
+  /// }
+  /// ```
+  ///
+  /// Note that letting documents name local files lets them probe for one:
+  /// a path that exists draws, and one that does not falls back to text.
+  /// That is a reason to be deliberate about it, and another reason it is
+  /// the app's call rather than this package's default.
   static InlineSpan? builder(
     BuildContext context,
     String text,
     TextStyle style,
   ) {
     final url = urlOf(text);
-    if (url == null) return null;
+    if (url == null || kindOf(url) != ImageSourceKind.network) return null;
 
     // The size vocabulary arrives as a font size, which is meaningless to a
     // picture -- so it is read as a zoom instead: an unmarked run renders
@@ -111,6 +157,40 @@ abstract final class NaturalBlockImages {
   /// convention without re-deriving it.
   static String? urlOf(String text) =>
       _pattern.firstMatch(text.trim())?.group(1)?.trim();
+
+  /// A drive letter, as it appears at the very start of a Windows path.
+  ///
+  /// Checked before anything asks [Uri] what it thinks, because `Uri` reads
+  /// `C:\Users\a.png` as a URI whose *scheme is `c`*. Any "does it have a
+  /// scheme, then it's a URL" test therefore mistakes every Windows path
+  /// for one. Real URL schemes are two characters or more in practice, so a
+  /// single letter before the colon is a drive.
+  static final RegExp _driveLetter = RegExp(r'^[A-Za-z]:');
+
+  /// Classifies where [source] points -- the URL from [urlOf], usually.
+  ///
+  /// This exists because the classification has one trap in it (see
+  /// [_driveLetter]) that every app would otherwise have to rediscover.
+  /// It reads the string only: it opens nothing, fetches nothing, and needs
+  /// no `dart:io`, so it is available on every platform including the web.
+  static ImageSourceKind kindOf(String source) {
+    final trimmed = source.trim();
+    if (trimmed.isEmpty) return ImageSourceKind.relative;
+
+    // UNC share. Note that writing one in markup takes doubled backslashes
+    // (`\\\\server`), since a backslash escapes itself.
+    if (trimmed.startsWith(r'\\')) return ImageSourceKind.file;
+    if (_driveLetter.hasMatch(trimmed)) return ImageSourceKind.file;
+    if (trimmed.startsWith('/')) return ImageSourceKind.file;
+
+    final uri = Uri.tryParse(trimmed);
+    if (uri != null && uri.hasScheme) {
+      return uri.scheme == 'file'
+          ? ImageSourceKind.file
+          : ImageSourceKind.network;
+    }
+    return ImageSourceKind.relative;
+  }
 
   /// Turns the style's font size into an `Image.scale`.
   ///
