@@ -12,10 +12,10 @@ void main() {
     ),
   );
 
-  group('the img(...) convention', () {
+  group('the image(...) convention', () {
     test('a payload that names an image yields its URL', () {
       expect(
-        NaturalBlockImages.urlOf('img(https://example.com/a.png)'),
+        NaturalBlockImages.urlOf('image(https://example.com/a.png)'),
         'https://example.com/a.png',
       );
     });
@@ -24,28 +24,31 @@ void main() {
       // The read-receipt shape is a query string, and it must survive intact
       // -- this package never inspects or rewrites what it carries.
       expect(
-        NaturalBlockImages.urlOf('img(https://e.com/x.png?id=you&v=2)'),
+        NaturalBlockImages.urlOf('image(https://e.com/x.png?id=you&v=2)'),
         'https://e.com/x.png?id=you&v=2',
       );
       expect(
-        NaturalBlockImages.urlOf('img(https://e.com/a_(1).png)'),
+        NaturalBlockImages.urlOf('image(https://e.com/a_(1).png)'),
         'https://e.com/a_(1).png',
       );
     });
 
-    test('anything else is declined', () {
+    test('anything else is declined, `img` included', () {
       for (final text in [
         'https://example.com',
         '#section',
-        'img()',
-        'image(https://e.com/a.png)',
-        'img(https://e.com/a.png) trailing',
+        'image()',
+        // The abbreviation is not an alias: one convention, one spelling,
+        // or the thing meant to prevent dialects becomes one.
+        'img(https://e.com/a.png)',
+        'IMAGE(https://e.com/a.png)',
+        'image(https://e.com/a.png) trailing',
         '',
       ]) {
         expect(
           NaturalBlockImages.urlOf(text),
           isNull,
-          reason: '"$text" is not the img(...) convention',
+          reason: '"$text" is not the image(...) convention',
         );
       }
     });
@@ -146,7 +149,7 @@ void main() {
       await tester.pumpWidget(
         wrap(
           const NaturalBlockView(
-            source: ':@img(https://example.com/a.png):@',
+            source: ':@image(https://example.com/a.png):@',
             onActionBuild: NaturalBlockImages.builder,
           ),
         ),
@@ -170,12 +173,12 @@ void main() {
       // tracking pixel and the reader was never asked.
       await tester.pumpWidget(
         wrap(
-          const NaturalBlockView(source: ':@img(https://example.com/a.png):@'),
+          const NaturalBlockView(source: ':@image(https://example.com/a.png):@'),
         ),
       );
 
       expect(find.byType(Image), findsNothing);
-      expect(renderedSpans(tester).single.text, 'img(https://example.com/a.png)');
+      expect(renderedSpans(tester).single.text, 'image(https://example.com/a.png)');
     });
 
     testWidgets('the size vocabulary reaches the image', (tester) async {
@@ -197,7 +200,7 @@ void main() {
       await tester.pumpWidget(
         wrap(
           const NaturalBlockView(
-            source: ':@img(https://example.com/a.png):@',
+            source: ':@image(https://example.com/a.png):@',
             onActionBuild: NaturalBlockImages.builder,
           ),
         ),
@@ -207,7 +210,7 @@ void main() {
       await tester.pumpWidget(
         wrap(
           const NaturalBlockView(
-            source: ':++:@img(https://example.com/a.png):@',
+            source: ':++:@image(https://example.com/a.png):@',
             onActionBuild: NaturalBlockImages.builder,
           ),
         ),
@@ -231,19 +234,19 @@ void main() {
       await tester.pumpWidget(
         wrap(
           const NaturalBlockView(
-            source: r':@img(C:\Users\sugai\a.png):@',
+            source: r':@image(C:\Users\sugai\a.png):@',
             onActionBuild: NaturalBlockImages.builder,
           ),
         ),
       );
 
       expect(find.byType(Image), findsNothing);
-      expect(renderedSpans(tester).single.text, r'img(C:\Users\sugai\a.png)');
+      expect(renderedSpans(tester).single.text, r'image(C:\Users\sugai\a.png)');
     });
 
     testWidgets('an app can render local paths by composing', (tester) async {
       // The pattern the README documents. Note the convention is unchanged
-      // -- still `img(...)` -- so supporting local files invents no new
+      // -- still `image(...)` -- so supporting local files invents no new
       // spelling and cannot fork the language.
       InlineSpan? withLocalFiles(
         BuildContext context,
@@ -264,7 +267,7 @@ void main() {
         wrap(
           NaturalBlockView(
             source:
-                r':@img(C:\a.png):@ と :@img(https://example.com/b.png):@',
+                r':@image(C:\a.png):@ と :@image(https://example.com/b.png):@',
             onActionBuild: withLocalFiles,
           ),
         ),
@@ -290,7 +293,7 @@ void main() {
       await tester.pumpWidget(
         wrap(
           NaturalBlockView(
-            source: ':@user(alice):@ and :@img(https://example.com/a.png):@',
+            source: ':@user(alice):@ and :@image(https://example.com/a.png):@',
             onActionBuild: mine,
           ),
         ),

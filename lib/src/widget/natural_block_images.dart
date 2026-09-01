@@ -1,12 +1,14 @@
 // 【解説】[番外2] 画像の参照実装。既定では無効で、アプリが1行で有効にする。
 // 【解説】
-// 【解説】 言語に画像の構文を足していないのが要点。:@img(url):@ はただの
-// 【解説】 アクションなので、これを知らない実装では img(https://...) という
+// 【解説】 言語に画像の構文を足していないのが要点。:@image(url):@ はただの
+// 【解説】 アクションなので、これを知らない実装では image(https://...) という
 // 【解説】 読めるテキストに劣化する。新しい記号を1つ消費する価値はないと判断した。
 // 【解説】
 // 【解説】 それでも「解釈しない」で済ませずパッケージが参照実装を持つのは、
 // 【解説】 方言対策。解釈を拒んでも方言は防げず、むしろ各アプリが img(...) や
-// 【解説】 image:... を勝手に決めて確実に乱立する。動くものを1つ置くほうが効く。
+// 【解説】 image:... や !url を勝手に決めて確実に乱立する。動くものを1つ置くほうが効く。
+// 【解説】 綴りを image に統一し img を別名として受けないのも同じ理由。
+// 【解説】 2通りある状態こそが、この慣習が防ごうとしている方言そのものなので。
 // 【解説】 加えて :++ が画像に届くことを保証できるのも、こちらが描く場合だけ。
 // 【解説】 寄せはブロック単位なので何もしなくても届くが、サイズはビルダーが
 // 【解説】 sizeOffset を読まないと効かないため、運任せにしたくない。
@@ -45,7 +47,7 @@ enum ImageSourceKind {
 /// The reference rendering for actionable runs that name an image.
 ///
 /// Pass [builder] as `NaturalBlockView.onActionBuild` to draw the
-/// conventional `img(<url>)` payload as an actual image:
+/// conventional `image(<url>)` payload as an actual image:
 ///
 /// ```dart
 /// NaturalBlockView(
@@ -56,9 +58,9 @@ enum ImageSourceKind {
 ///
 /// ## Why this ships here, and why it is off until you ask
 ///
-/// The language has no image syntax and gains none: `:@img(...):@` is an
+/// The language has no image syntax and gains none: `:@image(...):@` is an
 /// ordinary actionable run, so an implementation that has never heard of
-/// images still shows `img(https://...)` -- readable text a person can act
+/// images still shows `image(https://...)` -- readable text a person can act
 /// on -- rather than failing to parse.
 ///
 /// Providing the reference interpretation anyway is the point. Declining to
@@ -80,14 +82,20 @@ enum ImageSourceKind {
 /// disclosure decision belonging to the app, not to a markup renderer. This
 /// package cannot tell the two apart, because it never interprets the URL.
 abstract final class NaturalBlockImages {
-  /// Matches the conventional payload `img(<url>)`, capturing the URL.
+  /// Matches the conventional payload `image(<url>)`, capturing the URL.
   ///
   /// Anchored and non-greedy about nothing in particular: the URL is
   /// whatever sits between the outermost parentheses, so query strings and
   /// nested parentheses in a path survive intact.
-  static final RegExp _pattern = RegExp(r'^img\((.+)\)$', dotAll: true);
+  /// Spelled out rather than abbreviated, and `img` is deliberately *not*
+  /// accepted as an alias. The payload's job is to be readable when nothing
+  /// renders it, and `img` is borrowed HTML jargon; there is also no
+  /// scarcity here to buy the two characters back, unlike the single-symbol
+  /// markers. Accepting both spellings would be the dialect this convention
+  /// exists to prevent.
+  static final RegExp _pattern = RegExp(r'^image\((.+)\)$', dotAll: true);
 
-  /// An [ActionSpanBuilder] that renders `img(<url>)` pointing at a
+  /// An [ActionSpanBuilder] that renders `image(<url>)` pointing at a
   /// [ImageSourceKind.network] URL, and declines everything else by
   /// returning `null`.
   ///
@@ -99,7 +107,7 @@ abstract final class NaturalBlockImages {
   /// Drawing one needs `dart:io`, which does not exist on the web -- taking
   /// that on here would cost this package its web support for a capability
   /// only some apps want. An app that wants it supplies it, and because the
-  /// *convention* is unchanged (`img(...)` either way), doing so invents no
+  /// *convention* is unchanged (`image(...)` either way), doing so invents no
   /// new spelling and so risks no dialect:
   ///
   /// ```dart
@@ -152,7 +160,7 @@ abstract final class NaturalBlockImages {
     );
   }
 
-  /// The URL inside a conventional `img(<url>)` payload, or `null` if [text]
+  /// The URL inside a conventional `image(<url>)` payload, or `null` if [text]
   /// is not one -- exposed so an app writing its own builder can reuse the
   /// convention without re-deriving it.
   static String? urlOf(String text) =>

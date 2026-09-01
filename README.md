@@ -178,13 +178,15 @@ The `style` you receive is what the span *would* have been drawn with, including
 
 #### Images
 
-There is no image syntax, and there is not going to be one. An image is written as an ordinary actionable span using the conventional payload `img(<url>)`, so an implementation that has never heard of images still shows `img(https://...)` — readable text — instead of failing to parse.
+There is no image syntax, and there is not going to be one. An image is written as an ordinary actionable span using the conventional payload `image(<url>)`, so an implementation that has never heard of images still shows `image(https://...)` — readable text — instead of failing to parse.
+
+The word is spelled out, and `img` is deliberately **not** accepted as an alias. What the reader sees when nothing renders the payload is the whole point of the convention, and `img` is borrowed HTML jargon rather than a word; there is also no scarcity here to buy the two characters back, unlike the single-character markers. Two accepted spellings would be exactly the dialect this convention exists to prevent — so if the payload convention grows (`video(...)`, `user(...)`), the rule is simply to use the word.
 
 `NaturalBlockImages.builder` is the reference rendering for that convention:
 
 ```dart
 NaturalBlockView(
-  source: ':@img(https://example.com/a.png):@',
+  source: ':@image(https://example.com/a.png):@',
   onActionBuild: NaturalBlockImages.builder,
 );
 ```
@@ -208,11 +210,11 @@ onActionBuild: (context, text, style) {
 },
 ```
 
-The convention does not fork when you do this — it is still `img(...)`, and only the *resolution* differs — so unlike a new syntax, local file support cannot split the language.
+The convention does not fork when you do this — it is still `image(...)`, and only the *resolution* differs — so unlike a new syntax, local file support cannot split the language.
 
 `NaturalBlockImages.kindOf` is provided because the classification has a trap in it: `Uri.parse` reads `C:\Users\a.png` as a URI **whose scheme is `c`**, so the obvious "does it have a scheme, then it's a URL" test mistakes every Windows path for one. It reads the string only — no `dart:io`, works on every platform.
 
-**Write Windows paths with forward slashes**: `img(C:/Users/you/a.png)`. Dart's `File` accepts them on Windows, and it avoids backslashes entirely — relevant because `\` escapes itself in the markup, so a UNC path has to be written `\\\\server` to survive as `\\server`.
+**Write Windows paths with forward slashes**: `image(C:/Users/you/a.png)`. Dart's `File` accepts them on Windows, and it avoids backslashes entirely — relevant because `\` escapes itself in the markup, so a UNC path has to be written `\\\\server` to survive as `\\server`.
 
 Note also that letting documents name local files lets them probe for one: a path that exists draws, one that does not falls back to text. One more reason this is the app's call.
 
@@ -226,10 +228,10 @@ Note also that letting documents name local files lets them probe for one: a pat
 | `#name` | a target inside the same document |
 | `path#name` | a target in another document |
 | `@name` | a mention |
-| `img(<url>)` | an image -- see [Images](#images) |
+| `image(<url>)` | an image -- see [Images](#images) |
 | anything else | app-defined |
 
-Whichever shapes you use, **keep the payload human-readable**. That is what makes actions a safe place to extend the language at all: an implementation that does not recognise a payload still renders it as text, so `img(https://example.com/a.png)` degrades into something a person can read and act on, while an opaque identifier would degrade into nothing useful. Note that a span you replace via `onActionBuild` gives up that safety net *within your own app* too -- a `WidgetSpan` copies as `￼`, not as the text that named it.
+Whichever shapes you use, **keep the payload human-readable**. That is what makes actions a safe place to extend the language at all: an implementation that does not recognise a payload still renders it as text, so `image(https://example.com/a.png)` degrades into something a person can read and act on, while an opaque identifier would degrade into nothing useful. Note that a span you replace via `onActionBuild` gives up that safety net *within your own app* too -- a `WidgetSpan` copies as `￼`, not as the text that named it.
 
 Resolving any of this -- looking up `#name`, deciding what `@name` refers to, or anything else -- is entirely the app's responsibility; `natural_block` and `natural_block_flutter` only carry the text through.
 

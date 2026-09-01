@@ -96,15 +96,15 @@ const _samples = [
     '|~商品=価格|りんご=150|~合計=150',
   ),
   _Sample(
-    '画像(構文の追加なし、img(url)というアクションの慣習)\n'
+    '画像(構文の追加なし、image(url)というアクションの慣習)\n'
     'このアプリは onActionBuild を渡しているので描画される。'
     '渡さなければ読めるテキストのままで通信も起きない',
-    ':@img(https://flutter.github.io/assets-for-api-docs/assets/widgets/owl.jpg):@',
+    ':@image(https://flutter.github.io/assets-for-api-docs/assets/widgets/owl.jpg):@',
   ),
   _Sample(
     '画像にも :++ と寄せが効く(左が標準、右が3段階拡大)',
-    '|^:@img(https://flutter.github.io/assets-for-api-docs/assets/widgets/owl-2.jpg):@'
-    '=:+++:@img(https://flutter.github.io/assets-for-api-docs/assets/widgets/owl-2.jpg):@|',
+    '|^:@image(https://flutter.github.io/assets-for-api-docs/assets/widgets/owl-2.jpg):@'
+    '=:+++:@image(https://flutter.github.io/assets-for-api-docs/assets/widgets/owl-2.jpg):@|',
   ),
 ];
 
@@ -155,7 +155,7 @@ class NaturalBlockDemoPage extends StatelessWidget {
                       child: NaturalBlockView(
                         source: sample.source,
                         // 画像はここで明示的に有効化している。渡さなければ
-                        // img(...) は読めるテキストのまま描かれ、通信も起きない。
+                        // image(...) は読めるテキストのまま描かれ、通信も起きない。
                         onActionBuild: NaturalBlockImages.builder,
                         onActionTap: (text) {
                           ScaffoldMessenger.of(context).showSnackBar(

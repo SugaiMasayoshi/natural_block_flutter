@@ -56,7 +56,7 @@ class NaturalBlockView extends StatelessWidget {
   ///
   /// Consulted for every actionable span before the default rendering, and
   /// returning `null` for a span leaves that span to the default. Pass
-  /// `NaturalBlockImages.builder` to draw the conventional `img(<url>)`
+  /// `NaturalBlockImages.builder` to draw the conventional `image(<url>)`
   /// payload as an actual image; note that doing so lets a document fetch
   /// from a third party, which is why nothing here is enabled by default.
   ///
