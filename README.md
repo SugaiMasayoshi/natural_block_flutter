@@ -44,7 +44,18 @@ Because a table is sized to its content rather than filling the width, it can be
 
 * `tableCellPadding` -- space between a cell's edge and its text. Defaults to `EdgeInsets.symmetric(horizontal: 8, vertical: 4)`.
 * `tableBorder` -- rules drawn around and between rows and columns. Defaults to hairlines on every edge, outer frame included: a table is the one construct with a declared beginning and end, so a frame states something the source actually says. Pass `TableBorder.symmetric(inside: ...)` for rules without the surrounding box, or `null` for none.
-* `tableStripe` -- a background painted on every other row, starting with the second. Off by default: striping and rules solve the same problem, so both at once is usually louder than it is legible.
+* `tableStripe` -- a background painted on every other row, starting with the second. Off by default.
+
+To band a table's rows instead of ruling them, use `NaturalBlockTheme.fromColorScheme(scheme, striped: true)` (or `fromContext(context, striped: true)`), which sets the band and drops the horizontal rules, keeping the vertical ones and the frame:
+
+```dart
+NaturalBlockView(
+  source: source,
+  theme: NaturalBlockTheme.fromContext(context, striped: true),
+);
+```
+
+Striping is offered there rather than on the default constructor because it is only *safe* there: a band has to be darker than the surface in a light theme and lighter in a dark one, so no single constant can serve both. A fixed translucent black moves a light surface by about ten steps per channel but a dark one by one — invisible. Derived from the scheme's `surfaceContainerHigh`, it reads correctly either way.
 
 ## Getting started
 

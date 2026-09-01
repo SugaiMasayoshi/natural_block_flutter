@@ -145,6 +145,14 @@ class NaturalBlockTheme {
   ///   fourth, unrelated hue. It's the same role [info] uses -- info text
   ///   isn't tappable, so the underline is what actually distinguishes an
   ///   action from merely-informational text; sharing the color is fine.
+  ///
+  /// Set [striped] to band a table's rows instead of ruling them. This is
+  /// offered here and not on the default constructor because it is only
+  /// safe here: banding needs a color *darker* than the surface in a light
+  /// theme and *lighter* in a dark one, so no single constant can serve
+  /// both. A fixed translucent black shifts a light surface by about ten
+  /// steps per channel but a dark one by one -- invisible. Derived from
+  /// [ColorScheme.surfaceContainerHigh], it reads correctly either way.
   factory NaturalBlockTheme.fromColorScheme(
     ColorScheme scheme, {
     TextStyle base = const TextStyle(),
@@ -156,7 +164,9 @@ class NaturalBlockTheme {
       horizontal: 8,
       vertical: 4,
     ),
+    bool striped = false,
   }) {
+    final rule = BorderSide(color: scheme.outlineVariant);
     return NaturalBlockTheme(
       base: base,
       danger: TextStyle(color: scheme.error),
@@ -171,10 +181,20 @@ class NaturalBlockTheme {
       fontSizeStep: fontSizeStep,
       minFontSize: minFontSize,
       tableCellPadding: tableCellPadding,
-      tableBorder: TableBorder.symmetric(
-        inside: BorderSide(color: scheme.outlineVariant),
-        outside: BorderSide(color: scheme.outlineVariant),
-      ),
+      // Striping replaces the horizontal rules rather than joining them:
+      // both answer the same question -- which cells belong to one row --
+      // so drawing both is noise. The vertical rules and the outer frame
+      // stay either way, since neither is doing that job.
+      tableBorder: striped
+          ? TableBorder(
+              top: rule,
+              right: rule,
+              bottom: rule,
+              left: rule,
+              verticalInside: rule,
+            )
+          : TableBorder.symmetric(inside: rule, outside: rule),
+      tableStripe: striped ? scheme.surfaceContainerHigh : null,
     );
   }
 
@@ -186,8 +206,13 @@ class NaturalBlockTheme {
   /// nothing here is provided through an [InheritedWidget]. This builds a
   /// brand-new theme from the ambient [ColorScheme] on every call, so pass
   /// the result down explicitly rather than expecting a lookup.
-  factory NaturalBlockTheme.fromContext(BuildContext context) =>
-      NaturalBlockTheme.fromColorScheme(Theme.of(context).colorScheme);
+  factory NaturalBlockTheme.fromContext(
+    BuildContext context, {
+    bool striped = false,
+  }) => NaturalBlockTheme.fromColorScheme(
+    Theme.of(context).colorScheme,
+    striped: striped,
+  );
 
   /// Returns the style for [color]; [SemanticColor.none] returns [base].
   TextStyle styleFor(SemanticColor color) => switch (color) {

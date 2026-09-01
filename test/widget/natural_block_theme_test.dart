@@ -110,5 +110,91 @@ void main() {
       expect(theme.action.color, Colors.indigo);
       expect(theme.action.decoration, TextDecoration.underline);
     });
+
+    group('striped tables', () {
+      ColorScheme schemeFor(Brightness brightness) => ColorScheme.fromSeed(
+        seedColor: Colors.deepPurple,
+        brightness: brightness,
+      );
+
+      /// Perceived lightness, enough to tell "darker than" from "lighter
+      /// than" without pulling in a color-science dependency.
+      double luminance(Color color) => color.computeLuminance();
+
+      test('striping is off unless asked for', () {
+        expect(
+          NaturalBlockTheme.fromColorScheme(schemeFor(Brightness.light))
+              .tableStripe,
+          isNull,
+        );
+        expect(const NaturalBlockTheme().tableStripe, isNull);
+      });
+
+      test('the band darkens a light surface and lightens a dark one', () {
+        // The entire reason this lives on `fromColorScheme` and not on the
+        // default constructor: the band has to move in opposite directions
+        // depending on the theme, so no single constant could serve both.
+        // A fixed translucent black shifts a light surface visibly and a
+        // dark one by about one step per channel -- invisible.
+        for (final brightness in Brightness.values) {
+          final scheme = schemeFor(brightness);
+          final stripe = NaturalBlockTheme.fromColorScheme(
+            scheme,
+            striped: true,
+          ).tableStripe!;
+
+          final surfaceLuminance = luminance(scheme.surface);
+          final stripeLuminance = luminance(stripe);
+
+          if (brightness == Brightness.light) {
+            expect(
+              stripeLuminance,
+              lessThan(surfaceLuminance),
+              reason: 'a light theme needs a darker band',
+            );
+          } else {
+            expect(
+              stripeLuminance,
+              greaterThan(surfaceLuminance),
+              reason: 'a dark theme needs a lighter band',
+            );
+          }
+          expect(
+            (stripeLuminance - surfaceLuminance).abs(),
+            greaterThan(0.005),
+            reason: 'the band has to actually be visible in $brightness',
+          );
+        }
+      });
+
+      test('striping replaces the horizontal rules but keeps the rest', () {
+        // Both answer "which cells belong to one row", so drawing both is
+        // noise; the vertical rules and the frame are doing another job.
+        final theme = NaturalBlockTheme.fromColorScheme(
+          schemeFor(Brightness.light),
+          striped: true,
+        );
+        final border = theme.tableBorder!;
+
+        expect(border.horizontalInside.style, BorderStyle.none);
+        expect(border.verticalInside.style, BorderStyle.solid);
+        for (final side in [
+          border.top,
+          border.bottom,
+          border.left,
+          border.right,
+        ]) {
+          expect(side.style, BorderStyle.solid);
+        }
+      });
+
+      test('unstriped keeps the horizontal rules', () {
+        final border = NaturalBlockTheme.fromColorScheme(
+          schemeFor(Brightness.light),
+        ).tableBorder!;
+
+        expect(border.horizontalInside.style, BorderStyle.solid);
+      });
+    });
   });
 }
