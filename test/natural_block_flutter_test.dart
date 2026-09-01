@@ -176,6 +176,40 @@ void main() {
       },
     );
 
+    testWidgets('a line containing a WidgetSpan still registers', (
+      tester,
+    ) async {
+      // A span a caller builds -- an image, say -- becomes a WidgetSpan,
+      // which splits the paragraph's selection into segments around it.
+      // That is the likeliest place a drag across a line breaks, and the
+      // other selection tests here use plain text only.
+      await tester.pumpWidget(
+        MaterialApp(
+          home: SelectionArea(
+            child: NaturalBlockView(
+              source: 'before :@boxed:@ after',
+              onActionBuild: (context, text, style, theme) => WidgetSpan(
+                alignment: PlaceholderAlignment.middle,
+                child: SizedBox(width: 20, height: 10),
+              ),
+            ),
+          ),
+        ),
+      );
+
+      expect(tester.takeException(), isNull);
+
+      final text = tester.widget<RichText>(find.byType(RichText));
+      expect(text.selectionRegistrar, isNotNull);
+      // The placeholder shows up as U+FFFC, so a copied selection loses the
+      // text that named it -- the cost of replacing a run, noted in the docs.
+      expect(text.text.toPlainText(), contains('￼'));
+      expect(
+        text.text.toPlainText(includePlaceholders: false),
+        'before  after',
+      );
+    });
+
     testWidgets('without a SelectionArea nothing registers for selection', (
       tester,
     ) async {

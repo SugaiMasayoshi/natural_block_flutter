@@ -9,6 +9,13 @@ import '../rendered_spans.dart';
 void main() {
   const theme = NaturalBlockTheme();
 
+  /// A single-line cell, the shape the parser produces.
+  ColumnNode cell(String text) => ColumnNode(
+    children: [
+      TextNode(children: [TextSpanNode(text: text)]),
+    ],
+  );
+
   /// A fixed ambient font size, so measured geometry is about layout rather
   /// than about whatever size the test harness happens to default to.
   Widget wrap(Widget child) => MaterialApp(
@@ -197,6 +204,76 @@ void main() {
       final rows = tester.widget<Table>(find.byType(Table)).children;
       expect(rows[0].decoration, isNull, reason: 'the first row is unpainted');
       expect(rows[1].decoration, isNotNull);
+    });
+  });
+
+  group('shapes a consumer can build by hand', () {
+    // The parser guarantees every row has the same cell count, but
+    // TableNodeView is exported, so a hand-built node can violate that.
+    // These pin what happens rather than leaving it to be discovered.
+    testWidgets('a one-row table renders and is never striped', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        wrap(
+          const NaturalBlockView(
+            source: '|~only=row|',
+            theme: NaturalBlockTheme(tableStripe: Color(0xFFEEEEEE)),
+          ),
+        ),
+      );
+
+      final table = tester.widget<Table>(find.byType(Table));
+      expect(table.children, hasLength(1));
+      expect(
+        table.children.single.decoration,
+        isNull,
+        reason: 'banding starts at the second row, so one row is unpainted',
+      );
+    });
+
+    testWidgets('a one-column table renders', (tester) async {
+      // Not reachable from markup -- a block with no `=` never becomes a row
+      // -- but constructible, so it should not fall over.
+      await tester.pumpWidget(
+        wrap(
+          TableNodeView(
+            node: TableNode(
+              children: [
+                RowNode(children: [cell('only')]),
+              ],
+            ),
+            theme: theme,
+            registry: NaturalBlockRegistry.defaults,
+          ),
+        ),
+      );
+
+      expect(tester.takeException(), isNull);
+      expect(find.byType(Table), findsOneWidget);
+    });
+
+    testWidgets('ragged rows fail loudly rather than rendering wrong', (
+      tester,
+    ) async {
+      // Flutter's Table asserts on this, which is exactly why the parser
+      // ends a table at a row of a different width instead of trying.
+      await tester.pumpWidget(
+        wrap(
+          TableNodeView(
+            node: TableNode(
+              children: [
+                RowNode(children: [cell('a'), cell('b')]),
+                RowNode(children: [cell('c')]),
+              ],
+            ),
+            theme: theme,
+            registry: NaturalBlockRegistry.defaults,
+          ),
+        ),
+      );
+
+      expect(tester.takeException(), isNotNull);
     });
   });
 
