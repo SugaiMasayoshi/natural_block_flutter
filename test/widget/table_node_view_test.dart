@@ -146,7 +146,20 @@ void main() {
       await tester.pumpWidget(
         wrap(const NaturalBlockView(source: '|~A=B|C=D|')),
       );
-      expect(tester.widget<Table>(find.byType(Table)).border, isNotNull);
+      final border = tester.widget<Table>(find.byType(Table)).border!;
+      // A frame on every edge, not just rules between cells: a table is the
+      // one construct with a declared beginning and end, so an outer box
+      // states something the source actually says.
+      for (final side in [
+        border.top,
+        border.bottom,
+        border.left,
+        border.right,
+        border.horizontalInside,
+        border.verticalInside,
+      ]) {
+        expect(side.style, BorderStyle.solid);
+      }
 
       await tester.pumpWidget(
         wrap(

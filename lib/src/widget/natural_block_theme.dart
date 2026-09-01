@@ -73,11 +73,18 @@ class NaturalBlockTheme {
   /// say anything about the space around it.
   final EdgeInsets tableCellPadding;
 
-  /// Rules drawn between a table's rows and columns, or `null` for none.
+  /// Rules drawn around and between a table's rows and columns, or `null`
+  /// for none.
   ///
-  /// Defaults to hairlines *inside* the table only, with no outer frame:
-  /// the rules are there to help the eye track a row across columns, and a
-  /// surrounding box would assert a boundary the language never stated.
+  /// Defaults to hairlines on every edge, outer frame included. A table is
+  /// the one construct in this language with a declared beginning and end
+  /// (`|~` ... `|~`), so a frame states something the source actually says
+  /// -- and it is what separates a table from the prose above and below it
+  /// now that the table is sized to its content rather than to the page.
+  ///
+  /// For rules between cells but no surrounding box, pass
+  /// `TableBorder.symmetric(inside: BorderSide(...))`; for no rules at all,
+  /// pass `null`.
   final TableBorder? tableBorder;
 
   /// Background painted on every other row of a table, starting with the
@@ -112,6 +119,7 @@ class NaturalBlockTheme {
     ),
     this.tableBorder = const TableBorder.symmetric(
       inside: BorderSide(color: Color(0x1F000000)),
+      outside: BorderSide(color: Color(0x1F000000)),
     ),
     this.tableStripe,
   });
@@ -165,6 +173,7 @@ class NaturalBlockTheme {
       tableCellPadding: tableCellPadding,
       tableBorder: TableBorder.symmetric(
         inside: BorderSide(color: scheme.outlineVariant),
+        outside: BorderSide(color: scheme.outlineVariant),
       ),
     );
   }

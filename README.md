@@ -2,7 +2,7 @@
 
 Flutter widgets that render the AST produced by [`natural_block`](https://github.com/SugaiMasayoshi/natural_block), a lightweight markup language for structured text layout with semantic decoration.
 
-`natural_block` does the parsing; this package turns its `ColumnNode` / `RowNode` / `TextNode` / `TextSpanNode` tree into `Column`, `Row`, and `RichText` widgets -- with your own colors, and your own widgets substituted per node type if you want them.
+`natural_block` does the parsing; this package turns its `DocumentNode` / `ColumnNode` / `RowNode` / `TableNode` / `TextNode` / `TextSpanNode` tree into `Column`, `Row`, `Table`, and `RichText` widgets -- with your own colors, and your own widgets substituted per node type if you want them.
 
 ## A taste of the syntax
 
@@ -43,7 +43,7 @@ const source = '|~商品=>価格|'
 Because a table is sized to its content rather than filling the width, it can be positioned: `|~^` centers it. And because its columns touch, a table needs spacing and rules that the decoration syntax cannot express -- `NaturalBlockTheme` supplies them:
 
 * `tableCellPadding` -- space between a cell's edge and its text. Defaults to `EdgeInsets.symmetric(horizontal: 8, vertical: 4)`.
-* `tableBorder` -- rules drawn between rows and columns. Defaults to hairlines *inside* the table only, with no outer frame.
+* `tableBorder` -- rules drawn around and between rows and columns. Defaults to hairlines on every edge, outer frame included: a table is the one construct with a declared beginning and end, so a frame states something the source actually says. Pass `TableBorder.symmetric(inside: ...)` for rules without the surrounding box, or `null` for none.
 * `tableStripe` -- a background painted on every other row, starting with the second. Off by default: striping and rules solve the same problem, so both at once is usually louder than it is legible.
 
 ## Getting started
@@ -108,16 +108,16 @@ Maps each AST node type to the function that builds a widget for it. This is how
 ```dart
 final registry = NaturalBlockRegistry.defaults.register(
   TextNode,
-  (context, node, theme, registry) =>
+  (context, node, theme, registry, onActionTap) =>
       MyCustomTextWidget(node: node as TextNode, theme: theme),
 );
 
 NaturalBlockView(source: source, registry: registry);
 ```
 
-A `NodeBuilder` receives the node to render, the ambient theme, and the registry itself (so it can recurse into a node's own children, e.g. a `ColumnNode` builder rendering each of its children via `registry.buildAll`), and returns the widget for that node directly.
+A `NodeBuilder` receives the node to render, the ambient theme, the registry itself, and the `onActionTap` callback to forward to any actionable spans inside it (so it can recurse into a node's own children, e.g. a `ColumnNode` builder rendering each of its children via `registry.buildAll`), and returns the widget for that node directly.
 
-Use `NaturalBlockRegistry.empty()` to start from nothing and register only the node types you care about, or `registerAll` to register several builders at once. The default builders (`buildRowNode`, `buildColumnNode`, `buildTextNode`) are exported too, so a custom builder can delegate back to the default for the cases it doesn't want to change.
+Use `NaturalBlockRegistry.empty()` to start from nothing and register only the node types you care about, or `registerAll` to register several builders at once. The default builders (`buildRowNode`, `buildColumnNode`, `buildTableNode`, `buildTextNode`) are exported too, so a custom builder can delegate back to the default for the cases it doesn't want to change.
 
 ### Actionable text
 
