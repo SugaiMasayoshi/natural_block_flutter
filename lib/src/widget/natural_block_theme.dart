@@ -64,6 +64,31 @@ class NaturalBlockTheme {
   /// result is clamped to this floor instead.
   final double minFontSize;
 
+  /// Space between a table cell's own edge and its text.
+  ///
+  /// Not optional in practice: a table sizes its columns to their content,
+  /// so without padding the text of neighbouring cells touches. This is
+  /// exactly the kind of property a table declaration exists to make
+  /// expressible -- the decoration syntax styles text, and has no way to
+  /// say anything about the space around it.
+  final EdgeInsets tableCellPadding;
+
+  /// Rules drawn between a table's rows and columns, or `null` for none.
+  ///
+  /// Defaults to hairlines *inside* the table only, with no outer frame:
+  /// the rules are there to help the eye track a row across columns, and a
+  /// surrounding box would assert a boundary the language never stated.
+  final TableBorder? tableBorder;
+
+  /// Background painted on every other row of a table, starting with the
+  /// second, or `null` for none.
+  ///
+  /// Off by default. Striping and rules solve the same problem -- following
+  /// one row across the table -- so applying both at once is usually louder
+  /// than it is legible; this leaves rules as the default and striping as
+  /// the deliberate alternative.
+  final Color? tableStripe;
+
   /// Creates a theme. All fields default to values that keep
   /// `const NaturalBlockTheme()` usable with no [BuildContext] -- see
   /// [NaturalBlockTheme.fromColorScheme] and
@@ -81,6 +106,14 @@ class NaturalBlockTheme {
     this.baseFontSize = 14,
     this.fontSizeStep = 4,
     this.minFontSize = 1,
+    this.tableCellPadding = const EdgeInsets.symmetric(
+      horizontal: 8,
+      vertical: 4,
+    ),
+    this.tableBorder = const TableBorder.symmetric(
+      inside: BorderSide(color: Color(0x1F000000)),
+    ),
+    this.tableStripe,
   });
 
   /// Derives a theme from [scheme], keeping the same emphasis style and
@@ -111,6 +144,10 @@ class NaturalBlockTheme {
     double baseFontSize = 14,
     double fontSizeStep = 4,
     double minFontSize = 1,
+    EdgeInsets tableCellPadding = const EdgeInsets.symmetric(
+      horizontal: 8,
+      vertical: 4,
+    ),
   }) {
     return NaturalBlockTheme(
       base: base,
@@ -125,6 +162,10 @@ class NaturalBlockTheme {
       baseFontSize: baseFontSize,
       fontSizeStep: fontSizeStep,
       minFontSize: minFontSize,
+      tableCellPadding: tableCellPadding,
+      tableBorder: TableBorder.symmetric(
+        inside: BorderSide(color: scheme.outlineVariant),
+      ),
     );
   }
 
@@ -158,6 +199,9 @@ class NaturalBlockTheme {
     double? baseFontSize,
     double? fontSizeStep,
     double? minFontSize,
+    EdgeInsets? tableCellPadding,
+    TableBorder? tableBorder,
+    Color? tableStripe,
   }) {
     return NaturalBlockTheme(
       base: base ?? this.base,
@@ -169,6 +213,9 @@ class NaturalBlockTheme {
       baseFontSize: baseFontSize ?? this.baseFontSize,
       fontSizeStep: fontSizeStep ?? this.fontSizeStep,
       minFontSize: minFontSize ?? this.minFontSize,
+      tableCellPadding: tableCellPadding ?? this.tableCellPadding,
+      tableBorder: tableBorder ?? this.tableBorder,
+      tableStripe: tableStripe ?? this.tableStripe,
     );
   }
 
@@ -184,7 +231,10 @@ class NaturalBlockTheme {
         action == other.action &&
         baseFontSize == other.baseFontSize &&
         fontSizeStep == other.fontSizeStep &&
-        minFontSize == other.minFontSize;
+        minFontSize == other.minFontSize &&
+        tableCellPadding == other.tableCellPadding &&
+        tableBorder == other.tableBorder &&
+        tableStripe == other.tableStripe;
   }
 
   @override
@@ -198,5 +248,8 @@ class NaturalBlockTheme {
     baseFontSize,
     fontSizeStep,
     minFontSize,
+    tableCellPadding,
+    tableBorder,
+    tableStripe,
   );
 }

@@ -28,6 +28,24 @@ This renders a table-like row layout where the price column (`>`-aligned) sits f
 
 Alignment is rendered by moving the block itself (its cross-axis alignment), not the text inside it, so it works the same whether the aligned block is a whole document, a `|`-separated line, or a `=`-separated row cell.
 
+### Tables
+
+Plain `=`-separated rows are rendered as a `Row` of equal-width `Expanded` cells: each row is laid out on its own, so dividing the available width evenly is the only policy that keeps columns lined up between rows. That is what makes `左==右` push `右` to the far edge, and it is deliberately kept.
+
+Declaring a table with `|~` renders a Flutter `Table` instead, with `IntrinsicColumnWidth` -- columns as wide as their content, agreed across every row:
+
+```dart
+const source = '|~商品=>価格|'
+    'りんご=150|'
+    'バナナ=98|';
+```
+
+Because a table is sized to its content rather than filling the width, it can be positioned: `|~^` centers it. And because its columns touch, a table needs spacing and rules that the decoration syntax cannot express -- `NaturalBlockTheme` supplies them:
+
+* `tableCellPadding` -- space between a cell's edge and its text. Defaults to `EdgeInsets.symmetric(horizontal: 8, vertical: 4)`.
+* `tableBorder` -- rules drawn between rows and columns. Defaults to hairlines *inside* the table only, with no outer frame.
+* `tableStripe` -- a background painted on every other row, starting with the second. Off by default: striping and rules solve the same problem, so both at once is usually louder than it is legible.
+
 ## Getting started
 
 ```yaml

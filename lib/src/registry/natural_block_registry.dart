@@ -51,6 +51,7 @@ class NaturalBlockRegistry {
   /// [registerAll] instead.
   static const Map<Type, NodeBuilder> _defaultBuilders = {
     RowNode: buildRowNode,
+    TableNode: buildTableNode,
     ColumnNode: buildColumnNode,
     TextNode: buildTextNode,
   };

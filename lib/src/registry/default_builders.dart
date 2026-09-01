@@ -8,6 +8,7 @@ import 'package:natural_block/natural_block.dart';
 import '../widget/column_node_view.dart';
 import '../widget/natural_block_theme.dart';
 import '../widget/row_node_view.dart';
+import '../widget/table_node_view.dart';
 import '../widget/text_node_view.dart';
 import 'natural_block_registry.dart';
 
@@ -59,6 +60,23 @@ Widget buildTextNode(
   return TextNodeView(
     node: node as TextNode,
     theme: theme,
+    onActionTap: onActionTap,
+  );
+}
+
+/// Default builder for [TableNode]: renders it via [TableNodeView], with
+/// each row's cells recursively built through [registry].
+Widget buildTableNode(
+  BuildContext context,
+  BlockNode node,
+  NaturalBlockTheme theme,
+  NaturalBlockRegistry registry,
+  OnActionTap? onActionTap,
+) {
+  return TableNodeView(
+    node: node as TableNode,
+    theme: theme,
+    registry: registry,
     onActionTap: onActionTap,
   );
 }
