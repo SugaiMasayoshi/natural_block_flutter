@@ -1,3 +1,12 @@
+// 【解説】[13/16] 縦積み。ノードを受け取らず「組み立て済みウィジェット」を受け取る
+// 【解説】 のが特徴で、子を作る責任は呼び手(registry)にある。
+// 【解説】
+// 【解説】 読みどころは Align を使っている理由。中央/終端寄せには「内容より広い幅」が
+// 【解説】 要るが、幅いっぱいの SizedBox にすると幅が無限の文脈(横スクロールの中など)
+// 【解説】 で例外になり、寄せを付けた途端に文書が描画されなくなる。
+// 【解説】 Align は同じ文脈で内容を抱き込む側に退避するので壊れない。
+// 【解説】 次: lib/src/widget/row_node_view.dart
+
 import 'package:flutter/widgets.dart';
 import 'package:natural_block/natural_block.dart';
 

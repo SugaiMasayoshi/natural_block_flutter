@@ -1,3 +1,8 @@
+// 【解説】[番外] 実際に動かして確かめる場所。読解の最後に起動すると理解が固まる。
+// 【解説】 flutter run で「試してみよう」欄に直接記法を打ち込める。
+// 【解説】 _samples に構文ごとの例が並んでいるので、上から順に眺めるのが早い。
+// 【解説】 アクション(:@...:@)は一覧・試してみよう欄の両方でタップできる。
+
 import 'package:flutter/material.dart';
 import 'package:flutter/widget_previews.dart';
 import 'package:natural_block_flutter/natural_block_flutter.dart';
@@ -152,7 +157,11 @@ class _Playground extends StatefulWidget {
 
 class _PlaygroundState extends State<_Playground> {
   final _controller = TextEditingController(
-    text: ':!*自由に書き換えて試してみよう:!:*\n:+++大きく:--標準に戻す\n左のセル=右のセル',
+    text:
+        ':!*自由に書き換えて試してみよう:!:*\n'
+        ':+++大きく:--標準に戻す\n'
+        '左のセル=右のセル\n'
+        ':@ここをタップ:@ するとSnackBarが出る',
   );
 
   @override
@@ -196,8 +205,17 @@ class _PlaygroundState extends State<_Playground> {
             // rebuilds just this preview on every keystroke.
             child: AnimatedBuilder(
               animation: _controller,
-              builder: (context, _) =>
-                  NaturalBlockView(source: _controller.text),
+              builder: (context, _) => NaturalBlockView(
+                source: _controller.text,
+                // 一覧のサンプルと同じく、ここで入力した :@...:@ も
+                // そのままタップできる。渡さないとアクションは色と下線が
+                // 付くだけでタップに反応しない。
+                onActionTap: (text) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('タップされたアクション: $text')),
+                  );
+                },
+              ),
             ),
           ),
         ],

@@ -1,3 +1,17 @@
+// 【解説】[12/16] 木の葉。TextNode を実際の文字として描く唯一の場所。
+// 【解説】
+// 【解説】 読みどころは3つ:
+// 【解説】  1. RichText ではなく Text.rich を使っている。直接 RichText を組むと
+// 【解説】     選択機構に登録されず、SelectionArea で囲んでも黙って選択できない
+// 【解説】  2. StatefulWidget なのは TapGestureRecognizer が破棄の要る資源だから。
+// 【解説】     build のたびに前回分を破棄してから作り直している
+// 【解説】  3. onActionTap が null なら recognizer を作らない。作らなければ
+// 【解説】     破棄すべきものも無い、という単純化
+// 【解説】
+// 【解説】 なお「本当に破棄されたか」を検証するテストは書けていない。理由は
+// 【解説】 test/widget/text_node_view_test.dart のコメントに実測付きで書いてある。
+// 【解説】 次: lib/src/widget/column_node_view.dart
+
 import 'package:flutter/gestures.dart';
 import 'package:flutter/widgets.dart';
 import 'package:natural_block/natural_block.dart';

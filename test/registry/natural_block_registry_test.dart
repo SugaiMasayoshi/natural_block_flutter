@@ -9,7 +9,7 @@ void main() {
   Future<List<Widget>> buildWith(
     WidgetTester tester,
     NaturalBlockRegistry registry,
-    List<NaturalBlockNode> nodes,
+    List<BlockNode> nodes,
   ) async {
     late List<Widget> built;
     await tester.pumpWidget(
@@ -29,7 +29,7 @@ void main() {
     testWidgets('default registry renders Row/Column/Text via their views', (
       tester,
     ) async {
-      final nodes = <NaturalBlockNode>[
+      final nodes = <BlockNode>[
         RowNode(
           children: [
             ColumnNode(children: [TextNode(children: [TextSpanNode(text: 'a')])]),
@@ -52,7 +52,7 @@ void main() {
     testWidgets('one RowNode renders as one Row, keeping other nodes separate', (
       tester,
     ) async {
-      final nodes = <NaturalBlockNode>[
+      final nodes = <BlockNode>[
         RowNode(
           children: [
             ColumnNode(children: [TextNode(children: [TextSpanNode(text: 'a')])]),
@@ -89,7 +89,7 @@ void main() {
         TextNode,
         (context, node, theme, registry, onActionTap) => const Placeholder(),
       );
-      final nodes = <NaturalBlockNode>[TextNode(children: [])];
+      final nodes = <BlockNode>[TextNode(children: [])];
 
       await buildWith(tester, registry, nodes);
 
@@ -105,7 +105,7 @@ void main() {
           ColumnNode,
           (context, node, theme, registry, onActionTap) => const Placeholder(),
         );
-        final nodes = <NaturalBlockNode>[
+        final nodes = <BlockNode>[
           RowNode(
             children: [
               ColumnNode(children: [TextNode(children: [])]),
@@ -128,7 +128,7 @@ void main() {
           TextNode,
           buildRowNode,
         );
-        final nodes = <NaturalBlockNode>[TextNode(children: [])];
+        final nodes = <BlockNode>[TextNode(children: [])];
 
         await tester.pumpWidget(
           MaterialApp(
@@ -150,7 +150,7 @@ void main() {
     testWidgets('empty registry falls back to an empty box without throwing', (
       tester,
     ) async {
-      final nodes = <NaturalBlockNode>[
+      final nodes = <BlockNode>[
         RowNode(children: []),
         ColumnNode(children: []),
         TextNode(children: []),

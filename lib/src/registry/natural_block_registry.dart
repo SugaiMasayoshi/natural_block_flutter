@@ -1,3 +1,13 @@
+// 【解説】[15/16] ノードの型 → 描画関数 の対応表。差し替え機構。
+// 【解説】
+// 【解説】 利用者が register() で任意のノード型の描画を差し替えられる。これがあるので
+// 【解説】 「見出しだけ自前のウィジェットで描く」といったことがフォークせずにできる。
+// 【解説】
+// 【解説】 注意点が1つ、docにも明記してある: 引きは runtimeType の完全一致で、
+// 【解説】 is/継承では引かない。TextNode を継承した独自クラスは TextNode の
+// 【解説】 ビルダーに当たらず、フォールバック(何も描かず、デバッグ時のみ警告)に落ちる。
+// 【解説】 次: lib/src/registry/default_builders.dart
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:natural_block/natural_block.dart';
@@ -5,11 +15,11 @@ import 'package:natural_block/natural_block.dart';
 import '../widget/natural_block_theme.dart';
 import 'default_builders.dart';
 
-/// Builds the widget for a single [NaturalBlockNode].
+/// Builds the widget for a single [BlockNode].
 typedef NodeBuilder =
     Widget Function(
       BuildContext context,
-      NaturalBlockNode node,
+      BlockNode node,
       NaturalBlockTheme theme,
       NaturalBlockRegistry registry,
       OnActionTap? onActionTap,
@@ -22,7 +32,7 @@ typedef NodeBuilder =
 /// resolve, ...) is entirely the caller's business.
 typedef OnActionTap = void Function(String text);
 
-/// Maps [NaturalBlockNode] types to the [NodeBuilder] that renders them.
+/// Maps [BlockNode] types to the [NodeBuilder] that renders them.
 ///
 /// Lookup in [buildAll] is keyed by `runtimeType`, not by `is`/type
 /// hierarchy: a subclass of a registered node type (e.g. a consumer's own
@@ -78,7 +88,7 @@ class NaturalBlockRegistry {
   /// mode only -- prints a warning via `debugPrint`.
   List<Widget> buildAll(
     BuildContext context,
-    List<NaturalBlockNode> nodes,
+    List<BlockNode> nodes,
     NaturalBlockTheme theme, [
     OnActionTap? onActionTap,
   ]) {
@@ -90,7 +100,7 @@ class NaturalBlockRegistry {
 
   static Widget _buildFallback(
     BuildContext context,
-    NaturalBlockNode node,
+    BlockNode node,
     NaturalBlockTheme theme,
     NaturalBlockRegistry registry,
     OnActionTap? onActionTap,

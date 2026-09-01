@@ -1,3 +1,7 @@
+// 【解説】[16/16 の前半] 既定の描画関数3つ。registry と widget を繋ぐだけの薄い層。
+// 【解説】 ここが薄いことに意味があり、各 View は registry を知らずに済んでいる。
+// 【解説】 buildColumnNode だけが registry.buildAll を再帰的に呼ぶ = 木を降りる場所。
+
 import 'package:flutter/widgets.dart';
 import 'package:natural_block/natural_block.dart';
 
@@ -11,7 +15,7 @@ import 'natural_block_registry.dart';
 /// [Expanded] cell per child [ColumnNode].
 Widget buildRowNode(
   BuildContext context,
-  NaturalBlockNode node,
+  BlockNode node,
   NaturalBlockTheme theme,
   NaturalBlockRegistry registry,
   OnActionTap? onActionTap,
@@ -29,7 +33,7 @@ Widget buildRowNode(
 /// passed through so the block honors its alignment marker.
 Widget buildColumnNode(
   BuildContext context,
-  NaturalBlockNode node,
+  BlockNode node,
   NaturalBlockTheme theme,
   NaturalBlockRegistry registry,
   OnActionTap? onActionTap,
@@ -47,7 +51,7 @@ Widget buildColumnNode(
 /// Default builder for [TextNode]: renders it via [TextNodeView].
 Widget buildTextNode(
   BuildContext context,
-  NaturalBlockNode node,
+  BlockNode node,
   NaturalBlockTheme theme,
   NaturalBlockRegistry registry,
   OnActionTap? onActionTap,

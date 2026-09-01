@@ -1,3 +1,15 @@
+// 【解説】[11/16] 「意味」から「見た目」への対応表。パーサ側が SemanticColor.danger
+// 【解説】 としか言わないのに対し、それを実際に何色で描くかを決めるのがここ。
+// 【解説】 この一枚があるおかげで、配色の都合がパーサに一切漏れない。
+// 【解説】
+// 【解説】 読みどころ:
+// 【解説】  ・const で作れることを維持している(NaturalBlockView の既定値がconst)
+// 【解説】  ・fromContext という名前。.of() にしなかったのは、Flutterの慣習で
+// 【解説】    .of() は InheritedWidget の探索を意味し、ここはただの変換だから
+// 【解説】  ・baseFontSize / fontSizeStep / minFontSize が外出しされている。
+// 【解説】    以前は text_node_view に 14 と 4 が直書きされていた
+// 【解説】 次: lib/src/widget/text_node_view.dart（葉から上に読み上がる）
+
 import 'package:flutter/material.dart';
 import 'package:natural_block/natural_block.dart';
 
