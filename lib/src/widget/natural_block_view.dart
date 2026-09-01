@@ -75,7 +75,7 @@ class NaturalBlockView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final document = NaturalBlockParser().parse(source);
+    final document = NaturalBlockParser.parse(source);
     final children = registry.buildAll(
       context,
       document.children,

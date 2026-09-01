@@ -4,12 +4,17 @@
 // 【解説】  1. RichText ではなく Text.rich を使っている。直接 RichText を組むと
 // 【解説】     選択機構に登録されず、SelectionArea で囲んでも黙って選択できない
 // 【解説】  2. StatefulWidget なのは TapGestureRecognizer が破棄の要る資源だから。
-// 【解説】     build のたびに前回分を破棄してから作り直している
+// 【解説】     ただし build で作り直さず、オブジェクトを再利用して onTap だけ
+// 【解説】     差し替える。押下を受けた recognizer はジェスチャアリーナの
+// 【解説】     エントリを持つので、押下と離上の間の再ビルドで作り直すと
+// 【解説】     タップが黙って消える。クロージャは呼び出し時に widget を読むため
+// 【解説】     「古いコールバックを掴む」心配は元々無かった
 // 【解説】  3. onActionTap が null なら recognizer を作らない。作らなければ
 // 【解説】     破棄すべきものも無い、という単純化
 // 【解説】
-// 【解説】 なお「本当に破棄されたか」を検証するテストは書けていない。理由は
-// 【解説】 test/widget/text_node_view_test.dart のコメントに実測付きで書いてある。
+// 【解説】 破棄そのものは今も検証できない(GestureRecognizer.dispose は印を残さない)。
+// 【解説】 代わりに「再ビルドを跨いでも同じオブジェクトか」と「押下中の再ビルドを
+// 【解説】 挟んでもタップが届くか」を検証している。後者は旧実装で実際に落ちる。
 // 【解説】 次: lib/src/widget/column_node_view.dart
 
 import 'package:flutter/gestures.dart';
@@ -62,29 +67,51 @@ class TextNodeView extends StatefulWidget {
 }
 
 class _TextNodeViewState extends State<TextNodeView> {
+  /// One recognizer per actionable span, reused across builds and indexed
+  /// by the order those spans appear in.
+  ///
+  /// Reused, not rebuilt. A recognizer that has already taken a pointer
+  /// down owns an entry in the gesture arena, so disposing it mid-gesture
+  /// -- which any ancestor rebuild between the down and the up would do if
+  /// `build` recreated these -- rejects that entry and the tap is silently
+  /// lost. Rebuilds land there easily: an animation, an ambient
+  /// [InheritedWidget] changing, a `SelectionArea` updating during a drag.
+  ///
+  /// Nothing is gained by recreating them either. The concern that a
+  /// recognizer would hold a stale callback does not arise, because the
+  /// closure assigned below reads `widget` when the tap happens rather
+  /// than when it was built.
   final List<TapGestureRecognizer> _recognizers = [];
 
   @override
   void dispose() {
-    _disposeRecognizers();
-    super.dispose();
-  }
-
-  void _disposeRecognizers() {
     for (final recognizer in _recognizers) {
       recognizer.dispose();
     }
     _recognizers.clear();
+    super.dispose();
+  }
+
+  /// The recognizer for the [index]-th actionable span, creating it the
+  /// first time that index is needed.
+  TapGestureRecognizer _recognizerAt(int index) {
+    while (_recognizers.length <= index) {
+      _recognizers.add(TapGestureRecognizer());
+    }
+    return _recognizers[index];
+  }
+
+  /// Releases recognizers past [keep], for when a rebuild left this line
+  /// with fewer actionable spans than before.
+  void _trimRecognizers(int keep) {
+    while (_recognizers.length > keep) {
+      _recognizers.removeLast().dispose();
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    // Rebuilt (and any previous recognizers replaced) on every build, not
-    // just in didUpdateWidget: a build can also be triggered by something
-    // that doesn't change the widget instance (e.g. an ambient
-    // InheritedWidget), and a stale recognizer bound to a stale
-    // `widget.onActionTap` would silently call the wrong callback.
-    _disposeRecognizers();
+    var actionIndex = 0;
 
     final spans = widget.node.children.map((span) {
       final style = widget.theme
@@ -101,9 +128,15 @@ class _TextNodeViewState extends State<TextNodeView> {
         // The caller gets first refusal on every actionable run. A span it
         // returns replaces the default rendering completely -- text, style
         // and gestures -- which is how a run can come out as something that
-        // is not text at all, an image say. `style` is handed over so the
-        // markup's own size vocabulary can still reach it.
-        final built = widget.actions.buildSpan?.call(context, span.text, style);
+        // is not text at all, an image say. The style is handed over with
+        // its font size already resolved, so the markup's own size
+        // vocabulary can reach content that has no font size of its own.
+        final built = widget.actions.buildSpan?.call(
+          context,
+          span.text,
+          style.copyWith(fontSize: style.fontSize ?? _baseFontSize(context)),
+          widget.theme,
+        );
         if (built != null) return built;
       }
 
@@ -111,13 +144,25 @@ class _TextNodeViewState extends State<TextNodeView> {
       final onTap = widget.actions.onTap;
       if (span.isAction && onTap != null) {
         final text = span.text;
-        final tap = TapGestureRecognizer()..onTap = () => onTap(text);
-        _recognizers.add(tap);
-        recognizer = tap;
+        // Reused object, fresh callback. The closure reads `widget` at tap
+        // time, so it can never be stale, and the recognizer keeps whatever
+        // arena entry an in-flight gesture gave it.
+        recognizer = _recognizerAt(actionIndex++)..onTap = () => onTap(text);
       }
 
-      return TextSpan(text: span.text, style: style, recognizer: recognizer);
+      return TextSpan(
+        text: span.text,
+        style: style,
+        recognizer: recognizer,
+        // Announced as a link only when it actually does something. The
+        // action *style* still follows the document -- it said the run is
+        // actionable -- but claiming a link to a screen reader when no
+        // handler is wired would be a promise nothing keeps.
+        semanticsLabel: span.isAction && onTap != null ? span.text : null,
+      );
     }).toList();
+
+    _trimRecognizers(actionIndex);
 
     return Text.rich(
       TextSpan(
@@ -127,18 +172,26 @@ class _TextNodeViewState extends State<TextNodeView> {
     );
   }
 
-  /// Computes the font size for a span with a non-zero [sizeOffset],
-  /// scaling from the ambient font size (or [NaturalBlockTheme.baseFontSize]
-  /// if there is none) by [NaturalBlockTheme.fontSizeStep] points per step.
+  /// The size a run with no size markup renders at: whatever is ambient, or
+  /// the theme's fallback when nothing ambient says.
+  ///
+  /// Resolved explicitly rather than left null when handing a style to an
+  /// [ActionSpanBuilder]: a builder rendering something that is not text
+  /// has no way to recover the size otherwise, and `TextStyle.fontSize` is
+  /// null for every unmarked run.
+  double _baseFontSize(BuildContext context) =>
+      DefaultTextStyle.of(context).style.fontSize ?? widget.theme.baseFontSize;
+
+  /// Computes the font size for a span with a non-zero `sizeOffset`,
+  /// scaling from [_baseFontSize] by [NaturalBlockTheme.fontSizeStep]
+  /// points per step.
   ///
   /// The result is clamped to [NaturalBlockTheme.minFontSize] so a large
-  /// negative [sizeOffset] (the parser supports e.g. `:-----`, an offset of
-  /// -5) cannot drive the font size to zero or below, which Flutter's
+  /// negative offset (the parser supports e.g. `:-----`, an offset of -5)
+  /// cannot drive the font size to zero or below, which Flutter's
   /// [TextStyle] asserts against.
   double _fontSizeFor(BuildContext context, int sizeOffset) {
-    final ambient =
-        DefaultTextStyle.of(context).style.fontSize ??
-        widget.theme.baseFontSize;
+    final ambient = _baseFontSize(context);
     final scaled = ambient + sizeOffset * widget.theme.fontSizeStep;
     return scaled < widget.theme.minFontSize
         ? widget.theme.minFontSize

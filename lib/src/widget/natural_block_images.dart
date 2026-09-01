@@ -21,6 +21,7 @@
 import 'package:flutter/widgets.dart';
 
 import '../registry/natural_block_registry.dart';
+import 'natural_block_theme.dart';
 
 /// Where an image payload points, as far as the string itself can say.
 ///
@@ -87,6 +88,7 @@ abstract final class NaturalBlockImages {
   /// Anchored and non-greedy about nothing in particular: the URL is
   /// whatever sits between the outermost parentheses, so query strings and
   /// nested parentheses in a path survive intact.
+  ///
   /// Spelled out rather than abbreviated, and `img` is deliberately *not*
   /// accepted as an alias. The payload's job is to be readable when nothing
   /// renders it, and `img` is borrowed HTML jargon; there is also no
@@ -111,13 +113,13 @@ abstract final class NaturalBlockImages {
   /// new spelling and so risks no dialect:
   ///
   /// ```dart
-  /// onActionBuild: (context, text, style) {
+  /// onActionBuild: (context, text, style, theme) {
   ///   final source = NaturalBlockImages.urlOf(text);
   ///   if (source != null &&
   ///       NaturalBlockImages.kindOf(source) == ImageSourceKind.file) {
   ///     return WidgetSpan(child: Image.file(File(source)));
   ///   }
-  ///   return NaturalBlockImages.builder(context, text, style);
+  ///   return NaturalBlockImages.builder(context, text, style, theme);
   /// }
   /// ```
   ///
@@ -129,6 +131,7 @@ abstract final class NaturalBlockImages {
     BuildContext context,
     String text,
     TextStyle style,
+    NaturalBlockTheme theme,
   ) {
     final url = urlOf(text);
     if (url == null || kindOf(url) != ImageSourceKind.network) return null;
@@ -138,24 +141,33 @@ abstract final class NaturalBlockImages {
     // the image at its natural size, and each `:+` step scales it by the
     // same proportion it would have scaled text. That keeps one set of
     // symbols meaning one thing across text and images.
-    final scale = _scaleFrom(style);
+    final size = style.fontSize ?? theme.baseFontSize;
+    // `scale` divides: a larger number draws the image smaller, so a run
+    // asking for bigger text has to produce a smaller scale.
+    final scale = theme.baseFontSize / size;
 
     return WidgetSpan(
       alignment: PlaceholderAlignment.middle,
       child: Image.network(
         url,
         scale: scale,
+        // Without a label a screen reader announces nothing at all where a
+        // sighted reader sees a picture. The payload is the only
+        // description the document offers, so it is what gets announced
+        // until the convention grows an alt text.
+        semanticLabel: url,
         // A broken or blocked image falls back to the text that named it,
         // which is the same degradation an implementation without images
         // gives. Nothing a document said should vanish because a request
         // failed.
-        errorBuilder: (context, error, stackTrace) =>
-            Text(text, style: style),
+        errorBuilder: (context, error, stackTrace) => Text(text, style: style),
         // Reserving the line's height keeps text from reflowing once the
-        // image arrives; the real size is unknown until then.
-        loadingBuilder: (context, child, progress) => progress == null
-            ? child
-            : SizedBox(height: style.fontSize, width: style.fontSize),
+        // image arrives; the real size is unknown until then. `size`, not
+        // `style.fontSize`, because the latter is null for every run
+        // without size markup -- which made this a zero-sized box in the
+        // ordinary case, reserving nothing.
+        loadingBuilder: (context, child, progress) =>
+            progress == null ? child : SizedBox(height: size, width: size),
       ),
     );
   }
@@ -198,17 +210,5 @@ abstract final class NaturalBlockImages {
           : ImageSourceKind.network;
     }
     return ImageSourceKind.relative;
-  }
-
-  /// Turns the style's font size into an `Image.scale`.
-  ///
-  /// `scale` divides: a larger number draws the image smaller. So a run
-  /// asking for bigger text has to produce a *smaller* scale, hence the
-  /// reciprocal.
-  static double _scaleFrom(TextStyle style) {
-    const reference = 14.0;
-    final size = style.fontSize;
-    if (size == null || size <= 0) return 1;
-    return reference / size;
   }
 }

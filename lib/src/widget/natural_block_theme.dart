@@ -222,7 +222,22 @@ class NaturalBlockTheme {
     SemanticColor.none => base,
   };
 
+  /// Stands for "this argument was not passed", so that passing `null`
+  /// explicitly can mean *clear the value* on the two fields that are
+  /// themselves nullable.
+  ///
+  /// Without it, `copyWith(tableBorder: null)` is indistinguishable from
+  /// omitting the argument, so a themed table can never lose its rules --
+  /// the only way out is rebuilding the whole theme by hand. The cost is
+  /// that those two parameters are typed `Object?`, which accepts anything
+  /// and defers the mismatch to a runtime cast.
+  static const Object _unchanged = Object();
+
   /// Returns a copy of this theme with the given fields replaced.
+  ///
+  /// For [tableBorder] and [tableStripe], passing `null` explicitly clears
+  /// the value rather than leaving it alone; omit the argument to keep what
+  /// is there.
   NaturalBlockTheme copyWith({
     TextStyle? base,
     TextStyle? danger,
@@ -234,9 +249,17 @@ class NaturalBlockTheme {
     double? fontSizeStep,
     double? minFontSize,
     EdgeInsets? tableCellPadding,
-    TableBorder? tableBorder,
-    Color? tableStripe,
+    Object? tableBorder = _unchanged,
+    Object? tableStripe = _unchanged,
   }) {
+    assert(
+      tableBorder == _unchanged || tableBorder is TableBorder?,
+      'tableBorder must be a TableBorder or null',
+    );
+    assert(
+      tableStripe == _unchanged || tableStripe is Color?,
+      'tableStripe must be a Color or null',
+    );
     return NaturalBlockTheme(
       base: base ?? this.base,
       danger: danger ?? this.danger,
@@ -248,8 +271,12 @@ class NaturalBlockTheme {
       fontSizeStep: fontSizeStep ?? this.fontSizeStep,
       minFontSize: minFontSize ?? this.minFontSize,
       tableCellPadding: tableCellPadding ?? this.tableCellPadding,
-      tableBorder: tableBorder ?? this.tableBorder,
-      tableStripe: tableStripe ?? this.tableStripe,
+      tableBorder: identical(tableBorder, _unchanged)
+          ? this.tableBorder
+          : tableBorder as TableBorder?,
+      tableStripe: identical(tableStripe, _unchanged)
+          ? this.tableStripe
+          : tableStripe as Color?,
     );
   }
 

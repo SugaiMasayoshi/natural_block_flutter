@@ -111,6 +111,78 @@ void main() {
       expect(theme.action.decoration, TextDecoration.underline);
     });
 
+    group('copyWith', () {
+      test('an omitted argument leaves the value alone', () {
+        const base = NaturalBlockTheme();
+        final copy = base.copyWith(baseFontSize: 20);
+
+        expect(copy.baseFontSize, 20);
+        expect(copy.tableBorder, base.tableBorder);
+        expect(copy.danger, base.danger);
+      });
+
+      test('passing null clears a nullable field', () {
+        // The two nullable fields need `null` to mean *clear*, or a themed
+        // table can never lose its rules: with the usual `?? this.x` form,
+        // an explicit null is indistinguishable from omitting the argument.
+        const base = NaturalBlockTheme(tableStripe: Color(0xFFEEEEEE));
+
+        expect(base.tableBorder, isNotNull);
+        expect(base.copyWith(tableBorder: null).tableBorder, isNull);
+        expect(base.copyWith(tableStripe: null).tableStripe, isNull);
+      });
+
+      test('clearing one nullable field leaves the other', () {
+        const base = NaturalBlockTheme(tableStripe: Color(0xFFEEEEEE));
+        final copy = base.copyWith(tableBorder: null);
+
+        expect(copy.tableBorder, isNull);
+        expect(copy.tableStripe, base.tableStripe);
+      });
+    });
+
+    group('equality covers every field', () {
+      // Checked field by field rather than with one differing value: with a
+      // hand-written `==`, a field added to the class but forgotten in the
+      // comparison ships green, and a single-field test would never see it.
+      const base = NaturalBlockTheme();
+
+      final differing = <String, NaturalBlockTheme>{
+        'base': base.copyWith(base: const TextStyle(letterSpacing: 3)),
+        'danger': base.copyWith(danger: const TextStyle(color: Colors.pink)),
+        'success': base.copyWith(success: const TextStyle(color: Colors.pink)),
+        'info': base.copyWith(info: const TextStyle(color: Colors.pink)),
+        'emphasis': base.copyWith(
+          emphasis: const TextStyle(fontStyle: FontStyle.italic),
+        ),
+        'action': base.copyWith(action: const TextStyle(color: Colors.pink)),
+        'baseFontSize': base.copyWith(baseFontSize: 99),
+        'fontSizeStep': base.copyWith(fontSizeStep: 99),
+        'minFontSize': base.copyWith(minFontSize: 99),
+        'tableCellPadding': base.copyWith(
+          tableCellPadding: const EdgeInsets.all(99),
+        ),
+        'tableBorder': base.copyWith(tableBorder: null),
+        'tableStripe': base.copyWith(tableStripe: const Color(0xFF123456)),
+      };
+
+      for (final entry in differing.entries) {
+        test('${entry.key} is part of equality', () {
+          expect(
+            entry.value,
+            isNot(base),
+            reason: 'two themes differing only in ${entry.key} are not equal',
+          );
+          expect(entry.value.hashCode, isNot(base.hashCode));
+        });
+      }
+
+      test('an identical theme is equal', () {
+        expect(const NaturalBlockTheme(), base);
+        expect(const NaturalBlockTheme().hashCode, base.hashCode);
+      });
+    });
+
     group('striped tables', () {
       ColorScheme schemeFor(Brightness brightness) => ColorScheme.fromSeed(
         seedColor: Colors.deepPurple,

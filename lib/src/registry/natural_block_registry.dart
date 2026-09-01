@@ -35,20 +35,33 @@ typedef OnActionTap = void Function(String text);
 /// Builds the span an actionable run renders as, replacing the default
 /// styled text entirely -- an image, a chip, a formatted date.
 ///
-/// [text] is the run's own text, exactly as written between `:@` and `:@`;
+/// [text] is the run's own text, exactly as written between `:@` and `:@`.
 /// [style] is what the run *would* have been drawn with, including
-/// everything the surrounding markup asked for. Reading `style.fontSize` is
-/// what lets the language's own size vocabulary (`:++`, `:--`) reach
-/// content that is not text at all -- block alignment reaches it for free,
-/// since that moves the whole block, but size only arrives if the builder
-/// looks.
+/// everything the surrounding markup asked for, and with its `fontSize`
+/// always resolved to a concrete value -- reading it is what lets the
+/// language's own size vocabulary (`:++`, `:--`) reach content that is not
+/// text at all. Block alignment reaches such content for free, since that
+/// moves the whole block, but size only arrives if the builder looks.
+/// [theme] comes along so a builder can work out what that size means
+/// relative to an unmarked run (`theme.baseFontSize`, `theme.fontSizeStep`)
+/// instead of hardcoding a reference of its own.
 ///
 /// Returning `null` means "not mine": the run falls back to the default
 /// rendering. That is what keeps a builder from having to understand every
 /// payload it might meet, and what makes an unrecognized one degrade to
 /// readable text rather than disappearing.
+///
+/// A returned [WidgetSpan]'s child is laid out with the paragraph's width
+/// but an **unbounded height**, so a vertically greedy child (`Expanded`,
+/// an unbounded `AspectRatio`) throws from inside the paragraph. Give the
+/// child a bounded height.
 typedef ActionSpanBuilder =
-    InlineSpan? Function(BuildContext context, String text, TextStyle style);
+    InlineSpan? Function(
+      BuildContext context,
+      String text,
+      TextStyle style,
+      NaturalBlockTheme theme,
+    );
 
 /// What a view does with the actionable runs (`:@...:@`) it renders.
 ///

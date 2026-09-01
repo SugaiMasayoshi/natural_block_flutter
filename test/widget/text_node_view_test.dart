@@ -1,5 +1,6 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:natural_block/natural_block.dart';
 import 'package:natural_block_flutter/natural_block_flutter.dart';
@@ -261,60 +262,170 @@ void main() {
       expect(tapped, isEmpty);
     });
 
-    testWidgets(
-      'rebuilding and unmounting a tree of actionable spans does not throw '
-      '(regression guard for recognizer disposal -- see note below)',
-      (tester) async {
-        // This does not independently *prove* the recognizers were
-        // disposed, and that is a real limit rather than an oversight.
-        // GestureRecognizer.dispose() is just
-        // `assert(debugMaybeDispatchDisposed(this))`: it reports to the
-        // opt-in leak tracker and sets no flag, and addPointer has no
-        // used-after-dispose check -- so a disposed recognizer is
-        // indistinguishable from a live one to anything a widget test can
-        // call. (Driving the leak tracker from here was tried: it reports
-        // a non-disposed object only after it is garbage collected, which
-        // this test cannot force, so it passed even with disposal removed
-        // -- a green test proving nothing, which is worse than none.)
-        //
-        // What this does verify honestly: rebuilding TextNodeView with a
-        // different node (dropping the previous TapGestureRecognizers) and
-        // then unmounting produces no exception -- the visible symptom if
-        // TextNodeView ever disposed the same recognizer twice or used one
-        // after disposing it.
-        const theme = NaturalBlockTheme();
+    testWidgets('only a run that actually does something is announced', (
+      tester,
+    ) async {
+      // Style follows the document -- it said the run is actionable, so it
+      // renders as such either way. Semantics follow what will actually
+      // happen: telling a screen reader a run is interactive when no
+      // handler is wired is a promise nothing keeps.
+      final node = TextNode(
+        children: [TextSpanNode(text: 'tap me', isAction: true)],
+      );
+      const theme = NaturalBlockTheme();
 
-        Future<void> pumpWith(String text) => tester.pumpWidget(
-          MaterialApp(
-            home: TextNodeView(
+      await tester.pumpWidget(
+        MaterialApp(home: TextNodeView(node: node, theme: theme)),
+      );
+      final inert = renderedSpans(tester).single;
+      expect(inert.style!.decoration, theme.action.decoration);
+      expect(
+        inert.semanticsLabel,
+        isNull,
+        reason: 'no handler, so nothing is announced as interactive',
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: TextNodeView(
+            node: node,
+            theme: theme,
+            actions: NaturalBlockActions(onTap: (_) {}),
+          ),
+        ),
+      );
+      expect(renderedSpans(tester).single.semanticsLabel, 'tap me');
+    });
+
+    testWidgets('a recognizer survives a rebuild rather than being replaced', (
+      tester,
+    ) async {
+      // The property the whole design turns on. A recognizer that has taken
+      // a pointer down owns an entry in the gesture arena; replacing it
+      // mid-gesture throws that entry away. Reusing the object is what makes
+      // the next test possible.
+      const theme = NaturalBlockTheme();
+
+      Future<void> pumpWith(String text) => tester.pumpWidget(
+        MaterialApp(
+          home: TextNodeView(
+            node: TextNode(
+              children: [TextSpanNode(text: text, isAction: true)],
+            ),
+            theme: theme,
+            actions: NaturalBlockActions(onTap: (_) {}),
+          ),
+        ),
+      );
+
+      await pumpWith('tap me');
+      final first = renderedSpans(tester).single.recognizer;
+
+      await pumpWith('tap again');
+      expect(
+        renderedSpans(tester).single.recognizer,
+        same(first),
+        reason: 'the same recognizer object is reused across builds',
+      );
+    });
+
+    testWidgets('a tap interrupted by a rebuild still fires', (tester) async {
+      // The regression this design exists for, and the only test here that
+      // exercises the real gesture path -- calling `recognizer.onTap!()`
+      // directly bypasses the arena, so it cannot see this at all.
+      //
+      // Rebuilds between a pointer down and its up are ordinary: an
+      // animation, an ambient InheritedWidget changing, a SelectionArea
+      // updating during a drag. When `build` recreated recognizers, the one
+      // holding the down was disposed and the tap vanished silently.
+      final tapped = <String>[];
+
+      Future<void> pump(String suffix) => tester.pumpWidget(
+        MaterialApp(
+          home: DefaultTextStyle(
+            style: const TextStyle(fontSize: 14, color: Color(0xFF000000)),
+            child: TextNodeView(
               node: TextNode(
-                children: [TextSpanNode(text: text, isAction: true)],
+                children: [TextSpanNode(text: 'press', isAction: true)],
               ),
-              theme: theme,
-              actions: NaturalBlockActions(onTap: (_) {}),
+              // A different theme instance each time, so the rebuild is
+              // real work rather than an identical widget Flutter can skip.
+              theme: NaturalBlockTheme(base: TextStyle(letterSpacing: suffix.length * 0.0)),
+              actions: NaturalBlockActions(onTap: tapped.add),
             ),
           ),
-        );
+        ),
+      );
 
-        await pumpWith('tap me');
-        expect(
-          renderedSpans(tester).single.recognizer,
-          isA<TapGestureRecognizer>(),
-        );
-        expect(tester.takeException(), isNull);
+      await pump('a');
 
-        // Rebuilds with a different node, each superseding the previous
-        // recognizer: the old batch must be disposed before the new one is
-        // created, or Flutter's own asserts would fire here or below.
-        for (final text in ['tap again', 'and again', 'once more']) {
-          await pumpWith(text);
-          expect(tester.takeException(), isNull);
-        }
+      final paragraph = tester.renderObject<RenderParagraph>(
+        find.byType(RichText),
+      );
+      final box = paragraph
+          .getBoxesForSelection(
+            const TextSelection(baseOffset: 0, extentOffset: 5),
+          )
+          .single;
+      final target = paragraph.localToGlobal(
+        Offset((box.left + box.right) / 2, (box.top + box.bottom) / 2),
+      );
 
-        // Unmount entirely: dispose() must clean up the last batch.
-        await tester.pumpWidget(const SizedBox.shrink());
-        expect(tester.takeException(), isNull);
-      },
-    );
+      final gesture = await tester.startGesture(target);
+      await pump('bb'); // rebuild while the pointer is still down
+      await gesture.up();
+      await tester.pump();
+
+      expect(
+        tapped,
+        ['press'],
+        reason: 'the tap must survive a rebuild between down and up',
+      );
+    });
+
+    testWidgets('unmounting a line of actionable spans does not throw', (
+      tester,
+    ) async {
+      // Disposal itself stays unobservable: GestureRecognizer.dispose only
+      // reports to the opt-in leak tracker, and addPointer has no
+      // used-after-dispose check, so a widget test cannot distinguish a
+      // disposed recognizer from a live one. (The leak tracker was tried --
+      // it reports a non-disposed object only once it is garbage collected,
+      // which a test cannot force, so it stayed green with disposal removed:
+      // a test proving nothing, which is worse than none.)
+      //
+      // What is checkable is that shrinking the line and then unmounting it
+      // raises nothing -- the visible symptom of a double dispose or a use
+      // after one.
+      const theme = NaturalBlockTheme();
+
+      Future<void> pumpWith(List<TextSpanNode> spans) => tester.pumpWidget(
+        MaterialApp(
+          home: TextNodeView(
+            node: TextNode(children: spans),
+            theme: theme,
+            actions: NaturalBlockActions(onTap: (_) {}),
+          ),
+        ),
+      );
+
+      await pumpWith([
+        TextSpanNode(text: 'one', isAction: true),
+        TextSpanNode(text: 'two', isAction: true),
+        TextSpanNode(text: 'three', isAction: true),
+      ]);
+      expect(tester.takeException(), isNull);
+
+      // Fewer actionable spans than before: the surplus recognizers are
+      // released here rather than at unmount.
+      await pumpWith([TextSpanNode(text: 'one', isAction: true)]);
+      expect(tester.takeException(), isNull);
+
+      await pumpWith([TextSpanNode(text: 'plain')]);
+      expect(tester.takeException(), isNull);
+
+      await tester.pumpWidget(const SizedBox.shrink());
+      expect(tester.takeException(), isNull);
+    });
   });
 }

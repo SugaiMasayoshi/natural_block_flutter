@@ -224,6 +224,77 @@ void main() {
       );
     });
 
+    testWidgets('the loading placeholder reserves a real height', (
+      tester,
+    ) async {
+      // `style.fontSize` is null for every run without size markup, so
+      // reading it directly gave `SizedBox(height: null)` -- a zero-sized
+      // box that reserved nothing in the ordinary case, which is exactly
+      // the case the placeholder exists for. The theme's base size is what
+      // an unmarked run actually renders at.
+      await tester.pumpWidget(
+        wrap(
+          const NaturalBlockView(
+            source: ':@image(https://example.com/a.png):@',
+            onActionBuild: NaturalBlockImages.builder,
+          ),
+        ),
+      );
+
+      final image = tester.widget<Image>(find.byType(Image));
+      final placeholder = image.loadingBuilder!(
+        tester.element(find.byType(Image)),
+        const SizedBox.shrink(),
+        const ImageChunkEvent(
+          cumulativeBytesLoaded: 1,
+          expectedTotalBytes: 100,
+        ),
+      );
+
+      expect((placeholder as SizedBox).height, isNotNull);
+      expect(placeholder.height, greaterThan(0));
+    });
+
+    testWidgets('the scale follows the theme, not a hardcoded size', (
+      tester,
+    ) async {
+      // The builder used to compare against a literal 14.0, duplicating the
+      // theme's default and drifting the moment anyone changed it.
+      await tester.pumpWidget(
+        wrap(
+          const NaturalBlockView(
+            source: ':@image(https://example.com/a.png):@',
+            onActionBuild: NaturalBlockImages.builder,
+            theme: NaturalBlockTheme(baseFontSize: 28),
+          ),
+        ),
+      );
+
+      final image = tester.widget<Image>(find.byType(Image).first);
+      // The ambient size is 14 and the theme's base is 28, so an unmarked
+      // run is half the base and the image is drawn at half size -- which
+      // `scale`, dividing, expresses as 2.
+      expect((image.image as NetworkImage).scale, 2);
+    });
+
+    testWidgets('an image carries a semantic label', (tester) async {
+      // Without one a screen reader announces nothing at all where a
+      // sighted reader sees a picture.
+      await tester.pumpWidget(
+        wrap(
+          const NaturalBlockView(
+            source: ':@image(https://example.com/a.png):@',
+            onActionBuild: NaturalBlockImages.builder,
+          ),
+        ),
+      );
+
+      expect(
+        tester.widget<Image>(find.byType(Image)).semanticLabel,
+        'https://example.com/a.png',
+      );
+    });
+
     testWidgets('a local path is declined rather than fetched', (
       tester,
     ) async {
@@ -252,6 +323,7 @@ void main() {
         BuildContext context,
         String text,
         TextStyle style,
+        NaturalBlockTheme theme,
       ) {
         final source = NaturalBlockImages.urlOf(text);
         if (source != null &&
@@ -260,7 +332,7 @@ void main() {
           // pulling `dart:io` into a package that deliberately avoids it.
           return WidgetSpan(child: Text('local:$source'));
         }
-        return NaturalBlockImages.builder(context, text, style);
+        return NaturalBlockImages.builder(context, text, style, theme);
       }
 
       await tester.pumpWidget(
@@ -280,14 +352,14 @@ void main() {
     testWidgets('a builder of your own can fall back to this one', (
       tester,
     ) async {
-      InlineSpan? mine(BuildContext context, String text, TextStyle style) {
+      InlineSpan? mine(BuildContext context, String text, TextStyle style, NaturalBlockTheme theme) {
         if (text.startsWith('user(') && text.endsWith(')')) {
           return TextSpan(
             text: text.substring(5, text.length - 1),
             style: style,
           );
         }
-        return NaturalBlockImages.builder(context, text, style);
+        return NaturalBlockImages.builder(context, text, style, theme);
       }
 
       await tester.pumpWidget(
