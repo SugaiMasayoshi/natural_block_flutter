@@ -32,6 +32,8 @@ Alignment is rendered by moving the block itself (its cross-axis alignment), not
 
 Plain `=`-separated rows are rendered as a `Row` of equal-width `Expanded` cells: each row is laid out on its own, so dividing the available width evenly is the only policy that keeps columns lined up between rows. That is what makes `左==右` push `右` to the far edge, and it is deliberately kept.
 
+Where the available width is *unbounded* — inside a horizontally scrolling parent, or nested in another `Row` — there is no width to divide and `Expanded` cannot be used at all, so cells fall back to hugging their content. That fallback is a degradation, not an equivalent: columns stop lining up between rows and the `=<` / `=>` / `=^` markers become no-ops, since a cell exactly as wide as its content has nothing to align within. It is accepted because the alternative is the document not rendering.
+
 Declaring a table with `|~` renders a Flutter `Table` instead, with `IntrinsicColumnWidth` -- columns as wide as their content, agreed across every row:
 
 ```dart
@@ -63,6 +65,8 @@ Striping is offered there rather than on the default constructor because it is o
 dependencies:
   natural_block_flutter: ^0.0.1
 ```
+
+Add `natural_block` too if you plan to register your own `NodeBuilder`s -- naming the AST node types (`TextNode`, `RowNode`, ...) requires importing the parser package directly.
 
 ## Usage
 
@@ -113,6 +117,20 @@ NaturalBlockView(source: source, theme: theme);
 
 Every field has a sensible default, so you only need to override the ones you want to change.
 
+Three more fields control what a size step is *worth*, since `natural_block` only reports a relative offset and never an absolute size:
+
+* `baseFontSize` — the size to scale from when no ambient `DefaultTextStyle` supplies one. Defaults to `14`.
+* `fontSizeStep` — logical pixels added per `:+` (or removed per `:-`). Defaults to `4`.
+* `minFontSize` — the floor. `:-----` would otherwise be able to drive the size to zero or below, which Flutter asserts on. Defaults to `1`.
+
+`copyWith` returns a modified copy, and `styleFor(SemanticColor)` gives the style for one semantic color (`SemanticColor.none` returns `base`). For `tableBorder` and `tableStripe` — the two nullable fields — passing `null` to `copyWith` *clears* the value; omit the argument to keep it.
+
+### Semantics
+
+Actionable runs are announced to a screen reader only when something is actually wired to them: the action *style* follows the document, which said the run is actionable, but claiming interactivity when neither `onActionTap` nor `onActionBuild` is supplied would be a promise nothing keeps. `NaturalBlockImages.builder` gives every image a `semanticLabel` taken from its payload.
+
+Tables carry no row/column semantics yet — a screen reader reads their cells as an undifferentiated stream, losing the structure the `|~` declaration exists to express.
+
 ### `NaturalBlockRegistry`
 
 Maps each AST node type to the function that builds a widget for it. This is how you customize *what* renders, not just how it looks -- register your own builder for a node type and it takes over rendering wherever that node appears, including nested inside `Column`/`Row` blocks built by the default registry.
@@ -130,6 +148,20 @@ NaturalBlockView(source: source, registry: registry);
 A `NodeBuilder` receives the node to render, the ambient theme, the registry itself, and a `NaturalBlockActions` to forward to any actionable spans inside it (so it can recurse into a node's own children, e.g. a `ColumnNode` builder rendering each of its children via `registry.buildAll`), and returns the widget for that node directly.
 
 Use `NaturalBlockRegistry.empty()` to start from nothing and register only the node types you care about, or `registerAll` to register several builders at once. The default builders (`buildRowNode`, `buildColumnNode`, `buildTableNode`, `buildTextNode`) are exported too, so a custom builder can delegate back to the default for the cases it doesn't want to change.
+
+**Lookup is by exact `runtimeType`, not by subtype.** A node whose runtime type is not a key of the registry — including a subclass of one that is — falls through to a fallback builder that renders *nothing*, printing a warning only in debug mode. If you introduce a node subclass, register a builder for that exact type.
+
+The widgets the default builders use are exported as well (`TextNodeView`, `ColumnNodeView`, `RowNodeView`, `TableNodeView`), so a custom builder can wrap or reuse one rather than reimplementing it. So are the types a builder signature needs: `NodeBuilder`, `NaturalBlockActions`, `OnActionTap`, `ActionSpanBuilder`, and `ImageSourceKind`.
+
+### Selectable text
+
+Text is built with `Text.rich` rather than a bare `RichText` specifically so it takes part in text selection. Wrap a `NaturalBlockView` in a `SelectionArea` and the rendered text becomes selectable and copyable, including drags that cross cell and row boundaries:
+
+```dart
+SelectionArea(child: NaturalBlockView(source: source));
+```
+
+A directly-constructed `RichText` never registers with the selection machinery, so a `SelectionArea` around one would silently do nothing — which is why this package does not use one.
 
 ### Actionable text
 
@@ -167,14 +199,16 @@ Leaving `onActionTap` unset (the default, `null`) still renders actionable spans
 ```dart
 NaturalBlockView(
   source: source,
-  onActionBuild: (context, text, style) {
+  onActionBuild: (context, text, style, theme) {
     if (text.startsWith('@')) return TextSpan(text: text.substring(1), style: style);
     return null; // not mine -- render it as usual
   },
 );
 ```
 
-The `style` you receive is what the span *would* have been drawn with, including everything the surrounding markup asked for. Reading `style.fontSize` is what lets `:++` / `:--` reach content that is not text at all. Block alignment (`|^`, `=>`) reaches it for free, since that moves the whole block.
+The `style` you receive is what the span *would* have been drawn with, including everything the surrounding markup asked for, and with its `fontSize` always resolved to a concrete value -- reading it is what lets `:++` / `:--` reach content that is not text at all. `theme` comes along so you can work out what that size means relative to an unmarked run (`theme.baseFontSize`, `theme.fontSizeStep`) rather than hardcoding a reference.
+
+A `WidgetSpan` you return is laid out with the paragraph's width but an **unbounded height**, so give its child a bounded height -- a vertically greedy one throws from inside the paragraph. Block alignment (`|^`, `=>`) reaches it for free, since that moves the whole block.
 
 #### Images
 
@@ -200,13 +234,13 @@ Shipping the reference implementation anyway is the point: declining to interpre
 `NaturalBlockImages.builder` renders network URLs and declines everything else. Drawing a local file needs `Image.file`, and so `dart:io`, which does not exist on the web — taking that on here would cost this package its web support for a capability only some apps want. Supply it in your own builder instead:
 
 ```dart
-onActionBuild: (context, text, style) {
+onActionBuild: (context, text, style, theme) {
   final source = NaturalBlockImages.urlOf(text);
   if (source != null &&
       NaturalBlockImages.kindOf(source) == ImageSourceKind.file) {
     return WidgetSpan(child: Image.file(File(source)));
   }
-  return NaturalBlockImages.builder(context, text, style);
+  return NaturalBlockImages.builder(context, text, style, theme);
 },
 ```
 

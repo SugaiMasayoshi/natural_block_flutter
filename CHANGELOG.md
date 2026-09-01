@@ -1,7 +1,60 @@
 ## 0.0.1
 
-* Initial release.
-* `NaturalBlockView`: parses a `natural_block` markup `source` string and renders it as Flutter widgets.
-* `NaturalBlockTheme`: maps semantic colors (danger/success/info/none) and emphasis to `TextStyle`s.
-* `NaturalBlockRegistry`: maps AST node types (`RowNode`, `ColumnNode`, `TextNode`) to the widget builders that render them, with `register`/`registerAll` for overriding or extending the defaults per node type.
-* Default `NodeBuilder`s for `RowNode`, `ColumnNode`, and `TextNode`, exported for reuse by custom builders.
+Initial release.
+
+### Rendering
+
+- `NaturalBlockView` parses a `natural_block` `source` string and renders it.
+- `TextNodeView` draws a line's styled runs, built with `Text.rich` so the
+  result takes part in text selection: wrap a view in a `SelectionArea` and
+  the text is selectable and copyable across cell and row boundaries.
+- `ColumnNodeView` stacks blocks and honours `BlockAlign`. A non-start block
+  is wrapped in `Align` rather than a width-filling box, so adding an
+  alignment marker can never make a document stop rendering where the
+  available width is unbounded.
+- `RowNodeView` gives each cell of a row an equal share of the width, which
+  is what keeps columns lined up between rows. Where the width is unbounded
+  it falls back to shrink-wrapped cells — a degradation, since columns then
+  stop lining up and alignment markers become no-ops, but better than not
+  rendering.
+- `TableNodeView` renders a `TableNode` with `IntrinsicColumnWidth`, so a
+  declared table's columns are as wide as their content and agree across
+  every row.
+
+### Theming
+
+- `NaturalBlockTheme` maps semantic colors, emphasis, and actionability to
+  `TextStyle`s, and controls what a size step is worth (`baseFontSize`,
+  `fontSizeStep`, `minFontSize`).
+- Table appearance: `tableCellPadding`, `tableBorder` (a full frame by
+  default), `tableStripe` (off by default).
+- `fromColorScheme` / `fromContext` derive a theme that adapts to
+  brightness, with `striped: true` banding a table's rows instead of ruling
+  them. Striping lives there rather than on the default constructor because
+  a band must be darker than the surface in a light theme and lighter in a
+  dark one, so no single constant can serve both.
+- `copyWith`, `styleFor`, `==` / `hashCode`.
+
+### Customization
+
+- `NaturalBlockRegistry` maps node types to the builder that renders them,
+  with `register` / `registerAll`. Lookup is by exact `runtimeType`, and a
+  node with no builder renders nothing with a debug-mode warning.
+- Default builders (`buildRowNode`, `buildColumnNode`, `buildTableNode`,
+  `buildTextNode`) are exported so a custom builder can delegate back.
+
+### Actionable runs
+
+- `onActionTap` reports a tap with the run's own text. Nothing here ever
+  interprets that text — no URL is opened, and there is no `url_launcher`
+  dependency.
+- `onActionBuild` replaces a run's rendering entirely; returning `null` for
+  a payload leaves it to the default, so an unrecognized one still reads as
+  text.
+- `NaturalBlockImages.builder` is the reference rendering for the
+  conventional `image(<url>)` payload, off until passed: drawing a remote
+  image is a network request to a third party made by displaying a
+  document, which is a disclosure decision belonging to the app.
+  `NaturalBlockImages.kindOf` classifies a payload as network, file, or
+  relative without needing `dart:io`.
+- A run is announced to a screen reader only when something is wired to it.

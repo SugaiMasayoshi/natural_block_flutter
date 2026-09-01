@@ -14,6 +14,11 @@ dependencies:
   natural_block_flutter:
     path: ../
 
+  # Needed to name AST node types (TextNode, ...) when registering a custom
+  # NodeBuilder. Any consumer doing the same needs this dependency too.
+  natural_block:
+    path: ../../natural_block
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
