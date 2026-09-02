@@ -125,6 +125,16 @@ Three more fields control what a size step is *worth*, since `natural_block` onl
 
 `copyWith` returns a modified copy, and `styleFor(SemanticColor)` gives the style for one semantic color (`SemanticColor.none` returns `base`). For `tableBorder` and `tableStripe` — the two nullable fields — passing `null` to `copyWith` *clears* the value; omit the argument to keep it.
 
+### Verbatim regions
+
+A `` |` `` region is text the parser stopped reading, so `VerbatimNodeView` only has to avoid undoing that: monospaced, whitespace and newlines exactly as written, no styling per run. Four theme fields control it:
+
+* `verbatim` — the text style. Monospaced by default, because in a region whose whole point is exactness, indentation and the difference between `l` and `1` are part of the content.
+* `verbatimPadding` and `verbatimDecoration` — the box. Pass `null` for no box.
+* `verbatimScrollsHorizontally` — **off by default.** Wrapping is wrong for code, since a line broken in the middle reads as a different program; but turning this on puts a scroll view inside your layout, which nothing else in this package does. Turn it on where the surrounding layout can afford it.
+
+The box is never stretched to the available width, for the same reason `ColumnNodeView` uses `Align` rather than a width-filling `SizedBox`: adding a code block must not be able to stop a document rendering.
+
 ### Semantics
 
 Actionable runs are announced to a screen reader only when something is actually wired to them: the action *style* follows the document, which said the run is actionable, but claiming interactivity when neither `onActionTap` nor `onActionBuild` is supplied would be a promise nothing keeps. `NaturalBlockImages.builder` gives every image a `semanticLabel` taken from its payload.

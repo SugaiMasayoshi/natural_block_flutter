@@ -96,6 +96,28 @@ class NaturalBlockTheme {
   /// the deliberate alternative.
   final Color? tableStripe;
 
+  /// The style for a verbatim region's text.
+  ///
+  /// Monospaced by default, because the whole reason a region is verbatim
+  /// is that the exact characters matter -- alignment, indentation and the
+  /// difference between `l` and `1` are part of the content.
+  final TextStyle verbatim;
+
+  /// Space between a verbatim region's box and its text.
+  final EdgeInsets verbatimPadding;
+
+  /// The box drawn behind a verbatim region, or `null` for none.
+  final BoxDecoration? verbatimDecoration;
+
+  /// Whether a verbatim region scrolls sideways instead of wrapping.
+  ///
+  /// Off by default. Wrapping is wrong for code -- a broken line reads as a
+  /// different program -- but scrolling means this package puts a scroll
+  /// view inside your layout, which is the one thing it otherwise never
+  /// does, and nested scrolling is easy to get wrong. Turn it on when the
+  /// surrounding layout can afford it.
+  final bool verbatimScrollsHorizontally;
+
   /// Creates a theme. All fields default to values that keep
   /// `const NaturalBlockTheme()` usable with no [BuildContext] -- see
   /// [NaturalBlockTheme.fromColorScheme] and
@@ -122,6 +144,13 @@ class NaturalBlockTheme {
       outside: BorderSide(color: Color(0x1F000000)),
     ),
     this.tableStripe,
+    this.verbatim = const TextStyle(fontFamily: 'monospace'),
+    this.verbatimPadding = const EdgeInsets.all(12),
+    this.verbatimDecoration = const BoxDecoration(
+      color: Color(0x0A000000),
+      borderRadius: BorderRadius.all(Radius.circular(4)),
+    ),
+    this.verbatimScrollsHorizontally = false,
   });
 
   /// Derives a theme from [scheme], keeping the same emphasis style and
@@ -251,6 +280,10 @@ class NaturalBlockTheme {
     EdgeInsets? tableCellPadding,
     Object? tableBorder = _unchanged,
     Object? tableStripe = _unchanged,
+    TextStyle? verbatim,
+    EdgeInsets? verbatimPadding,
+    Object? verbatimDecoration = _unchanged,
+    bool? verbatimScrollsHorizontally,
   }) {
     assert(
       tableBorder == _unchanged || tableBorder is TableBorder?,
@@ -277,6 +310,13 @@ class NaturalBlockTheme {
       tableStripe: identical(tableStripe, _unchanged)
           ? this.tableStripe
           : tableStripe as Color?,
+      verbatim: verbatim ?? this.verbatim,
+      verbatimPadding: verbatimPadding ?? this.verbatimPadding,
+      verbatimDecoration: identical(verbatimDecoration, _unchanged)
+          ? this.verbatimDecoration
+          : verbatimDecoration as BoxDecoration?,
+      verbatimScrollsHorizontally:
+          verbatimScrollsHorizontally ?? this.verbatimScrollsHorizontally,
     );
   }
 
@@ -295,7 +335,11 @@ class NaturalBlockTheme {
         minFontSize == other.minFontSize &&
         tableCellPadding == other.tableCellPadding &&
         tableBorder == other.tableBorder &&
-        tableStripe == other.tableStripe;
+        tableStripe == other.tableStripe &&
+        verbatim == other.verbatim &&
+        verbatimPadding == other.verbatimPadding &&
+        verbatimDecoration == other.verbatimDecoration &&
+        verbatimScrollsHorizontally == other.verbatimScrollsHorizontally;
   }
 
   @override
@@ -312,5 +356,9 @@ class NaturalBlockTheme {
     tableCellPadding,
     tableBorder,
     tableStripe,
+    verbatim,
+    verbatimPadding,
+    verbatimDecoration,
+    verbatimScrollsHorizontally,
   );
 }

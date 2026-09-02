@@ -117,6 +117,7 @@ class NaturalBlockRegistry {
     TableNode: buildTableNode,
     ColumnNode: buildColumnNode,
     TextNode: buildTextNode,
+    VerbatimNode: buildVerbatimNode,
   };
 
   /// The registry used by `NaturalBlockView` unless a custom `registry` is

@@ -164,6 +164,16 @@ void main() {
         ),
         'tableBorder': base.copyWith(tableBorder: null),
         'tableStripe': base.copyWith(tableStripe: const Color(0xFF123456)),
+        'verbatim': base.copyWith(
+          verbatim: const TextStyle(fontFamily: 'Courier'),
+        ),
+        'verbatimPadding': base.copyWith(
+          verbatimPadding: const EdgeInsets.all(99),
+        ),
+        'verbatimDecoration': base.copyWith(verbatimDecoration: null),
+        'verbatimScrollsHorizontally': base.copyWith(
+          verbatimScrollsHorizontally: true,
+        ),
       };
 
       for (final entry in differing.entries) {
