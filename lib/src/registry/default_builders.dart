@@ -10,7 +10,6 @@ import '../widget/natural_block_theme.dart';
 import '../widget/row_node_view.dart';
 import '../widget/table_node_view.dart';
 import '../widget/text_node_view.dart';
-import '../widget/verbatim_node_view.dart';
 import 'natural_block_registry.dart';
 
 /// Default builder for [RowNode]: renders it via [RowNodeView], one
@@ -80,18 +79,4 @@ Widget buildTableNode(
     registry: registry,
     actions: actions,
   );
-}
-
-/// Default builder for [VerbatimNode]: renders it via [VerbatimNodeView].
-///
-/// Takes no [registry] or [actions]: nothing inside a verbatim region is a
-/// node or an actionable run, because the parser stopped reading there.
-Widget buildVerbatimNode(
-  BuildContext context,
-  BlockNode node,
-  NaturalBlockTheme theme,
-  NaturalBlockRegistry registry,
-  NaturalBlockActions actions,
-) {
-  return VerbatimNodeView(node: node as VerbatimNode, theme: theme);
 }

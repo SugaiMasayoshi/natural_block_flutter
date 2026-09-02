@@ -2,7 +2,7 @@
 
 Flutter widgets that render the AST produced by [`natural_block`](https://github.com/SugaiMasayoshi/natural_block), a lightweight markup language for structured text layout with semantic decoration.
 
-`natural_block` does the parsing; this package turns its `DocumentNode` / `ColumnNode` / `RowNode` / `TableNode` / `TextNode` / `TextSpanNode` tree into `Column`, `Row`, `Table`, and `RichText` widgets -- with your own colors, and your own widgets substituted per node type if you want them.
+`natural_block` does the parsing; this package turns its `DocumentNode` / `ColumnNode` / `RowNode` / `TableNode` / `TextNode` / `TextSpanNode` / `VerbatimNode` tree into `Column`, `Row`, `Table`, and `RichText` widgets -- with your own colors, and your own widgets substituted per node type if you want them.
 
 ## A taste of the syntax
 
@@ -127,13 +127,24 @@ Three more fields control what a size step is *worth*, since `natural_block` onl
 
 ### Verbatim regions
 
-A `` |` `` region is text the parser stopped reading, so `VerbatimNodeView` only has to avoid undoing that: monospaced, whitespace and newlines exactly as written, no styling per run. Four theme fields control it:
+A `` ` ``-fenced region is text the parser stopped reading, so rendering only has to avoid undoing that: monospaced, whitespace and newlines exactly as written, no styling per run.
+
+**Where it was written decides how it is drawn.** The parser makes no distinction — a region is one node either way — so `TextNodeView` answers it: a region that is a line's *only* content is that line, and is drawn as a padded code block; a region sitting among other text is a monospaced run inside the line.
+
+```dart
+const inline = '比較は`a == b`です';   // a run, no box
+const block  = '`cat a | grep b`';    // a code block, boxed
+```
+
+Four theme fields control it:
 
 * `verbatim` — the text style. Monospaced by default, because in a region whose whole point is exactness, indentation and the difference between `l` and `1` are part of the content.
 * `verbatimPadding` and `verbatimDecoration` — the box. Pass `null` for no box.
 * `verbatimScrollsHorizontally` — **off by default.** Wrapping is wrong for code, since a line broken in the middle reads as a different program; but turning this on puts a scroll view inside your layout, which nothing else in this package does. Turn it on where the surrounding layout can afford it.
 
 The box is never stretched to the available width, for the same reason `ColumnNodeView` uses `Align` rather than a width-filling `SizedBox`: adding a code block must not be able to stop a document rendering.
+
+A region also works inside a table cell, which a `|`-based marker could never have done — a cell holds lines, not blocks.
 
 ### Semantics
 

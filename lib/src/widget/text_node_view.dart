@@ -113,7 +113,28 @@ class _TextNodeViewState extends State<TextNodeView> {
   Widget build(BuildContext context) {
     var actionIndex = 0;
 
-    final spans = widget.node.children.map((span) {
+    // A line whose only content is a verbatim region *is* that region, so
+    // it is drawn the way anyone writing a code block expects: a padded
+    // box, monospaced, its own thing on the page. A region sitting among
+    // text is the same node in a different place, and gets the monospace
+    // run without the box. The parser makes no distinction -- where it was
+    // written is a question about appearance, so it is answered here.
+    final children = widget.node.children;
+    if (children.length == 1 && children.single is VerbatimNode) {
+      return _VerbatimBlock(
+        node: children.single as VerbatimNode,
+        theme: widget.theme,
+      );
+    }
+
+    final spans = widget.node.children.map<InlineSpan>((child) {
+      if (child is VerbatimNode) {
+        return TextSpan(
+          text: child.text,
+          style: DefaultTextStyle.of(context).style.merge(widget.theme.verbatim),
+        );
+      }
+      final span = child as TextSpanNode;
       final style = widget.theme
           .styleFor(span.color)
           .merge(span.emphasis ? widget.theme.emphasis : null)
@@ -196,5 +217,48 @@ class _TextNodeViewState extends State<TextNodeView> {
     return scaled < widget.theme.minFontSize
         ? widget.theme.minFontSize
         : scaled;
+  }
+}
+
+/// A verbatim region that is a whole line, drawn as a code block.
+///
+/// Separate from the inline case only in presentation. The AST has one
+/// verbatim node; whether it looks like a block is about where it was
+/// written, which is a question only a renderer can answer.
+class _VerbatimBlock extends StatelessWidget {
+  final VerbatimNode node;
+  final NaturalBlockTheme theme;
+
+  const _VerbatimBlock({required this.node, required this.theme});
+
+  @override
+  Widget build(BuildContext context) {
+    // Text.rich rather than a bare RichText, for the same reason the rest
+    // of this file uses it: code is exactly the kind of text a reader wants
+    // to select and copy.
+    final content = Text.rich(
+      TextSpan(
+        text: node.text,
+        style: DefaultTextStyle.of(context).style.merge(theme.verbatim),
+      ),
+      // Wrapping has to be off when scrolling, or the text would wrap to the
+      // viewport and the scroll view would have nothing to scroll.
+      softWrap: !theme.verbatimScrollsHorizontally,
+    );
+
+    return Container(
+      padding: theme.verbatimPadding,
+      decoration: theme.verbatimDecoration,
+      // The box is never stretched to the available width, for the same
+      // reason `ColumnNodeView` uses Align rather than a width-filling
+      // SizedBox: adding a code block must not be able to stop a document
+      // rendering where the width is unbounded.
+      child: theme.verbatimScrollsHorizontally
+          ? SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: content,
+            )
+          : content,
+    );
   }
 }

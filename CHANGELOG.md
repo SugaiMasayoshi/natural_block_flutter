@@ -43,6 +43,17 @@ Initial release.
 - Default builders (`buildRowNode`, `buildColumnNode`, `buildTableNode`,
   `buildTextNode`) are exported so a custom builder can delegate back.
 
+### Verbatim regions
+
+- A `` ` ``-fenced region renders monospaced, with whitespace and newlines
+  exactly as written. Where it was written decides how it is drawn: a region
+  that is a line's only content is a padded code block, one among other text
+  is a monospaced run.
+- `verbatim`, `verbatimPadding` and `verbatimDecoration` style it.
+- `verbatimScrollsHorizontally` (off by default) makes long lines scroll
+  rather than wrap. Wrapping is wrong for code, but turning this on puts a
+  scroll view inside the caller's layout, which nothing else here does.
+
 ### Actionable runs
 
 - `onActionTap` reports a tap with the run's own text. Nothing here ever
