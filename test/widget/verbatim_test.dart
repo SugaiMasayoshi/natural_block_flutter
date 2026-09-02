@@ -1,3 +1,13 @@
+// 【解説】[テスト13/21] verbatim の描画。1つのノードを2通りに描く判断。
+// 【解説】
+// 【解説】 2つ目の group が核心で、置かれ方が見た目を決める。行の中身が
+// 【解説】 区間だけなら枠付きのコードブロック、文中にあれば等幅のランになる。
+// 【解説】 パーサは区別していないので、この判断は TextNodeView にしかない。
+// 【解説】
+// 【解説】 "layout safety" は、コードブロックを足したせいで文書が描けなく
+// 【解説】 なることが無いという確認。幅が無限のところでも落ちない。
+// 【解説】 次: test/widget/column_node_view_test.dart
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:natural_block_flutter/natural_block_flutter.dart';

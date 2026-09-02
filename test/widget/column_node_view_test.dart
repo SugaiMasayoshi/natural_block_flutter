@@ -1,3 +1,10 @@
+// 【解説】[テスト14/21] 縦積み。短い。
+// 【解説】
+// 【解説】 ColumnNodeView はノードではなく「組み立て済みウィジェット」を
+// 【解説】 受け取る。だからテストも木ではなくウィジェットを渡していて、
+// 【解説】 registry を経由せずに単体で確かめられる。
+// 【解説】 次: test/widget/row_node_view_test.dart
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:natural_block/natural_block.dart';

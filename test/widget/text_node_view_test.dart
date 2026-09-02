@@ -1,3 +1,18 @@
+// 【解説】[テスト12/21] 葉の描画。色・サイズ・アクションが文字に届くこと。
+// 【解説】
+// 【解説】 サイズの group が見どころ。パーサは相対値(+2)しか言わないので、
+// 【解説】 1段が何ポイントかを決めるのはテーマ。周囲の DefaultTextStyle が
+// 【解説】 あればそこから、無ければ baseFontSize から数える。
+// 【解説】 :----- のような大きな負値で 0 以下にならないこと(Flutter が
+// 【解説】 assert する)も見ている。
+// 【解説】
+// 【解説】 アクションの group には、再ビルドを跨いで recognizer が同じ
+// 【解説】 オブジェクトのままであることのテストがある。作り直すと押下と離上の
+// 【解説】 間でタップが黙って消えるという、旧実装で実際に起きた不具合。
+// 【解説】 破棄そのものは検証できない(dispose は印を残さない)ので、
+// 【解説】 観測できる側だけを見ている。
+// 【解説】 次: test/widget/verbatim_test.dart
+
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';

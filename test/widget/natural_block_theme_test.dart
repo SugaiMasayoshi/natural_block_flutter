@@ -1,3 +1,17 @@
+// 【解説】[テスト17/21] テーマ。「意味」から「見た目」への対応表の検算。
+// 【解説】
+// 【解説】 copyWith の group が長いのには理由がある。tableBorder と
+// 【解説】 tableStripe は null 可能なので、「null を渡して消す」と
+// 【解説】 「省略して保つ」を区別しなければならない。普通の copyWith では
+// 【解説】 書けないので番兵を置いていて、その番兵が効いていることの確認。
+// 【解説】
+// 【解説】 "equality covers every field" は、フィールドを増やしたときに
+// 【解説】 == への追加を忘れないための網。忘れると差し替えても再描画されない。
+// 【解説】
+// 【解説】 縞が fromColorScheme にしか無いのも見ている。帯は明るい配色では
+// 【解説】 地より暗く、暗い配色では明るくなければならず、固定値では両立しない。
+// 【解説】 次: test/registry/natural_block_registry_test.dart
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:natural_block/natural_block.dart';

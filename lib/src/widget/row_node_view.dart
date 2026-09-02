@@ -1,4 +1,4 @@
-// 【解説】[14/16] 横並び。1つの RowNode を受け取り、セルごとに1列を作る。
+// 【解説】[17/21] 横並び。1つの RowNode を受け取り、セルごとに1列を作る。
 // 【解説】
 // 【解説】 なぜ等分(Expanded)なのかが最大の読みどころ。この widget は自分の行しか
 // 【解説】 見えず、隣の行のセルの内容を知らない。だから「既知の幅を等分する」以外に、
@@ -10,7 +10,7 @@
 // 【解説】 列は揃わなくなり寄せも無効になる。描画されないよりまし、という判断。
 // 【解説】 → 表を本格的にやるなら、ここではなく ColumnNodeView 側で連続した
 // 【解説】   RowNode をまとめて Table にする必要がある(現時点では未実装)。
-// 【解説】 次: lib/src/registry/natural_block_registry.dart
+// 【解説】 次: lib/src/widget/table_node_view.dart（RowNodeView と対になる）
 
 import 'package:flutter/widgets.dart';
 import 'package:natural_block/natural_block.dart';

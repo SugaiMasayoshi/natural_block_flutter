@@ -1,3 +1,16 @@
+// 【解説】[テスト19/21] 画像。言語に構文を足さずに済ませた部分の検算。
+// 【解説】
+// 【解説】 image(...) はただの慣習で、パーサも本体も知らない。だから
+// 【解説】 「知らない実装では読めるテキストに劣化する」ことがテストできる。
+// 【解説】 img を別名として受けないことも固定してある。2通りある状態こそが、
+// 【解説】 この慣習が防ごうとしている方言そのものだから。
+// 【解説】
+// 【解説】 kindOf の group には罠が1つ入っている。Uri.parse は
+// 【解説】 C:\Users\a.png を「スキームが c の URI」と読むので、
+// 【解説】 「スキームがあれば URL」という素直な判定は Windows のパスを
+// 【解説】 全部 URL と誤認する。それを踏まないことの確認。
+// 【解説】 次: test/natural_block_flutter_test.dart
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:natural_block_flutter/natural_block_flutter.dart';

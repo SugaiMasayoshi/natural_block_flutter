@@ -1,13 +1,14 @@
-// 【解説】[16/16] 利用者から見た入口。最後に読むと全部が繋がる。
+// 【解説】[21/21] 利用者から見た入口。最後に読むと全部が繋がる。
 // 【解説】
 // 【解説】 build() の中身は3行しかない:
-// 【解説】   1. パースして ColumnNode を得る       … natural_block 側[9]
-// 【解説】   2. registry で子を全部ウィジェットにする … [15][16前半]
-// 【解説】   3. ColumnNodeView で縦に積む          … [13]
-// 【解説】 ここから [12] TextNodeView まで再帰的に降りていく。
+// 【解説】   1. パースして ColumnNode を得る       … natural_block 側[11][12]
+// 【解説】   2. registry で子を全部ウィジェットにする … [19][20]
+// 【解説】   3. ColumnNodeView で縦に積む          … [16]
+// 【解説】 ここから [15] TextNodeView まで再帰的に降りていく。
 // 【解説】
 // 【解説】 build のたびに parse し直している。3000文字で約0.4msと実測済みで、
 // 【解説】 実害が出る水準ではないので、あえてメモ化していない。
+// 【解説】 次: lib/src/widget/natural_block_images.dart（番外1・本筋ではない）
 
 import 'package:flutter/widgets.dart';
 import 'package:natural_block/natural_block.dart';

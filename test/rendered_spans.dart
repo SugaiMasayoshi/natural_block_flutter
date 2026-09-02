@@ -1,3 +1,11 @@
+// 【解説】[テスト11/21] テストの道具。先に読むと以降の書き方が分かる。
+// 【解説】
+// 【解説】 描画された RichText から「実際に文字を持つ葉のスパン」だけを
+// 【解説】 集める。固定の深さで添字を掘らず木を歩いているのが要点で、
+// 【解説】 Text.rich は与えたスパンを包むので葉は今2段下にいるが、
+// 【解説】 それは Flutter の都合であってテストが縛られる話ではない。
+// 【解説】 次: test/widget/text_node_view_test.dart
+
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 

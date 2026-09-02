@@ -1,7 +1,8 @@
-// 【解説】[番外] 実際に動かして確かめる場所。読解の最後に起動すると理解が固まる。
+// 【解説】[番外2] 実際に動かして確かめる場所。読解の最後に起動すると理解が固まる。
 // 【解説】 flutter run で「試してみよう」欄に直接記法を打ち込める。
 // 【解説】 _samples に構文ごとの例が並んでいるので、上から順に眺めるのが早い。
 // 【解説】 アクション(:@...:@)は一覧・試してみよう欄の両方でタップできる。
+// 【解説】 次: テスト編へ。natural_block/test/readme_test.dart から [テスト1/21]
 
 import 'package:flutter/material.dart';
 import 'package:flutter/widget_previews.dart';

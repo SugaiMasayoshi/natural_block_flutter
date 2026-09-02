@@ -1,6 +1,7 @@
-// 【解説】[16/16 の前半] 既定の描画関数3つ。registry と widget を繋ぐだけの薄い層。
+// 【解説】[20/21] 既定の描画関数3つ。registry と widget を繋ぐだけの薄い層。
 // 【解説】 ここが薄いことに意味があり、各 View は registry を知らずに済んでいる。
 // 【解説】 buildColumnNode だけが registry.buildAll を再帰的に呼ぶ = 木を降りる場所。
+// 【解説】 次: lib/src/widget/natural_block_view.dart（最後の1枚）
 
 import 'package:flutter/widgets.dart';
 import 'package:natural_block/natural_block.dart';

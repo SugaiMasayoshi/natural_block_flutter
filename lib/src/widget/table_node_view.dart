@@ -1,4 +1,4 @@
-// 【解説】[14.5/16] 表。RowNodeView と対になる存在で、違いは幅の決め方にある。
+// 【解説】[18/21] 表。RowNodeView と対になる存在で、違いは幅の決め方にある。
 // 【解説】
 // 【解説】 RowNodeView は1行しか見えないので既知の幅を等分するしかない。
 // 【解説】 TableNode は行をまとめて持っているので、ここでは全行を一度に
@@ -8,6 +8,7 @@
 // 【解説】 IntrinsicWidth で包んでいるのが要点。Table は素のままだと与えられた
 // 【解説】 幅いっぱいに広がり、余りを各列に配ってしまうので、内容幅に収まらない。
 // 【解説】 実測: フォント14の3列表で、包まないと列が 0/288/548、包むと 0/84/174。
+// 【解説】 次: lib/src/registry/natural_block_registry.dart
 
 import 'package:flutter/widgets.dart';
 import 'package:natural_block/natural_block.dart';

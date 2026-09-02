@@ -1,3 +1,17 @@
+// 【解説】[テスト16/21] 表の描画。RowNodeView との違いは幅の決め方だけ。
+// 【解説】
+// 【解説】 最初の group が本質で、列が内容の幅になり、かつ行をまたいで
+// 【解説】 一致すること。普通の行は幅を等分するので、ここが唯一の違い。
+// 【解説】
+// 【解説】 罫線と縞は装飾構文では書けないのでテーマが持つ。既定が外枠まで
+// 【解説】 引くのは、表がこの言語で唯一「始まりと終わりを宣言する」構文で、
+// 【解説】 枠がソースの言っていることを表すから。
+// 【解説】
+// 【解説】 "shapes a consumer can build by hand" は、パーサからは出てこない
+// 【解説】 が利用側が手で組める形。1行だけの表、1列だけの表、そして列数が
+// 【解説】 揃わない表は「間違って描くより目立って落ちる」ことを固定している。
+// 【解説】 次: test/widget/natural_block_theme_test.dart
+
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
