@@ -61,9 +61,15 @@ void main() {
     ) async {
       final node = RowNode(
         children: [
-          ColumnNode(children: [TextNode(children: [TextSpanNode(text: 'left')])]),
           ColumnNode(
-            children: [TextNode(children: [TextSpanNode(text: 'right')])],
+            children: [
+              TextNode(children: [TextSpanNode(text: 'left')]),
+            ],
+          ),
+          ColumnNode(
+            children: [
+              TextNode(children: [TextSpanNode(text: 'right')]),
+            ],
           ),
         ],
       );
@@ -81,10 +87,16 @@ void main() {
     testWidgets('an empty cell renders as an empty Expanded', (tester) async {
       final node = RowNode(
         children: [
-          ColumnNode(children: [TextNode(children: [TextSpanNode(text: 'left')])]),
+          ColumnNode(
+            children: [
+              TextNode(children: [TextSpanNode(text: 'left')]),
+            ],
+          ),
           ColumnNode(children: []), // middle cell deliberately blank
           ColumnNode(
-            children: [TextNode(children: [TextSpanNode(text: 'right')])],
+            children: [
+              TextNode(children: [TextSpanNode(text: 'right')]),
+            ],
           ),
         ],
       );

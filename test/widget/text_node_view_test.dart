@@ -48,9 +48,7 @@ void main() {
       expect(spans[1].text, 'plain');
     });
 
-    testWidgets('combines color and emphasis on the same span', (
-      tester,
-    ) async {
+    testWidgets('combines color and emphasis on the same span', (tester) async {
       final node = TextNode(
         children: [
           TextSpanNode(
@@ -63,7 +61,9 @@ void main() {
       const theme = NaturalBlockTheme();
 
       await tester.pumpWidget(
-        MaterialApp(home: TextNodeView(node: node, theme: theme)),
+        MaterialApp(
+          home: TextNodeView(node: node, theme: theme),
+        ),
       );
 
       final span = renderedSpans(tester).first;
@@ -96,32 +96,29 @@ void main() {
       expect(span.style!.fontSize, 14 + 2 * theme.fontSizeStep);
     });
 
-    testWidgets(
-      'clamps a large negative sizeOffset to minFontSize instead of '
-      'producing a zero or negative font size',
-      (tester) async {
-        final node = TextNode(
-          children: [TextSpanNode(text: 'tiny', sizeOffset: -5)],
-        );
-        const theme = NaturalBlockTheme();
+    testWidgets('clamps a large negative sizeOffset to minFontSize instead of '
+        'producing a zero or negative font size', (tester) async {
+      final node = TextNode(
+        children: [TextSpanNode(text: 'tiny', sizeOffset: -5)],
+      );
+      const theme = NaturalBlockTheme();
 
-        await tester.pumpWidget(
-          MaterialApp(
-            home: DefaultTextStyle(
-              style: const TextStyle(fontSize: 14),
-              child: TextNodeView(node: node, theme: theme),
-            ),
+      await tester.pumpWidget(
+        MaterialApp(
+          home: DefaultTextStyle(
+            style: const TextStyle(fontSize: 14),
+            child: TextNodeView(node: node, theme: theme),
           ),
-        );
+        ),
+      );
 
-        expect(tester.takeException(), isNull);
+      expect(tester.takeException(), isNull);
 
-        final span = renderedSpans(tester).first;
+      final span = renderedSpans(tester).first;
 
-        expect(span.style!.fontSize, theme.minFontSize);
-        expect(span.style!.fontSize, greaterThan(0));
-      },
-    );
+      expect(span.style!.fontSize, theme.minFontSize);
+      expect(span.style!.fontSize, greaterThan(0));
+    });
   });
 
   group('actionable spans', () {
@@ -134,7 +131,9 @@ void main() {
       const theme = NaturalBlockTheme();
 
       await tester.pumpWidget(
-        MaterialApp(home: TextNodeView(node: node, theme: theme)),
+        MaterialApp(
+          home: TextNodeView(node: node, theme: theme),
+        ),
       );
 
       final span = renderedSpans(tester).first;
@@ -153,7 +152,9 @@ void main() {
       const theme = NaturalBlockTheme();
 
       await tester.pumpWidget(
-        MaterialApp(home: TextNodeView(node: node, theme: theme)),
+        MaterialApp(
+          home: TextNodeView(node: node, theme: theme),
+        ),
       );
 
       final span = renderedSpans(tester).first;
@@ -194,7 +195,9 @@ void main() {
         const theme = NaturalBlockTheme();
 
         await tester.pumpWidget(
-          MaterialApp(home: TextNodeView(node: node, theme: theme)),
+          MaterialApp(
+            home: TextNodeView(node: node, theme: theme),
+          ),
         );
 
         final span = renderedSpans(tester).first;
@@ -290,7 +293,9 @@ void main() {
       const theme = NaturalBlockTheme();
 
       await tester.pumpWidget(
-        MaterialApp(home: TextNodeView(node: node, theme: theme)),
+        MaterialApp(
+          home: TextNodeView(node: node, theme: theme),
+        ),
       );
       final inert = renderedSpans(tester).single;
       expect(inert.style!.decoration, theme.action.decoration);
@@ -365,7 +370,9 @@ void main() {
               ),
               // A different theme instance each time, so the rebuild is
               // real work rather than an identical widget Flutter can skip.
-              theme: NaturalBlockTheme(base: TextStyle(letterSpacing: suffix.length * 0.0)),
+              theme: NaturalBlockTheme(
+                base: TextStyle(letterSpacing: suffix.length * 0.0),
+              ),
               actions: NaturalBlockActions(onTap: tapped.add),
             ),
           ),
@@ -391,11 +398,9 @@ void main() {
       await gesture.up();
       await tester.pump();
 
-      expect(
-        tapped,
-        ['press'],
-        reason: 'the tap must survive a rebuild between down and up',
-      );
+      expect(tapped, [
+        'press',
+      ], reason: 'the tap must survive a rebuild between down and up');
     });
 
     testWidgets('unmounting a line of actionable spans does not throw', (

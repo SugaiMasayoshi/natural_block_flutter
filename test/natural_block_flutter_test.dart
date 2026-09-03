@@ -38,7 +38,11 @@ void main() {
 
       final row = tester.widget<Row>(find.byType(Row));
       expect(row.children, hasLength(2), reason: 'two cells, not three');
-      expect(find.byType(TextNodeView), findsNWidgets(3));
+      expect(
+        find.byType(TextNodeView),
+        findsNWidgets(2),
+        reason: 'one view per cell -- a newline no longer starts a new node',
+      );
     });
 
     testWidgets('renders plain text as a single RichText', (tester) async {
@@ -61,8 +65,7 @@ void main() {
       },
     );
 
-    testWidgets(
-      'renders column-separated content stacked vertically', (
+    testWidgets('renders column-separated content stacked vertically', (
       tester,
     ) async {
       await pump(tester, 'first|second');
@@ -71,25 +74,22 @@ void main() {
       expect(find.byType(TextNodeView), findsNWidgets(2));
     });
 
-    testWidgets(
-      '"a=b|c=d" renders as two separate two-cell Rows, not one '
-      'four-cell Row',
-      (tester) async {
-        // Regression: RowNode boundaries used to be implicit in sibling
-        // adjacency, so a column of two row-blocks in a row could collapse
-        // into a single merged Row of every cell.
-        await pump(tester, 'a=b|c=d');
+    testWidgets('"a=b|c=d" renders as two separate two-cell Rows, not one '
+        'four-cell Row', (tester) async {
+      // Regression: RowNode boundaries used to be implicit in sibling
+      // adjacency, so a column of two row-blocks in a row could collapse
+      // into a single merged Row of every cell.
+      await pump(tester, 'a=b|c=d');
 
-        expect(find.byType(RowNodeView), findsNWidgets(2));
-        expect(find.byType(Row), findsNWidgets(2));
+      expect(find.byType(RowNodeView), findsNWidgets(2));
+      expect(find.byType(Row), findsNWidgets(2));
 
-        final rows = tester.widgetList<Row>(find.byType(Row)).toList();
-        for (final row in rows) {
-          expect(row.children, hasLength(2));
-        }
-        expect(find.byType(Expanded), findsNWidgets(4));
-      },
-    );
+      final rows = tester.widgetList<Row>(find.byType(Row)).toList();
+      for (final row in rows) {
+        expect(row.children, hasLength(2));
+      }
+      expect(find.byType(Expanded), findsNWidgets(4));
+    });
   });
 
   group('decoration rendering (end-to-end)', () {
@@ -139,7 +139,9 @@ void main() {
 
   group('theme and registry customization', () {
     testWidgets('a custom theme changes the rendered color', (tester) async {
-      const customTheme = NaturalBlockTheme(danger: TextStyle(color: Colors.purple));
+      const customTheme = NaturalBlockTheme(
+        danger: TextStyle(color: Colors.purple),
+      );
       await pump(tester, ':!alert:!', theme: customTheme);
 
       final span = renderedSpans(tester).first;
@@ -167,25 +169,22 @@ void main() {
     // rendered text takes part in selection. A directly-constructed
     // RichText never registers with the selection machinery, so wrapping it
     // in a SelectionArea would silently do nothing.
-    testWidgets(
-      'text registers for selection when wrapped in a SelectionArea, '
-      'across every cell and row',
-      (tester) async {
-        await tester.pumpWidget(
-          const MaterialApp(
-            home: SelectionArea(child: NaturalBlockView(source: 'a=b|c=d')),
-          ),
-        );
+    testWidgets('text registers for selection when wrapped in a SelectionArea, '
+        'across every cell and row', (tester) async {
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: SelectionArea(child: NaturalBlockView(source: 'a=b|c=d')),
+        ),
+      );
 
-        final texts = tester.widgetList<RichText>(find.byType(RichText));
-        expect(texts, hasLength(4));
-        expect(
-          texts.every((t) => t.selectionRegistrar != null),
-          isTrue,
-          reason: 'every cell of every row must be selectable',
-        );
-      },
-    );
+      final texts = tester.widgetList<RichText>(find.byType(RichText));
+      expect(texts, hasLength(4));
+      expect(
+        texts.every((t) => t.selectionRegistrar != null),
+        isTrue,
+        reason: 'every cell of every row must be selectable',
+      );
+    });
 
     testWidgets('a line containing a WidgetSpan still registers', (
       tester,
@@ -245,10 +244,7 @@ void main() {
     Future<void> pumpWide(WidgetTester tester, String source) =>
         tester.pumpWidget(
           MaterialApp(
-            home: SizedBox(
-              width: 800,
-              child: NaturalBlockView(source: source),
-            ),
+            home: SizedBox(width: 800, child: NaturalBlockView(source: source)),
           ),
         );
 
@@ -263,9 +259,7 @@ void main() {
         ),
       );
       final box = boxes.single;
-      final topLeft = renderParagraph.localToGlobal(
-        Offset(box.left, box.top),
-      );
+      final topLeft = renderParagraph.localToGlobal(Offset(box.left, box.top));
       final bottomRight = renderParagraph.localToGlobal(
         Offset(box.right, box.bottom),
       );
@@ -342,9 +336,9 @@ void main() {
     double left(WidgetTester tester, String text) => tester
         .getTopLeft(
           find.byWidget(
-            tester.widgetList<RichText>(find.byType(RichText)).firstWhere(
-              (w) => w.text.toPlainText() == text,
-            ),
+            tester
+                .widgetList<RichText>(find.byType(RichText))
+                .firstWhere((w) => w.text.toPlainText() == text),
           ),
         )
         .dx;
@@ -378,34 +372,31 @@ void main() {
       },
     );
 
-    testWidgets(
-      'a row in an unbounded width shrink-wraps its cells instead of '
-      'throwing',
-      (tester) async {
-        // Regression: cells were wrapped in Expanded unconditionally, and a
-        // Row cannot lay out flex children when its own width is unbounded
-        // -- so any document containing "=" threw inside a horizontal
-        // scroll view, i.e. stopped rendering entirely.
-        await tester.pumpWidget(
-          const MaterialApp(
-            home: Scaffold(
-              body: SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: NaturalBlockView(source: 'Apple=200=1000'),
-              ),
+    testWidgets('a row in an unbounded width shrink-wraps its cells instead of '
+        'throwing', (tester) async {
+      // Regression: cells were wrapped in Expanded unconditionally, and a
+      // Row cannot lay out flex children when its own width is unbounded
+      // -- so any document containing "=" threw inside a horizontal
+      // scroll view, i.e. stopped rendering entirely.
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(
+            body: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: NaturalBlockView(source: 'Apple=200=1000'),
             ),
           ),
-        );
+        ),
+      );
 
-        expect(tester.takeException(), isNull);
-        expect(find.byType(RichText), findsNWidgets(3));
+      expect(tester.takeException(), isNull);
+      expect(find.byType(RichText), findsNWidgets(3));
 
-        // Cells are packed at their own content width, in order.
-        expect(left(tester, 'Apple'), 0);
-        expect(left(tester, '200'), greaterThan(0));
-        expect(left(tester, '1000'), greaterThan(left(tester, '200')));
-      },
-    );
+      // Cells are packed at their own content width, in order.
+      expect(left(tester, 'Apple'), 0);
+      expect(left(tester, '200'), greaterThan(0));
+      expect(left(tester, '1000'), greaterThan(left(tester, '200')));
+    });
 
     testWidgets('a row nested in another Row renders without throwing', (
       tester,
@@ -445,7 +436,8 @@ void main() {
         expect(
           left(tester, '200'),
           isNot(closeTo(left(tester, '1'), 0.01)),
-          reason: 'the second column of each row does not align when '
+          reason:
+              'the second column of each row does not align when '
               'cells shrink-wrap',
         );
       },

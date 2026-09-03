@@ -42,10 +42,18 @@ void main() {
       final nodes = <BlockNode>[
         RowNode(
           children: [
-            ColumnNode(children: [TextNode(children: [TextSpanNode(text: 'a')])]),
+            ColumnNode(
+              children: [
+                TextNode(children: [TextSpanNode(text: 'a')]),
+              ],
+            ),
           ],
         ),
-        ColumnNode(children: [TextNode(children: [TextSpanNode(text: 'b')])]),
+        ColumnNode(
+          children: [
+            TextNode(children: [TextSpanNode(text: 'b')]),
+          ],
+        ),
         TextNode(children: [TextSpanNode(text: 'c')]),
       ];
 
@@ -59,36 +67,52 @@ void main() {
       expect(find.byType(TextNodeView), findsNWidgets(3));
     });
 
-    testWidgets('one RowNode renders as one Row, keeping other nodes separate', (
-      tester,
-    ) async {
-      final nodes = <BlockNode>[
-        RowNode(
-          children: [
-            ColumnNode(children: [TextNode(children: [TextSpanNode(text: 'a')])]),
-            ColumnNode(children: [TextNode(children: [TextSpanNode(text: 'b')])]),
-          ],
-        ),
-        TextNode(children: [TextSpanNode(text: 'between')]),
-        RowNode(
-          children: [
-            ColumnNode(children: [TextNode(children: [TextSpanNode(text: 'c')])]),
-          ],
-        ),
-      ];
+    testWidgets(
+      'one RowNode renders as one Row, keeping other nodes separate',
+      (tester) async {
+        final nodes = <BlockNode>[
+          RowNode(
+            children: [
+              ColumnNode(
+                children: [
+                  TextNode(children: [TextSpanNode(text: 'a')]),
+                ],
+              ),
+              ColumnNode(
+                children: [
+                  TextNode(children: [TextSpanNode(text: 'b')]),
+                ],
+              ),
+            ],
+          ),
+          TextNode(children: [TextSpanNode(text: 'between')]),
+          RowNode(
+            children: [
+              ColumnNode(
+                children: [
+                  TextNode(children: [TextSpanNode(text: 'c')]),
+                ],
+              ),
+            ],
+          ),
+        ];
 
-      final built = await buildWith(
-        tester,
-        NaturalBlockRegistry.defaults,
-        nodes,
-      );
+        final built = await buildWith(
+          tester,
+          NaturalBlockRegistry.defaults,
+          nodes,
+        );
 
-      // 2 RowNodes + 1 plain text = 3 top-level widgets.
-      expect(built.length, 3);
-      expect(find.byType(RowNodeView), findsNWidgets(2));
-      expect(find.byType(Row), findsNWidgets(2));
-      expect(find.byType(Expanded), findsNWidgets(3)); // a+b in one Row, c alone in the other
-    });
+        // 2 RowNodes + 1 plain text = 3 top-level widgets.
+        expect(built.length, 3);
+        expect(find.byType(RowNodeView), findsNWidgets(2));
+        expect(find.byType(Row), findsNWidgets(2));
+        expect(
+          find.byType(Expanded),
+          findsNWidgets(3),
+        ); // a+b in one Row, c alone in the other
+      },
+    );
   });
 
   group('register / registerAll (custom builders)', () {

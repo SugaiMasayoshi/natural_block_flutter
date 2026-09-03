@@ -186,12 +186,17 @@ void main() {
       // tracking pixel and the reader was never asked.
       await tester.pumpWidget(
         wrap(
-          const NaturalBlockView(source: ':@image(https://example.com/a.png):@'),
+          const NaturalBlockView(
+            source: ':@image(https://example.com/a.png):@',
+          ),
         ),
       );
 
       expect(find.byType(Image), findsNothing);
-      expect(renderedSpans(tester).single.text, 'image(https://example.com/a.png)');
+      expect(
+        renderedSpans(tester).single.text,
+        'image(https://example.com/a.png)',
+      );
     });
 
     testWidgets('the size vocabulary reaches the image', (tester) async {
@@ -308,9 +313,7 @@ void main() {
       );
     });
 
-    testWidgets('a local path is declined rather than fetched', (
-      tester,
-    ) async {
+    testWidgets('a local path is declined rather than fetched', (tester) async {
       // Drawing one needs `dart:io`, which the web does not have -- taking
       // that on would cost this package its web support. Declining leaves a
       // clean handoff to an app that wants it, and wastes no request in the
@@ -365,7 +368,12 @@ void main() {
     testWidgets('a builder of your own can fall back to this one', (
       tester,
     ) async {
-      InlineSpan? mine(BuildContext context, String text, TextStyle style, NaturalBlockTheme theme) {
+      InlineSpan? mine(
+        BuildContext context,
+        String text,
+        TextStyle style,
+        NaturalBlockTheme theme,
+      ) {
         if (text.startsWith('user(') && text.endsWith(')')) {
           return TextSpan(
             text: text.substring(5, text.length - 1),

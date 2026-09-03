@@ -13,6 +13,7 @@
 // 【解説】 これで最後。lib 側は [1/21] から読める。
 
 import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -31,6 +32,8 @@ const _source = '''
 final x = a == b ? 1 : 2;
 cat file.txt | grep foo | wc -l
 `
+
+表は `|~` で宣言します。列幅は内容に揃います。
 
 |~:*商品::=>:*価格::=^:*在庫::|
 りんご=150=12|

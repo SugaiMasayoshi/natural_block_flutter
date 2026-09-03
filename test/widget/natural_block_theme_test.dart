@@ -59,9 +59,7 @@ void main() {
 
     test('replaces action when given', () {
       const theme = NaturalBlockTheme();
-      final copy = theme.copyWith(
-        action: const TextStyle(color: Colors.pink),
-      );
+      final copy = theme.copyWith(action: const TextStyle(color: Colors.pink));
 
       expect(copy.action, const TextStyle(color: Colors.pink));
       expect(copy.danger, theme.danger);

@@ -42,53 +42,52 @@ void main() {
   double leftOf(WidgetTester tester, String text) => tester
       .getRect(
         find.byWidget(
-          tester.widgetList<RichText>(find.byType(RichText)).firstWhere(
-            (w) => w.text.toPlainText() == text,
-          ),
+          tester
+              .widgetList<RichText>(find.byType(RichText))
+              .firstWhere((w) => w.text.toPlainText() == text),
         ),
       )
       .left;
 
   group('column widths', () {
-    testWidgets(
-      'columns fit their content and agree across rows',
-      (tester) async {
-        // The reason tables are declared separately from plain rows: a
-        // TableNode holds every row, so its columns can be sized to their
-        // content and still line up. A RowNodeView cannot do this -- it
-        // renders one row and cannot see its siblings.
-        await tester.pumpWidget(
-          wrap(
-            const NaturalBlockView(source: '|~Item=Price|Apple=200|Banana=1|'),
-          ),
-        );
+    testWidgets('columns fit their content and agree across rows', (
+      tester,
+    ) async {
+      // The reason tables are declared separately from plain rows: a
+      // TableNode holds every row, so its columns can be sized to their
+      // content and still line up. A RowNodeView cannot do this -- it
+      // renders one row and cannot see its siblings.
+      await tester.pumpWidget(
+        wrap(
+          const NaturalBlockView(source: '|~Item=Price|Apple=200|Banana=1|'),
+        ),
+      );
 
-        expect(find.byType(Table), findsOneWidget);
+      expect(find.byType(Table), findsOneWidget);
 
-        final firstColumn = ['Item', 'Apple', 'Banana'].map(
-          (t) => leftOf(tester, t),
-        );
-        final secondColumn = ['Price', '200', '1'].map(
-          (t) => leftOf(tester, t),
-        );
+      final firstColumn = [
+        'Item',
+        'Apple',
+        'Banana',
+      ].map((t) => leftOf(tester, t));
+      final secondColumn = ['Price', '200', '1'].map((t) => leftOf(tester, t));
 
-        expect(
-          firstColumn.toSet(),
-          hasLength(1),
-          reason: 'every first-column cell starts at the same x',
-        );
-        expect(
-          secondColumn.toSet(),
-          hasLength(1),
-          reason: 'every second-column cell starts at the same x',
-        );
-        expect(
-          secondColumn.first,
-          lessThan(200),
-          reason: 'the second column follows the content, not half the width',
-        );
-      },
-    );
+      expect(
+        firstColumn.toSet(),
+        hasLength(1),
+        reason: 'every first-column cell starts at the same x',
+      );
+      expect(
+        secondColumn.toSet(),
+        hasLength(1),
+        reason: 'every second-column cell starts at the same x',
+      );
+      expect(
+        secondColumn.first,
+        lessThan(200),
+        reason: 'the second column follows the content, not half the width',
+      );
+    });
 
     testWidgets(
       'the same rows without the marker still split the width evenly',
@@ -153,9 +152,7 @@ void main() {
         tableCellPadding: EdgeInsets.symmetric(horizontal: 40),
       );
       await tester.pumpWidget(
-        wrap(
-          const NaturalBlockView(source: '|~A=B|C=D|', theme: padded),
-        ),
+        wrap(const NaturalBlockView(source: '|~A=B|C=D|', theme: padded)),
       );
 
       expect(leftOf(tester, 'A'), 40);
@@ -225,9 +222,7 @@ void main() {
     // The parser guarantees every row has the same cell count, but
     // TableNodeView is exported, so a hand-built node can violate that.
     // These pin what happens rather than leaving it to be discovered.
-    testWidgets('a one-row table renders and is never striped', (
-      tester,
-    ) async {
+    testWidgets('a one-row table renders and is never striped', (tester) async {
       await tester.pumpWidget(
         wrap(
           const NaturalBlockView(
@@ -303,7 +298,12 @@ void main() {
           TableNodeView(
             node: TableNode(
               children: [
-                RowNode(children: [ColumnNode(children: []), ColumnNode()]),
+                RowNode(
+                  children: [
+                    ColumnNode(children: []),
+                    ColumnNode(),
+                  ],
+                ),
               ],
             ),
             theme: theme,
@@ -321,10 +321,7 @@ void main() {
       final tapped = <String>[];
       await tester.pumpWidget(
         wrap(
-          NaturalBlockView(
-            source: '|~:@tap:@=B|C=D|',
-            onActionTap: tapped.add,
-          ),
+          NaturalBlockView(source: '|~:@tap:@=B|C=D|', onActionTap: tapped.add),
         ),
       );
 
