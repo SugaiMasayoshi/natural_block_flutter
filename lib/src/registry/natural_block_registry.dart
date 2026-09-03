@@ -53,6 +53,7 @@ class NaturalBlockRegistry {
     TableNode: buildTableNode,
     ColumnNode: buildColumnNode,
     TextNode: buildTextNode,
+    VerbatimNode: buildVerbatimNode,
   };
 
   static const NaturalBlockRegistry defaults = NaturalBlockRegistry._(

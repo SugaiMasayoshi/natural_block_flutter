@@ -6,6 +6,7 @@ import '../widget/natural_block_theme.dart';
 import '../widget/row_node_view.dart';
 import '../widget/table_node_view.dart';
 import '../widget/text_node_view.dart';
+import '../widget/verbatim_node_view.dart';
 import 'natural_block_registry.dart';
 
 Widget buildRowNode(
@@ -58,4 +59,14 @@ Widget buildTableNode(
     registry: registry,
     actions: actions,
   );
+}
+
+Widget buildVerbatimNode(
+  BuildContext context,
+  NaturalBlockNode node,
+  NaturalBlockTheme theme,
+  NaturalBlockRegistry registry,
+  NaturalBlockActions actions,
+) {
+  return VerbatimNodeView(node: node as VerbatimNode, theme: theme);
 }

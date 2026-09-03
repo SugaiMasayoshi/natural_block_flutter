@@ -52,16 +52,8 @@ class _TextNodeViewState extends State<TextNodeView> {
   Widget build(BuildContext context) {
     var actionIndex = 0;
 
-    final children = widget.node.children;
-    if (children.length == 1 && children.single is VerbatimNode) {
-      return _VerbatimBlock(
-        node: children.single as VerbatimNode,
-        theme: widget.theme,
-      );
-    }
-
     final spans = widget.node.children.map<InlineSpan>((child) {
-      if (child is VerbatimNode) {
+      if (child is VerbatimSpanNode) {
         return TextSpan(
           text: child.text,
           style: DefaultTextStyle.of(context).style
@@ -123,34 +115,5 @@ class _TextNodeViewState extends State<TextNodeView> {
     return scaled < widget.theme.minFontSize
         ? widget.theme.minFontSize
         : scaled;
-  }
-}
-
-class _VerbatimBlock extends StatelessWidget {
-  final VerbatimNode node;
-  final NaturalBlockTheme theme;
-
-  const _VerbatimBlock({required this.node, required this.theme});
-
-  @override
-  Widget build(BuildContext context) {
-    final content = Text.rich(
-      TextSpan(
-        text: node.text,
-        style: DefaultTextStyle.of(context).style.merge(theme.verbatim),
-      ),
-      softWrap: !theme.verbatimScrollsHorizontally,
-    );
-
-    return Container(
-      padding: theme.verbatimPadding,
-      decoration: theme.verbatimDecoration,
-      child: theme.verbatimScrollsHorizontally
-          ? SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: content,
-            )
-          : content,
-    );
   }
 }

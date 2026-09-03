@@ -9,3 +9,4 @@ export 'src/widget/natural_block_view.dart';
 export 'src/widget/row_node_view.dart';
 export 'src/widget/table_node_view.dart';
 export 'src/widget/text_node_view.dart';
+export 'src/widget/verbatim_node_view.dart';
