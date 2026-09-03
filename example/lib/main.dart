@@ -1,9 +1,3 @@
-// 【解説】[番外2] 実際に動かして確かめる場所。読解の最後に起動すると理解が固まる。
-// 【解説】 flutter run で「試してみよう」欄に直接記法を打ち込める。
-// 【解説】 _samples に構文ごとの例が並んでいるので、上から順に眺めるのが早い。
-// 【解説】 アクション(:@...:@)は一覧・試してみよう欄の両方でタップできる。
-// 【解説】 次: テスト編へ。natural_block/test/readme_test.dart から [テスト1/21]
-
 import 'package:flutter/material.dart';
 import 'package:flutter/widget_previews.dart';
 import 'package:natural_block/natural_block.dart';
@@ -13,10 +7,6 @@ void main() {
   runApp(const MyApp());
 }
 
-/// Lets you see the sample list from [NaturalBlockDemoPage] instantly via
-/// `flutter widget-preview`, without building/launching the whole example
-/// app. Run `flutter widget-preview start` from this package and open the
-/// preview surface it prints -- edits to `_samples` below show up live.
 @Preview(name: 'natural_block_flutter サンプル一覧')
 Widget naturalBlockSamplesPreview() => const NaturalBlockDemoPage();
 
@@ -28,11 +18,6 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  // Both toggles exist to make theming visible. `NaturalBlockTheme` is
-  // derived from the app's own ColorScheme below, so switching brightness
-  // shows the semantic colors adapting rather than staying hardcoded, and
-  // `striped` shows the one table option that only a scheme-derived theme
-  // can offer safely.
   var _dark = false;
   var _striped = false;
 
@@ -131,34 +116,28 @@ const _samples = [
   _Sample(
     'そのまま出す区間(バッククォートで囲む)\n単独で置くとコードブロックとして描かれる',
     '`\n'
-    'final x = a == b ? 1 : 2;\n'
-    'cat file.txt | grep foo | wc -l\n'
-    '`',
+        'final x = a == b ? 1 : 2;\n'
+        'cat file.txt | grep foo | wc -l\n'
+        '`',
   ),
   _Sample(
     '同じ行を区間の外に書くと刻まれる\n= と | はコードが最も使う文字なので',
     'final x = a == b ? 1 : 2;',
   ),
-  _Sample(
-    '文中にも置ける(同じ構文・同じノード)\n置かれ方で見た目だけが変わる',
-    '比較は `a == b` で、区切りは `|` です',
-  ),
+  _Sample('文中にも置ける(同じ構文・同じノード)\n置かれ方で見た目だけが変わる', '比較は `a == b` で、区切りは `|` です'),
   _Sample(
     '表のセルの中でも使える\n| を含むコードがセルを割らない',
     '|~記号=意味|'
-    '`|`=縦に並べる|'
-    '`=`=横に並べる|',
+        '`|`=縦に並べる|'
+        '`=`=横に並べる|',
   ),
   _Sample(
     'フェンスは長くできる(``なら中に`を書ける)\nこの記法で自分自身を説明できる',
     '``\n'
-    '`これは閉じ記号にならない`\n'
-    '``',
+        '`これは閉じ記号にならない`\n'
+        '``',
   ),
-  _Sample(
-    r'閉じ忘れは区間にならない(何も飲み込まない)',
-    'a `b の後の | はちゃんと区切る',
-  ),
+  _Sample(r'閉じ忘れは区間にならない(何も飲み込まない)', 'a `b の後の | はちゃんと区切る'),
 ];
 
 class NaturalBlockDemoPage extends StatelessWidget {
@@ -179,11 +158,6 @@ class NaturalBlockDemoPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Derived from the app's own ColorScheme rather than using the const
-    // default, so the semantic colors adapt to brightness instead of being
-    // fixed reds and greens. `striped` bands a table's rows and drops the
-    // horizontal rules -- only safe here, because a band has to be darker
-    // than the surface in a light theme and lighter in a dark one.
     final theme = NaturalBlockTheme.fromContext(context, striped: striped);
 
     return Scaffold(
@@ -194,8 +168,6 @@ class NaturalBlockDemoPage extends StatelessWidget {
           _Toggle(label: 'ダーク', value: dark, onChanged: onDarkChanged),
         ],
       ),
-      // Everything is selectable: TextNodeView is built with Text.rich for
-      // exactly this, and a drag crosses cell and row boundaries.
       body: SelectionArea(
         child: Column(
           children: [
@@ -231,15 +203,9 @@ class NaturalBlockDemoPage extends StatelessWidget {
                           ),
                           borderRadius: BorderRadius.circular(8),
                         ),
-                        // タップされたアクションのテキストをそのままSnackBarで表示する。
-                        // どう解釈する(URLを開く/セクションへ移動する等)かはアプリ側の
-                        // 責務であり、natural_block/natural_block_flutterはテキストを
-                        // 運ぶだけで一切解釈しない。
                         child: NaturalBlockView(
                           source: sample.source,
                           theme: theme,
-                          // 画像はここで明示的に有効化している。渡さなければ
-                          // image(...) は読めるテキストのまま描かれ、通信も起きない。
                           onActionBuild: NaturalBlockImages.builder,
                           onActionTap: (text) {
                             ScaffoldMessenger.of(context).showSnackBar(
@@ -261,7 +227,6 @@ class NaturalBlockDemoPage extends StatelessWidget {
   }
 }
 
-/// A switch in the app bar, with its label.
 class _Toggle extends StatelessWidget {
   final String label;
   final bool value;
@@ -285,9 +250,6 @@ class _Toggle extends StatelessWidget {
   }
 }
 
-/// Shows the same source rendered by the default registry and by one with a
-/// builder swapped in, which is how you change *what* renders rather than
-/// just how it looks.
 class _RegistryDemo extends StatelessWidget {
   final NaturalBlockTheme theme;
 
@@ -297,9 +259,6 @@ class _RegistryDemo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Every TextNode now renders as a chip instead of plain text. A builder
-    // registered here takes over wherever that node type appears, including
-    // nested inside rows and tables built by the default registry.
     final registry = NaturalBlockRegistry.defaults.register(
       TextNode,
       (context, node, theme, registry, actions) => Padding(
@@ -348,9 +307,6 @@ class _RegistryDemo extends StatelessWidget {
   }
 }
 
-/// A live "type it yourself" area: whatever you type in the text field is
-/// parsed and rendered immediately below, using the exact same
-/// [NaturalBlockView] the samples below use.
 class _Playground extends StatefulWidget {
   final NaturalBlockTheme theme;
 
@@ -406,16 +362,11 @@ class _PlaygroundState extends State<_Playground> {
               border: Border.all(color: Theme.of(context).dividerColor),
               borderRadius: BorderRadius.circular(8),
             ),
-            // AnimatedBuilder listens to the controller (a Listenable) and
-            // rebuilds just this preview on every keystroke.
             child: AnimatedBuilder(
               animation: _controller,
               builder: (context, _) => NaturalBlockView(
                 source: _controller.text,
                 theme: widget.theme,
-                // 一覧のサンプルと同じく、ここで入力した :@...:@ も
-                // そのままタップできる。渡さないとアクションは色と下線が
-                // 付くだけでタップに反応しない。
                 onActionBuild: NaturalBlockImages.builder,
                 onActionTap: (text) {
                   ScaffoldMessenger.of(

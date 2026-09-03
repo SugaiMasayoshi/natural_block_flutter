@@ -1,52 +1,9 @@
-// 【解説】[16/21] 縦積み。ノードを受け取らず「組み立て済みウィジェット」を受け取る
-// 【解説】 のが特徴で、子を作る責任は呼び手(registry)にある。
-// 【解説】
-// 【解説】 読みどころは Align を使っている理由。中央/終端寄せには「内容より広い幅」が
-// 【解説】 要るが、幅いっぱいの SizedBox にすると幅が無限の文脈(横スクロールの中など)
-// 【解説】 で例外になり、寄せを付けた途端に文書が描画されなくなる。
-// 【解説】 Align は同じ文脈で内容を抱き込む側に退避するので壊れない。
-// 【解説】 次: lib/src/widget/row_node_view.dart
-
 import 'package:flutter/widgets.dart';
 import 'package:natural_block/natural_block.dart';
 
-/// Renders pre-built child widgets in a vertically stacked [Column], honoring
-/// `ColumnNode.align`.
-///
-/// Alignment is applied by moving the block itself -- setting the `Column`'s
-/// [Column.crossAxisAlignment] -- rather than by giving the text a
-/// `textAlign`. Both approaches produce identical results for lines of
-/// differing length, since each line is its own child widget here, but block
-/// alignment touches one widget instead of requiring this widget to stretch
-/// *and* its text children to receive a `textAlign`. It also leaves a
-/// [BlockAlign.start] block hugging its content as a real sized object,
-/// which is room for per-block background/border decorations later.
-///
-/// A [BlockAlign.start] block is left to hug its content, as `Column`
-/// normally does. A [BlockAlign.center] or [BlockAlign.end] block, however,
-/// needs room on its cross axis before `crossAxisAlignment` has anything to
-/// move it *within* -- a shrink-wrapped `Column` nested inside another
-/// non-stretching `Column` (as this widget is, when it renders a block
-/// nested in a bigger document) is offered only as much width as its
-/// content needs, same as a start-aligned block. So a non-start block is
-/// wrapped in an [Align], which takes the width its ancestors offer and
-/// positions the block within it.
-///
-/// [Align] rather than a width-filling `SizedBox`: both position the block
-/// identically when the width is bounded, but a `SizedBox` of infinite
-/// width throws where the available width is itself unbounded -- inside a
-/// horizontally scrolling parent, say. `Align` degrades to hugging the
-/// content there instead of failing, so adding an alignment marker can
-/// never make a document that rendered before stop rendering.
 class ColumnNodeView extends StatelessWidget {
-  /// The already-built widgets to stack vertically, in order. Building
-  /// these from the source `ColumnNode`'s children (typically via
-  /// `NaturalBlockRegistry.buildAll`) is the caller's responsibility --
-  /// this widget only lays them out.
   final List<Widget> children;
 
-  /// How to align [children] on the cross axis, taken from the source
-  /// `ColumnNode.align`. Defaults to [BlockAlign.start].
   final BlockAlign align;
 
   const ColumnNodeView({
@@ -62,8 +19,6 @@ class ColumnNodeView extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: children,
     );
-    // A start-aligned block keeps hugging its content; a centered or
-    // end-aligned one needs room to be moved within -- see the class doc.
     if (align == BlockAlign.start) return column;
     return Align(alignment: _alignmentFor(align), child: column);
   }
