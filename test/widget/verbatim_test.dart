@@ -166,7 +166,7 @@ void main() {
       // Only possible because the delimiter no longer involves `|`: a cell
       // holds lines, so it could never have held a block-shaped region.
       await tester.pumpWidget(
-        wrap(const NaturalBlockView(source: '|~x=`a|b`|y=z|')),
+        wrap(const NaturalBlockView(source: '~x=`a|b`|y=z~')),
       );
 
       expect(tester.takeException(), isNull);

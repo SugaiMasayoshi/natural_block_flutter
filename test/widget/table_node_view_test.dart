@@ -59,7 +59,7 @@ void main() {
       // renders one row and cannot see its siblings.
       await tester.pumpWidget(
         wrap(
-          const NaturalBlockView(source: '|~Item=Price|Apple=200|Banana=1|'),
+          const NaturalBlockView(source: '~Item=Price|Apple=200|Banana=1~'),
         ),
       );
 
@@ -110,10 +110,10 @@ void main() {
   });
 
   group('placement', () {
-    testWidgets('`|~^` centers the table', (tester) async {
+    testWidgets('`~^` centers the table', (tester) async {
       // Meaningful only because the table is sized to its content: a
       // width-filling table would have nothing to be centered within.
-      await tester.pumpWidget(wrap(const NaturalBlockView(source: '|~^A=B|')));
+      await tester.pumpWidget(wrap(const NaturalBlockView(source: '~^A=B~')));
 
       final a = tester.getRect(
         find.byWidget(tester.widget<RichText>(find.byType(RichText).first)),
@@ -132,7 +132,7 @@ void main() {
           const Scaffold(
             body: SingleChildScrollView(
               scrollDirection: Axis.horizontal,
-              child: NaturalBlockView(source: '|~^A=B|C=D|'),
+              child: NaturalBlockView(source: '~^A=B|C=D~'),
             ),
           ),
         ),
@@ -152,7 +152,7 @@ void main() {
         tableCellPadding: EdgeInsets.symmetric(horizontal: 40),
       );
       await tester.pumpWidget(
-        wrap(const NaturalBlockView(source: '|~A=B|C=D|', theme: padded)),
+        wrap(const NaturalBlockView(source: '~A=B|C=D~', theme: padded)),
       );
 
       expect(leftOf(tester, 'A'), 40);
@@ -162,7 +162,7 @@ void main() {
       tester,
     ) async {
       await tester.pumpWidget(
-        wrap(const NaturalBlockView(source: '|~A=B|C=D|')),
+        wrap(const NaturalBlockView(source: '~A=B|C=D~')),
       );
       final border = tester.widget<Table>(find.byType(Table)).border!;
       // A frame on every edge, not just rules between cells: a table is the
@@ -182,7 +182,7 @@ void main() {
       await tester.pumpWidget(
         wrap(
           const NaturalBlockView(
-            source: '|~A=B|C=D|',
+            source: '~A=B|C=D~',
             theme: NaturalBlockTheme(tableBorder: null),
           ),
         ),
@@ -194,7 +194,7 @@ void main() {
       tester,
     ) async {
       await tester.pumpWidget(
-        wrap(const NaturalBlockView(source: '|~A=B|C=D|')),
+        wrap(const NaturalBlockView(source: '~A=B|C=D~')),
       );
       expect(
         tester
@@ -207,7 +207,7 @@ void main() {
       await tester.pumpWidget(
         wrap(
           const NaturalBlockView(
-            source: '|~A=B|C=D|',
+            source: '~A=B|C=D~',
             theme: NaturalBlockTheme(tableStripe: Color(0xFFEEEEEE)),
           ),
         ),
@@ -226,7 +226,7 @@ void main() {
       await tester.pumpWidget(
         wrap(
           const NaturalBlockView(
-            source: '|~only=row|',
+            source: '~only=row~',
             theme: NaturalBlockTheme(tableStripe: Color(0xFFEEEEEE)),
           ),
         ),
@@ -321,7 +321,7 @@ void main() {
       final tapped = <String>[];
       await tester.pumpWidget(
         wrap(
-          NaturalBlockView(source: '|~:@tap:@=B|C=D|', onActionTap: tapped.add),
+          NaturalBlockView(source: '~:@tap:@=B|C=D~', onActionTap: tapped.add),
         ),
       );
 

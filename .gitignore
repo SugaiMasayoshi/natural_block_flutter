@@ -31,3 +31,6 @@ migrate_working_dir/
 /coverage/
 # Widget Preview related
 .widget_preview/
+
+# Written by flutter_test when a golden comparison fails.
+**/failures/

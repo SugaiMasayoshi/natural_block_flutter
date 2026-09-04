@@ -34,15 +34,17 @@ Plain `=`-separated rows are rendered as a `Row` of equal-width `Expanded` cells
 
 Where the available width is *unbounded* — inside a horizontally scrolling parent, or nested in another `Row` — there is no width to divide and `Expanded` cannot be used at all, so cells fall back to hugging their content. That fallback is a degradation, not an equivalent: columns stop lining up between rows and the `=<` / `=>` / `=^` markers become no-ops, since a cell exactly as wide as its content has nothing to align within. It is accepted because the alternative is the document not rendering.
 
-Declaring a table with `|~` renders a Flutter `Table` instead, with `IntrinsicColumnWidth` -- columns as wide as their content, agreed across every row:
+Declaring a table with `~` renders a Flutter `Table` instead, with `IntrinsicColumnWidth` -- columns as wide as their content, agreed across every row:
 
 ```dart
-const source = '|~商品=>価格|'
-    'りんご=150|'
-    'バナナ=98|';
+const source = '~\n'
+    '|商品=>価格\n'
+    '|りんご=150\n'
+    '|バナナ=98\n'
+    '~';
 ```
 
-Because a table is sized to its content rather than filling the width, it can be positioned: `|~^` centers it. And because its columns touch, a table needs spacing and rules that the decoration syntax cannot express -- `NaturalBlockTheme` supplies them:
+Because a table is sized to its content rather than filling the width, it can be positioned: `~^` centers it. And because its columns touch, a table needs spacing and rules that the decoration syntax cannot express -- `NaturalBlockTheme` supplies them:
 
 * `tableCellPadding` -- space between a cell's edge and its text. Defaults to `EdgeInsets.symmetric(horizontal: 8, vertical: 4)`.
 * `tableBorder` -- rules drawn around and between rows and columns. Defaults to hairlines on every edge, outer frame included: a table is the one construct with a declared beginning and end, so a frame states something the source actually says. Pass `TableBorder.symmetric(inside: ...)` for rules without the surrounding box, or `null` for none.
@@ -150,7 +152,7 @@ A region also works inside a table cell, which a `|`-based marker could never ha
 
 Actionable runs are announced to a screen reader only when something is actually wired to them: the action *style* follows the document, which said the run is actionable, but claiming interactivity when neither `onActionTap` nor `onActionBuild` is supplied would be a promise nothing keeps. `NaturalBlockImages.builder` gives every image a `semanticLabel` taken from its payload.
 
-Tables carry no row/column semantics yet — a screen reader reads their cells as an undifferentiated stream, losing the structure the `|~` declaration exists to express.
+Tables carry no row/column semantics yet — a screen reader reads their cells as an undifferentiated stream, losing the structure the `~` declaration exists to express.
 
 ### `NaturalBlockRegistry`
 
