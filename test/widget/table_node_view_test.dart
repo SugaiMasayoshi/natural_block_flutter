@@ -262,11 +262,12 @@ void main() {
       expect(find.byType(Table), findsOneWidget);
     });
 
-    testWidgets('ragged rows fail loudly rather than rendering wrong', (
+    testWidgets('a ragged row is squared off to the table width', (
       tester,
     ) async {
-      // Flutter's Table asserts on this, which is exactly why the parser
-      // ends a table at a row of a different width instead of trying.
+      // Flutter's `Table` asserts unless every row holds the same number of
+      // children. That is this layer's problem, not the tree's: the parser
+      // records only the cells the author wrote, and the view pads.
       await tester.pumpWidget(
         wrap(
           TableNodeView(
@@ -282,7 +283,37 @@ void main() {
         ),
       );
 
-      expect(tester.takeException(), isNotNull);
+      expect(tester.takeException(), isNull);
+      final rows = tester.widget<Table>(find.byType(Table)).children;
+      expect([for (final r in rows) r.children.length], [2, 2]);
+    });
+
+    testWidgets('a cell that stated nothing is drawn with its column', (
+      tester,
+    ) async {
+      // The resolution the parser no longer does: the tree says the second
+      // cell of row 2 stated nothing, and that the column stated `end`.
+      const source = '~|A=>B\n|C=D\n~';
+      final table =
+          NaturalBlockParser.parse(source).children.single as TableNode;
+
+      expect(table.columns, [null, BlockAlign.end]);
+      expect(
+        table.children[1].children[1].align,
+        isNull,
+        reason: 'the source wrote no marker on that cell',
+      );
+
+      await tester.pumpWidget(wrap(const NaturalBlockView(source: source)));
+
+      final aligned = tester.widgetList<ColumnNodeView>(
+        find.byType(ColumnNodeView),
+      );
+      expect(
+        aligned.where((v) => v.align == BlockAlign.end).length,
+        2,
+        reason: 'both cells of the end-aligned column are drawn end-aligned',
+      );
     });
   });
 

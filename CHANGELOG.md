@@ -21,7 +21,13 @@ Initial release.
   rendering.
 - `TableNodeView` renders a `TableNode` with `IntrinsicColumnWidth`, so a
   declared table's columns are as wide as their content and agree across
-  every row.
+  every row. It also does the two things the tree deliberately leaves undone:
+  it squares short rows off to the table's width (Flutter's `TableRow`
+  requires every row to hold the same number of children) and resolves each
+  cell's alignment against its column (`cell.align ?? table.columns[i]`).
+  Both are questions about drawing, asked of a tree that records only what
+  the author wrote. Cells still go through the registry, so a caller's own
+  `ColumnNode` builder applies inside a table.
 
 ### Theming
 
