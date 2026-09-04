@@ -5,7 +5,7 @@ import '../registry/natural_block_registry.dart';
 import 'column_node_view.dart';
 import 'natural_block_theme.dart';
 
-class NaturalBlockView extends StatelessWidget {
+class NaturalBlockView extends StatefulWidget {
   final String source;
 
   final NaturalBlockTheme theme;
@@ -26,13 +26,36 @@ class NaturalBlockView extends StatelessWidget {
   });
 
   @override
+  State<NaturalBlockView> createState() => _NaturalBlockViewState();
+}
+
+class _NaturalBlockViewState extends State<NaturalBlockView> {
+  /// The parsed `source`, kept across rebuilds.
+  ///
+  /// The tree is a pure function of `source` and owes nothing to the
+  /// `BuildContext`, but `build` runs whenever an ancestor rebuilds -- a
+  /// theme change, a `MediaQuery` change, every frame of an animating
+  /// parent. Parsing there charged the whole document to each of those.
+  late DocumentNode _document = NaturalBlockParser.parse(widget.source);
+
+  @override
+  void didUpdateWidget(NaturalBlockView oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.source != oldWidget.source) {
+      _document = NaturalBlockParser.parse(widget.source);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final document = NaturalBlockParser.parse(source);
-    final children = registry.buildAll(
+    final children = widget.registry.buildAll(
       context,
-      document.children,
-      theme,
-      NaturalBlockActions(onTap: onActionTap, buildSpan: onActionBuild),
+      _document.children,
+      widget.theme,
+      NaturalBlockActions(
+        onTap: widget.onActionTap,
+        buildSpan: widget.onActionBuild,
+      ),
     );
 
     return ColumnNodeView(children: children);

@@ -5,6 +5,9 @@ Initial release.
 ### Rendering
 
 - `NaturalBlockView` parses a `natural_block` `source` string and renders it.
+  It parses once per source, not once per build: the tree owes nothing to the
+  `BuildContext`, so an ancestor rebuilding -- a theme change, an animating
+  parent, a scroll -- reuses it, and only a new `source` re-parses.
 - `TextNodeView` draws a line's styled runs, built with `Text.rich` so the
   result takes part in text selection: wrap a view in a `SelectionArea` and
   the text is selectable and copyable across cell and row boundaries.

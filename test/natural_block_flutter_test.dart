@@ -450,6 +450,85 @@ void main() {
     );
   });
 
+  group('parsing happens once per source, not once per frame', () {
+    // Nothing about the parse depends on the BuildContext, but `build` runs
+    // whenever an ancestor rebuilds. Counting is the only way to see this:
+    // a rebuilt view renders identically whether or not it re-parsed, so no
+    // assertion about the widgets it produces would ever catch a regression.
+
+    /// A registry that counts how many times a document reaches it.
+    ({NaturalBlockRegistry registry, List<int> builds}) counting() {
+      final builds = <int>[];
+      return (
+        builds: builds,
+        registry: NaturalBlockRegistry.defaults.register(TextNode, (
+          context,
+          node,
+          theme,
+          registry,
+          actions,
+        ) {
+          builds.add(1);
+          return const SizedBox.shrink();
+        }),
+      );
+    }
+
+    testWidgets('an ancestor rebuild does not re-parse', (tester) async {
+      final counter = counting();
+      final rebuild = ValueNotifier<int>(0);
+      addTearDown(rebuild.dispose);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: ValueListenableBuilder<int>(
+            valueListenable: rebuild,
+            builder: (context, value, _) => Padding(
+              padding: EdgeInsets.all(value.toDouble()),
+              child: NaturalBlockView(
+                source: 'one|two|three',
+                registry: counter.registry,
+              ),
+            ),
+          ),
+        ),
+      );
+
+      final afterFirst = counter.builds.length;
+      expect(afterFirst, 3, reason: 'three blocks on the first build');
+
+      for (var i = 1; i <= 5; i++) {
+        rebuild.value = i;
+        await tester.pump();
+      }
+
+      expect(
+        tester.widget<Padding>(find.byType(Padding).first).padding,
+        const EdgeInsets.all(5),
+        reason: 'the ancestor really did rebuild',
+      );
+      expect(
+        counter.builds.length,
+        afterFirst + 3 * 5,
+        reason: 'widgets are rebuilt each frame -- the parse is not',
+      );
+    });
+
+    testWidgets('changing the source re-parses', (tester) async {
+      Future<void> pumpSource(WidgetTester tester, String source) =>
+          tester.pumpWidget(
+            MaterialApp(home: NaturalBlockView(source: source)),
+          );
+
+      await pumpSource(tester, 'first');
+      expect(find.text('first', findRichText: true), findsOneWidget);
+
+      await pumpSource(tester, 'second');
+      expect(find.text('second', findRichText: true), findsOneWidget);
+      expect(find.text('first', findRichText: true), findsNothing);
+    });
+  });
+
   group('edge cases', () {
     testWidgets('an empty source renders an empty Column', (tester) async {
       await pump(tester, '');
