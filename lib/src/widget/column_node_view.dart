@@ -4,16 +4,18 @@ import 'package:natural_block/natural_block.dart';
 class ColumnNodeView extends StatelessWidget {
   final List<Widget> children;
 
-  final BlockAlign align;
+  /// The alignment the source stated, or null when it stated none.
+  ///
+  /// Both draw at the start today. They are kept apart so a theme can give
+  /// unaligned blocks a look of its own without also overriding a block that
+  /// asked for the start.
+  final BlockAlign? align;
 
-  const ColumnNodeView({
-    super.key,
-    required this.children,
-    this.align = BlockAlign.start,
-  });
+  const ColumnNodeView({super.key, required this.children, this.align});
 
   @override
   Widget build(BuildContext context) {
+    final align = this.align ?? BlockAlign.start;
     final column = Column(
       crossAxisAlignment: _crossAxisAlignmentFor(align),
       mainAxisSize: MainAxisSize.min,

@@ -49,8 +49,9 @@ class TableNodeView extends StatelessWidget {
 
     final sized = IntrinsicWidth(child: table);
 
-    if (node.align == BlockAlign.start) return sized;
-    return Align(alignment: _alignmentFor(node.align), child: sized);
+    final align = node.align ?? BlockAlign.start;
+    if (align == BlockAlign.start) return sized;
+    return Align(alignment: _alignmentFor(align), child: sized);
   }
 
   static AlignmentGeometry _alignmentFor(BlockAlign align) => switch (align) {
