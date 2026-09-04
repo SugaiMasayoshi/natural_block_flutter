@@ -70,7 +70,8 @@ void main() {
     ) async {
       await pump(tester, 'first|second');
 
-      expect(find.byType(ColumnNodeView), findsOneWidget);
+      // One for the document, one for each of the two blocks it now holds.
+      expect(find.byType(ColumnNodeView), findsNWidgets(3));
       expect(find.byType(TextNodeView), findsNWidgets(2));
     });
 
@@ -298,8 +299,13 @@ void main() {
     ) async {
       await pump(tester, 'left|right');
 
-      final column = tester.widget<Column>(find.byType(Column));
-      expect(column.crossAxisAlignment, CrossAxisAlignment.start);
+      // Every block is a ColumnNode now, so there is more than one Column;
+      // "unchanged" means none of them was given an alignment.
+      final columns = tester.widgetList<Column>(find.byType(Column));
+      expect(columns, isNotEmpty);
+      for (final column in columns) {
+        expect(column.crossAxisAlignment, CrossAxisAlignment.start);
+      }
     });
   });
 
@@ -458,7 +464,7 @@ void main() {
     ) async {
       await pump(tester, '   ');
 
-      expect(find.byType(ColumnNodeView), findsOneWidget);
+      expect(find.byType(ColumnNodeView), findsNWidgets(2));
       expect(tester.takeException(), isNull);
     });
   });

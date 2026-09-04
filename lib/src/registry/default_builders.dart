@@ -11,7 +11,7 @@ import 'natural_block_registry.dart';
 
 Widget buildRowNode(
   BuildContext context,
-  BlockNode node,
+  NaturalBlockNode node,
   NaturalBlockTheme theme,
   NaturalBlockRegistry registry,
   NaturalBlockActions actions,
@@ -26,7 +26,7 @@ Widget buildRowNode(
 
 Widget buildColumnNode(
   BuildContext context,
-  BlockNode node,
+  NaturalBlockNode node,
   NaturalBlockTheme theme,
   NaturalBlockRegistry registry,
   NaturalBlockActions actions,
@@ -38,7 +38,7 @@ Widget buildColumnNode(
 
 Widget buildTextNode(
   BuildContext context,
-  BlockNode node,
+  NaturalBlockNode node,
   NaturalBlockTheme theme,
   NaturalBlockRegistry registry,
   NaturalBlockActions actions,
@@ -48,7 +48,7 @@ Widget buildTextNode(
 
 Widget buildTableNode(
   BuildContext context,
-  BlockNode node,
+  NaturalBlockNode node,
   NaturalBlockTheme theme,
   NaturalBlockRegistry registry,
   NaturalBlockActions actions,

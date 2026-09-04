@@ -7,7 +7,7 @@ import 'default_builders.dart';
 
 typedef NodeBuilder = Widget Function(
   BuildContext context,
-  BlockNode node,
+  NaturalBlockNode node,
   NaturalBlockTheme theme,
   NaturalBlockRegistry registry,
   NaturalBlockActions actions,
@@ -68,9 +68,15 @@ class NaturalBlockRegistry {
   NaturalBlockRegistry registerAll(Map<Type, NodeBuilder> builders) =>
       NaturalBlockRegistry._({..._builders, ...builders});
 
+  /// Builds a widget for each of [nodes], whatever kind they are.
+  ///
+  /// Typed as broadly as the lookup is: builders are found by exact
+  /// `runtimeType`, so a document's blocks and a block's lines go through the
+  /// same call. Narrowing this to one of them would only bar the other from
+  /// a mechanism that already serves it.
   List<Widget> buildAll(
     BuildContext context,
-    List<BlockNode> nodes,
+    List<NaturalBlockNode> nodes,
     NaturalBlockTheme theme, [
     NaturalBlockActions actions = NaturalBlockActions.none,
   ]) {
@@ -82,7 +88,7 @@ class NaturalBlockRegistry {
 
   static Widget _buildFallback(
     BuildContext context,
-    BlockNode node,
+    NaturalBlockNode node,
     NaturalBlockTheme theme,
     NaturalBlockRegistry registry,
     NaturalBlockActions actions,
