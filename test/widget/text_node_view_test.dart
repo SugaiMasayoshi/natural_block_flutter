@@ -96,6 +96,44 @@ void main() {
       expect(span.style!.fontSize, 14 + 2 * theme.fontSizeStep);
     });
 
+    testWidgets('a size step counts from the size the theme actually draws, '
+        'not from the ambient one', (tester) async {
+      // The README's first theme example is `base: TextStyle(fontSize: 16)`,
+      // and `theme.base` wins over the ambient `DefaultTextStyle` for the
+      // root span. A sized run has to count from the same place, or `:+`
+      // renders *smaller* than the text beside it.
+      const theme = NaturalBlockTheme(base: TextStyle(fontSize: 24));
+      final node = TextNode(
+        children: [
+          TextSpanNode(text: 'plain'),
+          TextSpanNode(text: 'bigger', sizeOffset: 1),
+        ],
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: DefaultTextStyle(
+            style: const TextStyle(fontSize: 14),
+            child: TextNodeView(node: node, theme: theme),
+          ),
+        ),
+      );
+
+      final spans = renderedSpans(tester);
+
+      expect(
+        spans[0].style!.fontSize,
+        24,
+        reason: 'theme.base wins over the ambient style',
+      );
+      expect(spans[1].style!.fontSize, 24 + theme.fontSizeStep);
+      expect(
+        spans[1].style!.fontSize,
+        greaterThan(spans[0].style!.fontSize!),
+        reason: 'an enlarging marker must not shrink the text',
+      );
+    });
+
     testWidgets('clamps a large negative sizeOffset to minFontSize instead of '
         'producing a zero or negative font size', (tester) async {
       final node = TextNode(

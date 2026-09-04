@@ -120,8 +120,15 @@ class _TextNodeViewState extends State<TextNodeView> {
     );
   }
 
+  /// The size a run of this line draws at before any `:+` or `:-`.
+  ///
+  /// Must be the same expression the root span is built from in [build], or
+  /// a sized run counts from a different baseline than its neighbours -- and
+  /// with a theme whose `base` names a size, `:+` renders *smaller* than the
+  /// text beside it.
   double _baseFontSize(BuildContext context) =>
-      DefaultTextStyle.of(context).style.fontSize ?? widget.theme.baseFontSize;
+      DefaultTextStyle.of(context).style.merge(widget.theme.base).fontSize ??
+      widget.theme.baseFontSize;
 
   double _fontSizeFor(BuildContext context, int sizeOffset) {
     final ambient = _baseFontSize(context);

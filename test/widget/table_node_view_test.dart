@@ -94,7 +94,7 @@ void main() {
       (tester) async {
         // Guards the pair of policies against being accidentally unified:
         // plain rows must keep dividing the available width, because that
-        // is what makes `LEFT==RIGHT` push RIGHT to the far edge.
+        // is what makes `LEFT^^RIGHT` push RIGHT to the far edge.
         await tester.pumpWidget(
           wrap(const NaturalBlockView(source: 'Item^Price|Apple^200|')),
         );
@@ -242,7 +242,7 @@ void main() {
     });
 
     testWidgets('a one-column table renders', (tester) async {
-      // Not reachable from markup -- a block with no `=` never becomes a row
+      // Not reachable from markup -- a block with no `^` never becomes a row
       // -- but constructible, so it should not fall over.
       await tester.pumpWidget(
         wrap(
