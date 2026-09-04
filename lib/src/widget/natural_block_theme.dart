@@ -8,8 +8,6 @@ class NaturalBlockTheme {
 
   final TextStyle success;
 
-  final TextStyle info;
-
   final TextStyle emphasis;
 
   final TextStyle action;
@@ -38,7 +36,6 @@ class NaturalBlockTheme {
     this.base = const TextStyle(),
     this.danger = const TextStyle(color: Colors.red),
     this.success = const TextStyle(color: Colors.green),
-    this.info = const TextStyle(color: Colors.blue),
     this.emphasis = const TextStyle(fontWeight: FontWeight.bold),
     this.action = const TextStyle(
       color: Colors.blue,
@@ -83,7 +80,6 @@ class NaturalBlockTheme {
       base: base,
       danger: TextStyle(color: scheme.error),
       success: TextStyle(color: scheme.tertiary),
-      info: TextStyle(color: scheme.primary),
       emphasis: emphasis,
       action: TextStyle(
         color: scheme.primary,
@@ -117,7 +113,6 @@ class NaturalBlockTheme {
   TextStyle styleFor(SemanticColor color) => switch (color) {
     SemanticColor.danger => danger,
     SemanticColor.success => success,
-    SemanticColor.info => info,
     SemanticColor.none => base,
   };
 
@@ -127,7 +122,6 @@ class NaturalBlockTheme {
     TextStyle? base,
     TextStyle? danger,
     TextStyle? success,
-    TextStyle? info,
     TextStyle? emphasis,
     TextStyle? action,
     double? baseFontSize,
@@ -157,7 +151,6 @@ class NaturalBlockTheme {
       base: base ?? this.base,
       danger: danger ?? this.danger,
       success: success ?? this.success,
-      info: info ?? this.info,
       emphasis: emphasis ?? this.emphasis,
       action: action ?? this.action,
       baseFontSize: baseFontSize ?? this.baseFontSize,
@@ -187,7 +180,6 @@ class NaturalBlockTheme {
         base == other.base &&
         danger == other.danger &&
         success == other.success &&
-        info == other.info &&
         emphasis == other.emphasis &&
         action == other.action &&
         baseFontSize == other.baseFontSize &&
@@ -207,7 +199,6 @@ class NaturalBlockTheme {
     base,
     danger,
     success,
-    info,
     emphasis,
     action,
     baseFontSize,

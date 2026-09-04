@@ -20,11 +20,11 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:natural_block_flutter/natural_block_flutter.dart';
 
 const _source = '''
-:++:*:?natural_block:: 見本
+:++:*:%natural_block:: 見本
 
 普通の文章はそのまま通ります。C++ も 100% も Really?! も you@example.com も無傷です。
 
-:!危険:! と :%成功:% と :?情報:? と :*強調:*
+:!危険:! と :%成功:% と :*強調:*
 
 区切りは `|` で、横並びは `^` です。どちらも区間の中では効きません。
 

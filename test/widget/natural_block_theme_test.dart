@@ -29,9 +29,6 @@ void main() {
       expect(theme.styleFor(SemanticColor.success), theme.success);
     });
 
-    test('SemanticColor.info returns info', () {
-      expect(theme.styleFor(SemanticColor.info), theme.info);
-    });
 
     test('SemanticColor.none returns base', () {
       expect(theme.styleFor(SemanticColor.none), theme.base);
@@ -50,7 +47,6 @@ void main() {
       expect(copy.fontSizeStep, 10);
       expect(copy.base, theme.base);
       expect(copy.success, theme.success);
-      expect(copy.info, theme.info);
       expect(copy.emphasis, theme.emphasis);
       expect(copy.action, theme.action);
       expect(copy.baseFontSize, theme.baseFontSize);
@@ -104,7 +100,7 @@ void main() {
       expect(theme.danger.color, Colors.orange);
     });
 
-    test('success and info pick up tertiary and primary respectively', () {
+    test('success picks up tertiary', () {
       const scheme = ColorScheme.light(
         tertiary: Colors.teal,
         primary: Colors.indigo,
@@ -112,7 +108,6 @@ void main() {
       final theme = NaturalBlockTheme.fromColorScheme(scheme);
 
       expect(theme.success.color, Colors.teal);
-      expect(theme.info.color, Colors.indigo);
     });
 
     test('action picks up primary and is underlined', () {
@@ -163,7 +158,6 @@ void main() {
         'base': base.copyWith(base: const TextStyle(letterSpacing: 3)),
         'danger': base.copyWith(danger: const TextStyle(color: Colors.pink)),
         'success': base.copyWith(success: const TextStyle(color: Colors.pink)),
-        'info': base.copyWith(info: const TextStyle(color: Colors.pink)),
         'emphasis': base.copyWith(
           emphasis: const TextStyle(fontStyle: FontStyle.italic),
         ),

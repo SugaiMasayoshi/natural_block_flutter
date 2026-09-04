@@ -102,14 +102,13 @@ class Example extends StatelessWidget {
 
 ### `NaturalBlockTheme`
 
-Maps each semantic color from `natural_block` (`SemanticColor.danger`, `.success`, `.info`, `.none`) plus emphasis to a Flutter `TextStyle`:
+Maps each semantic color from `natural_block` (`SemanticColor.danger`, `.success`, `.none`) plus emphasis to a Flutter `TextStyle`:
 
 ```dart
 const theme = NaturalBlockTheme(
   base: TextStyle(fontSize: 16),
   danger: TextStyle(color: Colors.red),
   success: TextStyle(color: Colors.green),
-  info: TextStyle(color: Colors.blue),
   emphasis: TextStyle(fontWeight: FontWeight.bold),
   action: TextStyle(color: Colors.indigo, decoration: TextDecoration.underline),
 );
