@@ -33,7 +33,7 @@ void main() {
     testWidgets('code that would otherwise be split renders as one run', (
       tester,
     ) async {
-      const code = 'final x = a == b ? 1 : 2;';
+      const code = 'final x ^ a ^^ b ? 1 : 2;';
 
       await tester.pumpWidget(wrap(const NaturalBlockView(source: '`$code`')));
 
@@ -68,14 +68,14 @@ void main() {
       tester,
     ) async {
       await tester.pumpWidget(
-        wrap(const NaturalBlockView(source: '比較は`a == b`です')),
+        wrap(const NaturalBlockView(source: '比較は`a ^^ b`です')),
       );
 
       expect(decoratedBoxes(tester), isEmpty);
-      expect(renderedText(tester), '比較はa == bです');
+      expect(renderedText(tester), '比較はa ^^ bです');
 
       final spans = renderedSpans(tester);
-      expect(spans.map((s) => s.text), ['比較は', 'a == b', 'です']);
+      expect(spans.map((s) => s.text), ['比較は', 'a ^^ b', 'です']);
       expect(
         spans[1].style!.fontFamily,
         'monospace',
@@ -166,7 +166,7 @@ void main() {
       // Only possible because the delimiter no longer involves `|`: a cell
       // holds lines, so it could never have held a block-shaped region.
       await tester.pumpWidget(
-        wrap(const NaturalBlockView(source: '~x=`a|b`|y=z~')),
+        wrap(const NaturalBlockView(source: '~x^`a|b`|y^z~')),
       );
 
       expect(tester.takeException(), isNull);

@@ -34,7 +34,7 @@ void main() {
         'them into separate cells', (tester) async {
       // Regression: RowNodeView used to flatten every RowNode's children into
       // the Row, so a two-line left cell rendered as two side-by-side cells.
-      await pump(tester, 'left line 1\nleft line 2=right');
+      await pump(tester, 'left line 1\nleft line 2^right');
 
       final row = tester.widget<Row>(find.byType(Row));
       expect(row.children, hasLength(2), reason: 'two cells, not three');
@@ -57,7 +57,7 @@ void main() {
     testWidgets(
       'renders row-separated content as one Row with Expanded cells',
       (tester) async {
-        await pump(tester, 'left=right');
+        await pump(tester, 'left^right');
 
         expect(find.byType(RowNodeView), findsOneWidget);
         expect(find.byType(Row), findsOneWidget);
@@ -75,12 +75,12 @@ void main() {
       expect(find.byType(TextNodeView), findsNWidgets(2));
     });
 
-    testWidgets('"a=b|c=d" renders as two separate two-cell Rows, not one '
+    testWidgets('"a^b|c^d" renders as two separate two-cell Rows, not one '
         'four-cell Row', (tester) async {
       // Regression: RowNode boundaries used to be implicit in sibling
       // adjacency, so a column of two row-blocks in a row could collapse
       // into a single merged Row of every cell.
-      await pump(tester, 'a=b|c=d');
+      await pump(tester, 'a^b|c^d');
 
       expect(find.byType(RowNodeView), findsNWidgets(2));
       expect(find.byType(Row), findsNWidgets(2));
@@ -174,7 +174,7 @@ void main() {
         'across every cell and row', (tester) async {
       await tester.pumpWidget(
         const MaterialApp(
-          home: SelectionArea(child: NaturalBlockView(source: 'a=b|c=d')),
+          home: SelectionArea(child: NaturalBlockView(source: 'a^b|c^d')),
         ),
       );
 
@@ -267,10 +267,10 @@ void main() {
       return Rect.fromPoints(topLeft, bottomRight);
     }
 
-    testWidgets('|<A=>B| aligns A to the left and B to the right', (
+    testWidgets('|<A^>B| aligns A to the left and B to the right', (
       tester,
     ) async {
-      await pumpWide(tester, '|<A=>B|');
+      await pumpWide(tester, '|<A^>B|');
 
       final richTexts = tester
           .widgetList<RichText>(find.byType(RichText))
@@ -284,8 +284,8 @@ void main() {
       expect(bRect.right, closeTo(800, 1));
     });
 
-    testWidgets('|^A| centers the block', (tester) async {
-      await pumpWide(tester, '|^A|');
+    testWidgets('|=A| centers the block', (tester) async {
+      await pumpWide(tester, '|=A|');
 
       final richText = tester.widget<RichText>(find.byType(RichText));
       final rect = glyphRect(tester, richText);
@@ -314,7 +314,7 @@ void main() {
     // throws where the available width is itself unbounded, which would
     // mean adding an alignment marker could stop a document rendering at
     // all. Align degrades to hugging its content there instead.
-    for (final source in ['|^A|', '|>A|']) {
+    for (final source in ['|=A|', '|>A|']) {
       testWidgets(
         '"$source" renders inside a horizontal scroll view without throwing',
         (tester) async {
@@ -357,7 +357,7 @@ void main() {
         // thing that makes consecutive rows share column positions.
         await tester.pumpWidget(
           const MaterialApp(
-            home: NaturalBlockView(source: 'Apple=200=1000|Banana=1=2'),
+            home: NaturalBlockView(source: 'Apple^200^1000|Banana^1^2'),
           ),
         );
 
@@ -382,14 +382,14 @@ void main() {
         'throwing', (tester) async {
       // Regression: cells were wrapped in Expanded unconditionally, and a
       // Row cannot lay out flex children when its own width is unbounded
-      // -- so any document containing "=" threw inside a horizontal
+      // -- so any document containing "^" threw inside a horizontal
       // scroll view, i.e. stopped rendering entirely.
       await tester.pumpWidget(
         const MaterialApp(
           home: Scaffold(
             body: SingleChildScrollView(
               scrollDirection: Axis.horizontal,
-              child: NaturalBlockView(source: 'Apple=200=1000'),
+              child: NaturalBlockView(source: 'Apple^200^1000'),
             ),
           ),
         ),
@@ -411,7 +411,7 @@ void main() {
       // width on the main axis just as a horizontal scroll view does.
       await tester.pumpWidget(
         const MaterialApp(
-          home: Row(children: [NaturalBlockView(source: 'a=b')]),
+          home: Row(children: [NaturalBlockView(source: 'a^b')]),
         ),
       );
 
@@ -432,7 +432,7 @@ void main() {
             home: Scaffold(
               body: SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
-                child: NaturalBlockView(source: 'Apple=200|Banana=1'),
+                child: NaturalBlockView(source: 'Apple^200|Banana^1'),
               ),
             ),
           ),

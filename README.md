@@ -7,44 +7,44 @@ Flutter widgets that render the AST produced by [`natural_block`](https://github
 ## A taste of the syntax
 
 ```dart
-const source = '見出し|:!危険:!普通のテキスト|左のセル=右のセル';
+const source = '見出し|:!危険:!普通のテキスト|左のセル^右のセル';
 ```
 
-`|` starts a new vertical block, `=` starts a new horizontal cell, and a `:`-led cluster like `:!` toggles semantic decoration (color, emphasis, size) on a run of text. See the [`natural_block` README](https://github.com/SugaiMasayoshi/natural_block#readme) for the full syntax reference -- this package only concerns itself with rendering.
+`|` starts a new vertical block, `^` starts a new horizontal cell, and a `:`-led cluster like `:!` toggles semantic decoration (color, emphasis, size) on a run of text. See the [`natural_block` README](https://github.com/SugaiMasayoshi/natural_block#readme) for the full syntax reference -- this package only concerns itself with rendering.
 
-A row is properly written wrapped in `|`, e.g. `|A=B=C|`. Omitting the leading `|` (`A=B=C`) only works when nothing precedes the row on its own line -- otherwise the preceding line gets absorbed into the row's first cell instead of staying its own block. When in doubt, wrap the row in `|`.
+A row is properly written wrapped in `|`, e.g. `|A^B^C|`. Omitting the leading `|` (`A^B^C`) only works when nothing precedes the row on its own line -- otherwise the preceding line gets absorbed into the row's first cell instead of staying its own block. When in doubt, wrap the row in `|`.
 
 ### Block alignment
 
-An alignment marker -- `<` (start), `^` (center), or `>` (end) -- placed immediately after an unescaped `|` or `=` configures how the block starting there is aligned within the space it's given:
+An alignment marker -- `<` (start), `=` (center), or `>` (end) -- placed immediately after an unescaped `|` or `^` configures how the block starting there is aligned within the space it's given:
 
 ```dart
-const source = '|<品名=^数量=>価格|'
-    '|<りんご=^3=>150|'
-    '|<みかん=^12=>480|';
+const source = '|<品名^=数量^>価格|'
+    '|<りんご^=3^>150|'
+    '|<みかん^=12^>480|';
 ```
 
 This renders a table-like row layout where the price column (`>`-aligned) sits flush against the right edge of its cell, regardless of how many digits each price has -- the classic motivating case being a right-aligned numeric column, such as prices in a product table.
 
-Alignment is rendered by moving the block itself (its cross-axis alignment), not the text inside it, so it works the same whether the aligned block is a whole document, a `|`-separated line, or a `=`-separated row cell.
+Alignment is rendered by moving the block itself (its cross-axis alignment), not the text inside it, so it works the same whether the aligned block is a whole document, a `|`-separated line, or a `^`-separated row cell.
 
 ### Tables
 
-Plain `=`-separated rows are rendered as a `Row` of equal-width `Expanded` cells: each row is laid out on its own, so dividing the available width evenly is the only policy that keeps columns lined up between rows. That is what makes `左==右` push `右` to the far edge, and it is deliberately kept.
+Plain `^`-separated rows are rendered as a `Row` of equal-width `Expanded` cells: each row is laid out on its own, so dividing the available width evenly is the only policy that keeps columns lined up between rows. That is what makes `左^^右` push `右` to the far edge, and it is deliberately kept.
 
-Where the available width is *unbounded* — inside a horizontally scrolling parent, or nested in another `Row` — there is no width to divide and `Expanded` cannot be used at all, so cells fall back to hugging their content. That fallback is a degradation, not an equivalent: columns stop lining up between rows and the `=<` / `=>` / `=^` markers become no-ops, since a cell exactly as wide as its content has nothing to align within. It is accepted because the alternative is the document not rendering.
+Where the available width is *unbounded* — inside a horizontally scrolling parent, or nested in another `Row` — there is no width to divide and `Expanded` cannot be used at all, so cells fall back to hugging their content. That fallback is a degradation, not an equivalent: columns stop lining up between rows and the `^<` / `^>` / `^=` markers become no-ops, since a cell exactly as wide as its content has nothing to align within. It is accepted because the alternative is the document not rendering.
 
 Declaring a table with `~` renders a Flutter `Table` instead, with `IntrinsicColumnWidth` -- columns as wide as their content, agreed across every row:
 
 ```dart
 const source = '~\n'
-    '|商品=>価格\n'
-    '|りんご=150\n'
-    '|バナナ=98\n'
+    '|商品^>価格\n'
+    '|りんご^150\n'
+    '|バナナ^98\n'
     '~';
 ```
 
-Because a table is sized to its content rather than filling the width, it can be positioned: `~^` centers it. And because its columns touch, a table needs spacing and rules that the decoration syntax cannot express -- `NaturalBlockTheme` supplies them:
+Because a table is sized to its content rather than filling the width, it can be positioned: `~=` centers it. And because its columns touch, a table needs spacing and rules that the decoration syntax cannot express -- `NaturalBlockTheme` supplies them:
 
 * `tableCellPadding` -- space between a cell's edge and its text. Defaults to `EdgeInsets.symmetric(horizontal: 8, vertical: 4)`.
 * `tableBorder` -- rules drawn around and between rows and columns. Defaults to hairlines on every edge, outer frame included: a table is the one construct with a declared beginning and end, so a frame states something the source actually says. Pass `TableBorder.symmetric(inside: ...)` for rules without the surrounding box, or `null` for none.
