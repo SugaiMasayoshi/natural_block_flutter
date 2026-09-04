@@ -149,6 +149,10 @@ class NaturalBlockTheme {
       tableStripe == _unchanged || tableStripe is Color?,
       'tableStripe must be a Color or null',
     );
+    assert(
+      verbatimDecoration == _unchanged || verbatimDecoration is BoxDecoration?,
+      'verbatimDecoration must be a BoxDecoration or null',
+    );
     return NaturalBlockTheme(
       base: base ?? this.base,
       danger: danger ?? this.danger,

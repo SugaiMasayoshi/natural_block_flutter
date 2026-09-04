@@ -2,6 +2,7 @@ import 'package:flutter/widgets.dart';
 import 'package:natural_block/natural_block.dart';
 
 import '../registry/natural_block_registry.dart';
+import 'block_align_layout.dart';
 import 'natural_block_theme.dart';
 
 class TableNodeView extends StatelessWidget {
@@ -33,9 +34,7 @@ class TableNodeView extends StatelessWidget {
   List<NaturalBlockNode> _squared(RowNode row) => [
     for (var i = 0; i < node.columns.length; i++)
       ColumnNode(
-        children: i < row.children.length
-            ? row.children[i].children
-            : const [],
+        children: i < row.children.length ? row.children[i].children : const [],
         align:
             (i < row.children.length ? row.children[i].align : null) ??
             node.columns[i],
@@ -70,14 +69,7 @@ class TableNodeView extends StatelessWidget {
 
     final sized = IntrinsicWidth(child: table);
 
-    final align = node.align ?? BlockAlign.start;
-    if (align == BlockAlign.start) return sized;
-    return Align(alignment: _alignmentFor(align), child: sized);
+    if (node.align.isStart) return sized;
+    return Align(alignment: node.align.alignment, child: sized);
   }
-
-  static AlignmentGeometry _alignmentFor(BlockAlign align) => switch (align) {
-    BlockAlign.start => AlignmentDirectional.centerStart,
-    BlockAlign.center => Alignment.center,
-    BlockAlign.end => AlignmentDirectional.centerEnd,
-  };
 }

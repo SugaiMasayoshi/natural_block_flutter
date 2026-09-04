@@ -1,6 +1,8 @@
 import 'package:flutter/widgets.dart';
 import 'package:natural_block/natural_block.dart';
 
+import 'block_align_layout.dart';
+
 class ColumnNodeView extends StatelessWidget {
   final List<Widget> children;
 
@@ -15,35 +17,12 @@ class ColumnNodeView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final align = this.align ?? BlockAlign.start;
     final column = Column(
-      crossAxisAlignment: _crossAxisAlignmentFor(align),
+      crossAxisAlignment: align.crossAxis,
       mainAxisSize: MainAxisSize.min,
       children: children,
     );
-    if (align == BlockAlign.start) return column;
-    return Align(alignment: _alignmentFor(align), child: column);
-  }
-
-  static CrossAxisAlignment _crossAxisAlignmentFor(BlockAlign align) {
-    switch (align) {
-      case BlockAlign.start:
-        return CrossAxisAlignment.start;
-      case BlockAlign.center:
-        return CrossAxisAlignment.center;
-      case BlockAlign.end:
-        return CrossAxisAlignment.end;
-    }
-  }
-
-  static AlignmentGeometry _alignmentFor(BlockAlign align) {
-    switch (align) {
-      case BlockAlign.start:
-        return AlignmentDirectional.centerStart;
-      case BlockAlign.center:
-        return Alignment.center;
-      case BlockAlign.end:
-        return AlignmentDirectional.centerEnd;
-    }
+    if (align.isStart) return column;
+    return Align(alignment: align.alignment, child: column);
   }
 }
