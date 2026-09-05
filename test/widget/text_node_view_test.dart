@@ -37,7 +37,10 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
-          home: TextNodeView(node: node, theme: theme),
+          home: TextNodeView(
+            node: node,
+            scope: NaturalBlockScope(theme: theme),
+          ),
         ),
       );
 
@@ -62,7 +65,10 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
-          home: TextNodeView(node: node, theme: theme),
+          home: TextNodeView(
+            node: node,
+            scope: NaturalBlockScope(theme: theme),
+          ),
         ),
       );
 
@@ -86,7 +92,10 @@ void main() {
         MaterialApp(
           home: DefaultTextStyle(
             style: const TextStyle(fontSize: 14),
-            child: TextNodeView(node: node, theme: theme),
+            child: TextNodeView(
+              node: node,
+              scope: NaturalBlockScope(theme: theme),
+            ),
           ),
         ),
       );
@@ -114,7 +123,10 @@ void main() {
         MaterialApp(
           home: DefaultTextStyle(
             style: const TextStyle(fontSize: 14),
-            child: TextNodeView(node: node, theme: theme),
+            child: TextNodeView(
+              node: node,
+              scope: NaturalBlockScope(theme: theme),
+            ),
           ),
         ),
       );
@@ -145,7 +157,10 @@ void main() {
         MaterialApp(
           home: DefaultTextStyle(
             style: const TextStyle(fontSize: 14),
-            child: TextNodeView(node: node, theme: theme),
+            child: TextNodeView(
+              node: node,
+              scope: NaturalBlockScope(theme: theme),
+            ),
           ),
         ),
       );
@@ -170,7 +185,10 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
-          home: TextNodeView(node: node, theme: theme),
+          home: TextNodeView(
+            node: node,
+            scope: NaturalBlockScope(theme: theme),
+          ),
         ),
       );
 
@@ -191,7 +209,10 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
-          home: TextNodeView(node: node, theme: theme),
+          home: TextNodeView(
+            node: node,
+            scope: NaturalBlockScope(theme: theme),
+          ),
         ),
       );
 
@@ -213,8 +234,10 @@ void main() {
           MaterialApp(
             home: TextNodeView(
               node: node,
-              theme: theme,
-              actions: NaturalBlockActions(onTap: (_) {}),
+              scope: NaturalBlockScope(
+                theme: theme,
+                actions: NaturalBlockActions(onTap: (_) {}),
+              ),
             ),
           ),
         );
@@ -234,7 +257,10 @@ void main() {
 
         await tester.pumpWidget(
           MaterialApp(
-            home: TextNodeView(node: node, theme: theme),
+            home: TextNodeView(
+              node: node,
+              scope: NaturalBlockScope(theme: theme),
+            ),
           ),
         );
 
@@ -251,8 +277,10 @@ void main() {
         MaterialApp(
           home: TextNodeView(
             node: node,
-            theme: theme,
-            actions: NaturalBlockActions(onTap: (_) {}),
+            scope: NaturalBlockScope(
+              theme: theme,
+              actions: NaturalBlockActions(onTap: (_) {}),
+            ),
           ),
         ),
       );
@@ -278,8 +306,10 @@ void main() {
           MaterialApp(
             home: TextNodeView(
               node: node,
-              theme: theme,
-              actions: NaturalBlockActions(onTap: tapped.add),
+              scope: NaturalBlockScope(
+                theme: theme,
+                actions: NaturalBlockActions(onTap: tapped.add),
+              ),
             ),
           ),
         );
@@ -307,8 +337,10 @@ void main() {
         MaterialApp(
           home: TextNodeView(
             node: node,
-            theme: theme,
-            actions: NaturalBlockActions(onTap: tapped.add),
+            scope: NaturalBlockScope(
+              theme: theme,
+              actions: NaturalBlockActions(onTap: tapped.add),
+            ),
           ),
         ),
       );
@@ -332,7 +364,10 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
-          home: TextNodeView(node: node, theme: theme),
+          home: TextNodeView(
+            node: node,
+            scope: NaturalBlockScope(theme: theme),
+          ),
         ),
       );
       final inert = renderedSpans(tester).single;
@@ -347,8 +382,10 @@ void main() {
         MaterialApp(
           home: TextNodeView(
             node: node,
-            theme: theme,
-            actions: NaturalBlockActions(onTap: (_) {}),
+            scope: NaturalBlockScope(
+              theme: theme,
+              actions: NaturalBlockActions(onTap: (_) {}),
+            ),
           ),
         ),
       );
@@ -370,8 +407,10 @@ void main() {
             node: TextNode(
               children: [TextSpanNode(text: text, isAction: true)],
             ),
-            theme: theme,
-            actions: NaturalBlockActions(onTap: (_) {}),
+            scope: NaturalBlockScope(
+              theme: theme,
+              actions: NaturalBlockActions(onTap: (_) {}),
+            ),
           ),
         ),
       );
@@ -408,10 +447,12 @@ void main() {
               ),
               // A different theme instance each time, so the rebuild is
               // real work rather than an identical widget Flutter can skip.
-              theme: NaturalBlockTheme(
-                base: TextStyle(letterSpacing: suffix.length * 0.0),
+              scope: NaturalBlockScope(
+                theme: NaturalBlockTheme(
+                  base: TextStyle(letterSpacing: suffix.length * 0.0),
+                ),
+                actions: NaturalBlockActions(onTap: tapped.add),
               ),
-              actions: NaturalBlockActions(onTap: tapped.add),
             ),
           ),
         ),
@@ -461,8 +502,10 @@ void main() {
         MaterialApp(
           home: TextNodeView(
             node: TextNode(children: spans),
-            theme: theme,
-            actions: NaturalBlockActions(onTap: (_) {}),
+            scope: NaturalBlockScope(
+              theme: theme,
+              actions: NaturalBlockActions(onTap: (_) {}),
+            ),
           ),
         ),
       );

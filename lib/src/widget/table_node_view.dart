@@ -3,24 +3,13 @@ import 'package:natural_block/natural_block.dart';
 
 import '../registry/natural_block_registry.dart';
 import 'block_align_layout.dart';
-import 'natural_block_theme.dart';
 
 class TableNodeView extends StatelessWidget {
   final TableNode node;
 
-  final NaturalBlockTheme theme;
+  final NaturalBlockScope scope;
 
-  final NaturalBlockRegistry registry;
-
-  final NaturalBlockActions actions;
-
-  const TableNodeView({
-    super.key,
-    required this.node,
-    required this.theme,
-    required this.registry,
-    this.actions = NaturalBlockActions.none,
-  });
+  const TableNodeView({super.key, required this.node, required this.scope});
 
   /// [row]'s cells, squared off to the table's width and with each cell's
   /// alignment resolved against its column.
@@ -43,11 +32,11 @@ class TableNodeView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final stripe = theme.tableStripe;
+    final stripe = scope.theme.tableStripe;
 
     final table = Table(
       defaultColumnWidth: const IntrinsicColumnWidth(),
-      border: theme.tableBorder,
+      border: scope.theme.tableBorder,
       children: [
         for (var i = 0; i < node.children.length; i++)
           TableRow(
@@ -55,13 +44,11 @@ class TableNodeView extends StatelessWidget {
                 ? BoxDecoration(color: stripe)
                 : null,
             children: [
-              for (final cell in registry.buildAll(
+              for (final cell in scope.buildAll(
                 context,
                 _squared(node.children[i]),
-                theme,
-                actions,
               ))
-                Padding(padding: theme.tableCellPadding, child: cell),
+                Padding(padding: scope.theme.tableCellPadding, child: cell),
             ],
           ),
       ],

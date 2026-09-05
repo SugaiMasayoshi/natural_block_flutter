@@ -26,7 +26,10 @@ void main() {
       MaterialApp(
         home: Builder(
           builder: (context) {
-            built = registry.buildAll(context, nodes, theme);
+            built = NaturalBlockScope(
+              theme: theme,
+              registry: registry,
+            ).buildAll(context, nodes);
             return Column(children: built);
           },
         ),
@@ -121,7 +124,7 @@ void main() {
     ) async {
       final registry = NaturalBlockRegistry.defaults.register(
         TextNode,
-        (context, node, theme, registry, onActionTap) => const Placeholder(),
+        (context, node, scope) => const Placeholder(),
       );
       final nodes = <NaturalBlockNode>[TextNode(children: [])];
 
@@ -137,7 +140,7 @@ void main() {
       (tester) async {
         final registry = NaturalBlockRegistry.defaults.register(
           ColumnNode,
-          (context, node, theme, registry, onActionTap) => const Placeholder(),
+          (context, node, scope) => const Placeholder(),
         );
         final nodes = <NaturalBlockNode>[
           RowNode(
@@ -168,7 +171,10 @@ void main() {
           MaterialApp(
             home: Builder(
               builder: (context) {
-                registry.buildAll(context, nodes, theme);
+                NaturalBlockScope(
+                  theme: theme,
+                  registry: registry,
+                ).buildAll(context, nodes);
                 return const SizedBox();
               },
             ),

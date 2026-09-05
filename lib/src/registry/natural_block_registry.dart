@@ -8,9 +8,7 @@ import 'default_builders.dart';
 typedef NodeBuilder = Widget Function(
   BuildContext context,
   NaturalBlockNode node,
-  NaturalBlockTheme theme,
-  NaturalBlockRegistry registry,
-  NaturalBlockActions actions,
+  NaturalBlockScope scope,
 );
 
 typedef OnActionTap = void Function(String text);
@@ -30,17 +28,41 @@ class NaturalBlockActions {
   const NaturalBlockActions({this.onTap, this.buildSpan});
 
   static const NaturalBlockActions none = NaturalBlockActions();
+}
 
-  @override
-  bool operator ==(Object other) {
-    if (identical(this, other)) return true;
-    return other is NaturalBlockActions &&
-        onTap == other.onTap &&
-        buildSpan == other.buildSpan;
-  }
+/// Everything a node needs to draw itself that is not the node.
+///
+/// The three travel together the whole way down -- a table hands them to its
+/// rows, a row to its cells, a cell to its lines -- and no level chooses a
+/// different one of them for its children. Carried as one value they are
+/// declared once instead of at every level, and adding a fourth thing later
+/// does not rewrite every signature in between.
+///
+/// The `BuildContext` is deliberately *not* in here. It is the one thing that
+/// does differ per level, and keeping it out is what lets the default builder
+/// map stay `const`.
+class NaturalBlockScope {
+  final NaturalBlockTheme theme;
 
-  @override
-  int get hashCode => Object.hash(onTap, buildSpan);
+  final NaturalBlockRegistry registry;
+
+  final NaturalBlockActions actions;
+
+  const NaturalBlockScope({
+    this.theme = const NaturalBlockTheme(),
+    this.registry = NaturalBlockRegistry.defaults,
+    this.actions = NaturalBlockActions.none,
+  });
+
+  /// Builds a widget for each of [nodes], whatever kind they are.
+  ///
+  /// Typed as broadly as the lookup is: builders are found by exact
+  /// `runtimeType`, so a document's blocks and a block's lines go through the
+  /// same call. Narrowing this to one of them would only bar the other from
+  /// a mechanism that already serves it.
+  List<Widget> buildAll(BuildContext context, List<NaturalBlockNode> nodes) => [
+    for (final node in nodes) registry.builderFor(node)(context, node, this),
+  ];
 }
 
 class NaturalBlockRegistry {
@@ -68,30 +90,15 @@ class NaturalBlockRegistry {
   NaturalBlockRegistry registerAll(Map<Type, NodeBuilder> builders) =>
       NaturalBlockRegistry._({..._builders, ...builders});
 
-  /// Builds a widget for each of [nodes], whatever kind they are.
-  ///
-  /// Typed as broadly as the lookup is: builders are found by exact
-  /// `runtimeType`, so a document's blocks and a block's lines go through the
-  /// same call. Narrowing this to one of them would only bar the other from
-  /// a mechanism that already serves it.
-  List<Widget> buildAll(
-    BuildContext context,
-    List<NaturalBlockNode> nodes,
-    NaturalBlockTheme theme, [
-    NaturalBlockActions actions = NaturalBlockActions.none,
-  ]) {
-    return nodes.map((node) {
-      final builder = _builders[node.runtimeType] ?? _buildFallback;
-      return builder(context, node, theme, this, actions);
-    }).toList();
-  }
+  /// The builder registered for [node]'s exact type, or the one that draws
+  /// nothing and says so.
+  NodeBuilder builderFor(NaturalBlockNode node) =>
+      _builders[node.runtimeType] ?? _buildFallback;
 
   static Widget _buildFallback(
     BuildContext context,
     NaturalBlockNode node,
-    NaturalBlockTheme theme,
-    NaturalBlockRegistry registry,
-    NaturalBlockActions actions,
+    NaturalBlockScope scope,
   ) {
     if (kDebugMode) {
       debugPrint(

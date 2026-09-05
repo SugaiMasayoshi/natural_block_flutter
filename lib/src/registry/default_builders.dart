@@ -2,7 +2,6 @@ import 'package:flutter/widgets.dart';
 import 'package:natural_block/natural_block.dart';
 
 import '../widget/column_node_view.dart';
-import '../widget/natural_block_theme.dart';
 import '../widget/row_node_view.dart';
 import '../widget/table_node_view.dart';
 import '../widget/text_node_view.dart';
@@ -12,61 +11,35 @@ import 'natural_block_registry.dart';
 Widget buildRowNode(
   BuildContext context,
   NaturalBlockNode node,
-  NaturalBlockTheme theme,
-  NaturalBlockRegistry registry,
-  NaturalBlockActions actions,
-) {
-  return RowNodeView(
-    node: node as RowNode,
-    theme: theme,
-    registry: registry,
-    actions: actions,
-  );
-}
+  NaturalBlockScope scope,
+) => RowNodeView(node: node as RowNode, scope: scope);
 
 Widget buildColumnNode(
   BuildContext context,
   NaturalBlockNode node,
-  NaturalBlockTheme theme,
-  NaturalBlockRegistry registry,
-  NaturalBlockActions actions,
+  NaturalBlockScope scope,
 ) {
   final column = node as ColumnNode;
-  final children = registry.buildAll(context, column.children, theme, actions);
-  return ColumnNodeView(align: column.align, children: children);
+  return ColumnNodeView(
+    align: column.align,
+    children: scope.buildAll(context, column.children),
+  );
 }
 
 Widget buildTextNode(
   BuildContext context,
   NaturalBlockNode node,
-  NaturalBlockTheme theme,
-  NaturalBlockRegistry registry,
-  NaturalBlockActions actions,
-) {
-  return TextNodeView(node: node as TextNode, theme: theme, actions: actions);
-}
+  NaturalBlockScope scope,
+) => TextNodeView(node: node as TextNode, scope: scope);
 
 Widget buildTableNode(
   BuildContext context,
   NaturalBlockNode node,
-  NaturalBlockTheme theme,
-  NaturalBlockRegistry registry,
-  NaturalBlockActions actions,
-) {
-  return TableNodeView(
-    node: node as TableNode,
-    theme: theme,
-    registry: registry,
-    actions: actions,
-  );
-}
+  NaturalBlockScope scope,
+) => TableNodeView(node: node as TableNode, scope: scope);
 
 Widget buildVerbatimNode(
   BuildContext context,
   NaturalBlockNode node,
-  NaturalBlockTheme theme,
-  NaturalBlockRegistry registry,
-  NaturalBlockActions actions,
-) {
-  return VerbatimNodeView(node: node as VerbatimNode, theme: theme);
-}
+  NaturalBlockScope scope,
+) => VerbatimNodeView(node: node as VerbatimNode, theme: scope.theme);

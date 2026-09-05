@@ -37,7 +37,10 @@ void main() {
 
         await tester.pumpWidget(
           MaterialApp(
-            home: RowNodeView(node: node, theme: theme, registry: registry),
+            home: RowNodeView(
+              node: node,
+              scope: NaturalBlockScope(theme: theme, registry: registry),
+            ),
           ),
         );
 
@@ -76,7 +79,10 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
-          home: RowNodeView(node: node, theme: theme, registry: registry),
+          home: RowNodeView(
+            node: node,
+            scope: NaturalBlockScope(theme: theme, registry: registry),
+          ),
         ),
       );
 
@@ -103,7 +109,10 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
-          home: RowNodeView(node: node, theme: theme, registry: registry),
+          home: RowNodeView(
+            node: node,
+            scope: NaturalBlockScope(theme: theme, registry: registry),
+          ),
         ),
       );
 
@@ -119,8 +128,7 @@ void main() {
         MaterialApp(
           home: RowNodeView(
             node: RowNode(children: []),
-            theme: theme,
-            registry: registry,
+            scope: NaturalBlockScope(theme: theme, registry: registry),
           ),
         ),
       );
@@ -136,7 +144,7 @@ void main() {
       (tester) async {
         final customRegistry = NaturalBlockRegistry.defaults.register(
           ColumnNode,
-          (context, node, theme, registry, onActionTap) => const Placeholder(),
+          (context, node, scope) => const Placeholder(),
         );
         final node = RowNode(
           children: [
@@ -148,8 +156,7 @@ void main() {
           MaterialApp(
             home: RowNodeView(
               node: node,
-              theme: theme,
-              registry: customRegistry,
+              scope: NaturalBlockScope(theme: theme, registry: customRegistry),
             ),
           ),
         );

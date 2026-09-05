@@ -155,7 +155,7 @@ void main() {
     ) async {
       final registry = NaturalBlockRegistry.defaults.register(
         TextNode,
-        (context, node, theme, registry, onActionTap) => const Placeholder(),
+        (context, node, scope) => const Placeholder(),
       );
 
       await pump(tester, 'Hello world', registry: registry);
@@ -464,9 +464,7 @@ void main() {
         registry: NaturalBlockRegistry.defaults.register(TextNode, (
           context,
           node,
-          theme,
-          registry,
-          actions,
+          scope,
         ) {
           builds.add(1);
           return const SizedBox.shrink();
@@ -515,10 +513,8 @@ void main() {
     });
 
     testWidgets('changing the source re-parses', (tester) async {
-      Future<void> pumpSource(WidgetTester tester, String source) =>
-          tester.pumpWidget(
-            MaterialApp(home: NaturalBlockView(source: source)),
-          );
+      Future<void> pumpSource(WidgetTester tester, String source) => tester
+          .pumpWidget(MaterialApp(home: NaturalBlockView(source: source)));
 
       await pumpSource(tester, 'first');
       expect(find.text('first', findRichText: true), findsOneWidget);

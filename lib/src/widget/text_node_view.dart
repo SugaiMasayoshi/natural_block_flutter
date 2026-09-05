@@ -8,22 +8,17 @@ import 'natural_block_theme.dart';
 class TextNodeView extends StatefulWidget {
   final TextNode node;
 
-  final NaturalBlockTheme theme;
+  final NaturalBlockScope scope;
 
-  final NaturalBlockActions actions;
-
-  const TextNodeView({
-    super.key,
-    required this.node,
-    required this.theme,
-    this.actions = NaturalBlockActions.none,
-  });
+  const TextNodeView({super.key, required this.node, required this.scope});
 
   @override
   State<TextNodeView> createState() => _TextNodeViewState();
 }
 
 class _TextNodeViewState extends State<TextNodeView> {
+  NaturalBlockTheme get _theme => widget.scope.theme;
+
   final List<TapGestureRecognizer> _recognizers = [];
 
   @override
@@ -65,7 +60,7 @@ class _TextNodeViewState extends State<TextNodeView> {
 
     return Text.rich(
       TextSpan(
-        style: DefaultTextStyle.of(context).style.merge(widget.theme.base),
+        style: DefaultTextStyle.of(context).style.merge(_theme.base),
         children: spans,
       ),
     );
@@ -74,7 +69,7 @@ class _TextNodeViewState extends State<TextNodeView> {
   InlineSpan _verbatimSpan(BuildContext context, VerbatimSpanNode node) =>
       TextSpan(
         text: node.text,
-        style: DefaultTextStyle.of(context).style.merge(widget.theme.verbatim),
+        style: DefaultTextStyle.of(context).style.merge(_theme.verbatim),
       );
 
   /// The span for one styled run, or whatever [ActionSpanBuilder] returned
@@ -85,10 +80,10 @@ class _TextNodeViewState extends State<TextNodeView> {
     TextSpanNode span,
     int Function() nextAction,
   ) {
-    final style = widget.theme
+    final style = _theme
         .styleFor(span.color)
-        .merge(span.emphasis ? widget.theme.emphasis : null)
-        .merge(span.isAction ? widget.theme.action : null)
+        .merge(span.emphasis ? _theme.emphasis : null)
+        .merge(span.isAction ? _theme.action : null)
         .copyWith(
           fontSize: span.sizeOffset != 0
               ? _fontSizeFor(context, span.sizeOffset)
@@ -96,17 +91,17 @@ class _TextNodeViewState extends State<TextNodeView> {
         );
 
     if (span.isAction) {
-      final built = widget.actions.buildSpan?.call(
+      final built = widget.scope.actions.buildSpan?.call(
         context,
         span.text,
         style.copyWith(fontSize: style.fontSize ?? _baseFontSize(context)),
-        widget.theme,
+        _theme,
       );
       if (built != null) return built;
     }
 
     GestureRecognizer? recognizer;
-    final onTap = widget.actions.onTap;
+    final onTap = widget.scope.actions.onTap;
     if (span.isAction && onTap != null) {
       final text = span.text;
       recognizer = _recognizerAt(nextAction())..onTap = () => onTap(text);
@@ -127,14 +122,12 @@ class _TextNodeViewState extends State<TextNodeView> {
   /// with a theme whose `base` names a size, `:+` renders *smaller* than the
   /// text beside it.
   double _baseFontSize(BuildContext context) =>
-      DefaultTextStyle.of(context).style.merge(widget.theme.base).fontSize ??
-      widget.theme.baseFontSize;
+      DefaultTextStyle.of(context).style.merge(_theme.base).fontSize ??
+      _theme.baseFontSize;
 
   double _fontSizeFor(BuildContext context, int sizeOffset) {
     final ambient = _baseFontSize(context);
-    final scaled = ambient + sizeOffset * widget.theme.fontSizeStep;
-    return scaled < widget.theme.minFontSize
-        ? widget.theme.minFontSize
-        : scaled;
+    final scaled = ambient + sizeOffset * _theme.fontSizeStep;
+    return scaled < _theme.minFontSize ? _theme.minFontSize : scaled;
   }
 }

@@ -48,15 +48,16 @@ class _NaturalBlockViewState extends State<NaturalBlockView> {
 
   @override
   Widget build(BuildContext context) {
-    final children = widget.registry.buildAll(
-      context,
-      _document.children,
-      widget.theme,
-      NaturalBlockActions(
+    final scope = NaturalBlockScope(
+      theme: widget.theme,
+      registry: widget.registry,
+      actions: NaturalBlockActions(
         onTap: widget.onActionTap,
         buildSpan: widget.onActionBuild,
       ),
     );
+
+    final children = scope.buildAll(context, _document.children);
 
     return ColumnNodeView(children: children);
   }

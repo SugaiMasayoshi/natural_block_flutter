@@ -263,14 +263,10 @@ class _RegistryDemo extends StatelessWidget {
   Widget build(BuildContext context) {
     final registry = NaturalBlockRegistry.defaults.register(
       TextNode,
-      (context, node, theme, registry, actions) => Padding(
+      (context, node, scope) => Padding(
         padding: const EdgeInsets.symmetric(vertical: 2),
         child: Chip(
-          label: TextNodeView(
-            node: node as TextNode,
-            theme: theme,
-            actions: actions,
-          ),
+          label: TextNodeView(node: node as TextNode, scope: scope),
         ),
       ),
     );
@@ -346,8 +342,8 @@ class _PlaygroundState extends State<_Playground> {
           const SizedBox(height: 8),
           TextField(
             controller: _controller,
-            maxLines: 4,
-            minLines: 2,
+            maxLines: 12,
+            minLines: 4,
             style: const TextStyle(fontFamily: 'monospace'),
             decoration: const InputDecoration(
               border: OutlineInputBorder(),

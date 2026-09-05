@@ -58,9 +58,7 @@ void main() {
       // content and still line up. A RowNodeView cannot do this -- it
       // renders one row and cannot see its siblings.
       await tester.pumpWidget(
-        wrap(
-          const NaturalBlockView(source: '~Item^Price|Apple^200|Banana^1~'),
-        ),
+        wrap(const NaturalBlockView(source: '~Item^Price|Apple^200|Banana^1~')),
       );
 
       expect(find.byType(Table), findsOneWidget);
@@ -252,8 +250,10 @@ void main() {
                 RowNode(children: [cell('only')]),
               ],
             ),
-            theme: theme,
-            registry: NaturalBlockRegistry.defaults,
+            scope: NaturalBlockScope(
+              theme: theme,
+              registry: NaturalBlockRegistry.defaults,
+            ),
           ),
         ),
       );
@@ -277,8 +277,10 @@ void main() {
                 RowNode(children: [cell('c')]),
               ],
             ),
-            theme: theme,
-            registry: NaturalBlockRegistry.defaults,
+            scope: NaturalBlockScope(
+              theme: theme,
+              registry: NaturalBlockRegistry.defaults,
+            ),
           ),
         ),
       );
@@ -321,7 +323,7 @@ void main() {
     testWidgets('cells are built through the registry', (tester) async {
       final registry = NaturalBlockRegistry.defaults.register(
         ColumnNode,
-        (context, node, theme, registry, onActionTap) => const Placeholder(),
+        (context, node, scope) => const Placeholder(),
       );
 
       await tester.pumpWidget(
@@ -337,8 +339,7 @@ void main() {
                 ),
               ],
             ),
-            theme: theme,
-            registry: registry,
+            scope: NaturalBlockScope(theme: theme, registry: registry),
           ),
         ),
       );

@@ -29,7 +29,6 @@ void main() {
       expect(theme.styleFor(SemanticColor.success), theme.success);
     });
 
-
     test('SemanticColor.none returns base', () {
       expect(theme.styleFor(SemanticColor.none), theme.base);
     });
