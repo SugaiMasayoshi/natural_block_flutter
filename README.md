@@ -160,20 +160,20 @@ Maps each AST node type to the function that builds a widget for it. This is how
 ```dart
 final registry = NaturalBlockRegistry.defaults.register(
   TextNode,
-  (context, node, theme, registry, actions) =>
-      MyCustomTextWidget(node: node as TextNode, theme: theme),
+  (context, node, scope) =>
+      MyCustomTextWidget(node: node as TextNode, theme: scope.theme),
 );
 
 NaturalBlockView(source: source, registry: registry);
 ```
 
-A `NodeBuilder` receives the node to render, the ambient theme, the registry itself, and a `NaturalBlockActions` to forward to any actionable spans inside it (so it can recurse into a node's own children, e.g. a `ColumnNode` builder rendering each of its children via `registry.buildAll`), and returns the widget for that node directly.
+A `NodeBuilder` receives the node to render and a `NaturalBlockScope` -- the theme, the registry and a `NaturalBlockActions`, which travel together the whole way down -- and returns the widget for that node directly. Recurse into a node's own children with `scope.buildAll(context, node.children)`, which keeps every one of them on the same theme, registry and actions.
 
 Use `NaturalBlockRegistry.empty()` to start from nothing and register only the node types you care about, or `registerAll` to register several builders at once. The default builders (`buildRowNode`, `buildColumnNode`, `buildTableNode`, `buildTextNode`) are exported too, so a custom builder can delegate back to the default for the cases it doesn't want to change.
 
 **Lookup is by exact `runtimeType`, not by subtype.** A node whose runtime type is not a key of the registry — including a subclass of one that is — falls through to a fallback builder that renders *nothing*, printing a warning only in debug mode. If you introduce a node subclass, register a builder for that exact type.
 
-The widgets the default builders use are exported as well (`TextNodeView`, `ColumnNodeView`, `RowNodeView`, `TableNodeView`), so a custom builder can wrap or reuse one rather than reimplementing it. So are the types a builder signature needs: `NodeBuilder`, `NaturalBlockActions`, `OnActionTap`, `ActionSpanBuilder`, and `ImageSourceKind`.
+The widgets the default builders use are exported as well (`TextNodeView`, `ColumnNodeView`, `RowNodeView`, `TableNodeView`), so a custom builder can wrap or reuse one rather than reimplementing it. So are the types a builder signature needs: `NodeBuilder`, `NaturalBlockScope`, `NaturalBlockActions`, `OnActionTap`, `ActionSpanBuilder`, and `ImageSourceKind`.
 
 ### Selectable text
 

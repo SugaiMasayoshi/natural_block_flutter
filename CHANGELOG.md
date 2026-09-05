@@ -53,6 +53,13 @@ Initial release.
   node with no builder renders nothing with a debug-mode warning.
 - Default builders (`buildRowNode`, `buildColumnNode`, `buildTableNode`,
   `buildTextNode`) are exported so a custom builder can delegate back.
+- A builder receives the node and one `NaturalBlockScope`, which carries the
+  theme, the registry and the actions. The three travel together the whole
+  way down and no level swaps one of them for its children, so they are one
+  value rather than three parameters repeated at every level. `buildAll`
+  lives on the scope for the same reason. The `BuildContext` stays outside
+  it: it is the one thing that really does differ per level, and keeping it
+  out is what lets the default builder map stay `const`.
 
 ### Verbatim regions
 
