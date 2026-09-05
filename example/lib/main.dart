@@ -174,54 +174,54 @@ class NaturalBlockDemoPage extends StatelessWidget {
         child: Column(
           children: [
             _Playground(theme: theme),
-            const Divider(height: 1),
-            Expanded(
-              child: ListView.separated(
-                padding: const EdgeInsets.all(16),
-                itemCount: _samples.length,
-                separatorBuilder: (context, index) => const Divider(height: 32),
-                itemBuilder: (context, index) {
-                  final sample = _samples[index];
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        sample.title,
-                        style: Theme.of(context).textTheme.titleMedium,
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        sample.source,
-                        style: Theme.of(context).textTheme.bodySmall
-                            ?.copyWith(fontFamily: 'monospace'),
-                      ),
-                      const SizedBox(height: 8),
-                      Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          border: Border.all(
-                            color: Theme.of(context).dividerColor,
-                          ),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: NaturalBlockView(
-                          source: sample.source,
-                          theme: theme,
-                          onActionBuild: NaturalBlockImages.builder,
-                          onActionTap: (text) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('タップされたアクション: $text')),
-                            );
-                          },
-                        ),
-                      ),
-                    ],
-                  );
-                },
-              ),
-            ),
-            _RegistryDemo(theme: theme),
+            // const Divider(height: 1),
+            // Expanded(
+            //   child: ListView.separated(
+            //     padding: const EdgeInsets.all(16),
+            //     itemCount: _samples.length,
+            //     separatorBuilder: (context, index) => const Divider(height: 32),
+            //     itemBuilder: (context, index) {
+            //       final sample = _samples[index];
+            //       return Column(
+            //         crossAxisAlignment: CrossAxisAlignment.start,
+            //         children: [
+            //           Text(
+            //             sample.title,
+            //             style: Theme.of(context).textTheme.titleMedium,
+            //           ),
+            //           const SizedBox(height: 4),
+            //           Text(
+            //             sample.source,
+            //             style: Theme.of(context).textTheme.bodySmall
+            //                 ?.copyWith(fontFamily: 'monospace'),
+            //           ),
+            //           const SizedBox(height: 8),
+            //           Container(
+            //             width: double.infinity,
+            //             padding: const EdgeInsets.all(12),
+            //             decoration: BoxDecoration(
+            //               border: Border.all(
+            //                 color: Theme.of(context).dividerColor,
+            //               ),
+            //               borderRadius: BorderRadius.circular(8),
+            //             ),
+            //             child: NaturalBlockView(
+            //               source: sample.source,
+            //               theme: theme,
+            //               onActionBuild: NaturalBlockImages.builder,
+            //               onActionTap: (text) {
+            //                 ScaffoldMessenger.of(context).showSnackBar(
+            //                   SnackBar(content: Text('タップされたアクション: $text')),
+            //                 );
+            //               },
+            //             ),
+            //           ),
+            //         ],
+            //       );
+            //     },
+            //   ),
+            // ),
+            // _RegistryDemo(theme: theme),
           ],
         ),
       ),

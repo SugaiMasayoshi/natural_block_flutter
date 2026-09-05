@@ -19,6 +19,18 @@ class TextNodeView extends StatefulWidget {
 class _TextNodeViewState extends State<TextNodeView> {
   NaturalBlockTheme get _theme => widget.scope.theme;
 
+  NaturalBlockActions get _actions => widget.scope.actions;
+
+  /// What every run of this line starts from: the ambient style with the
+  /// theme's `base` merged over it.
+  ///
+  /// One expression, because two of them is a bug rather than a repetition.
+  /// The root span is built from this and so is the baseline a `:+` counts
+  /// from; when they drifted apart, a theme whose `base` named a size made
+  /// `:+` render *smaller* than the text beside it.
+  TextStyle _rootStyle(BuildContext context) =>
+      DefaultTextStyle.of(context).style.merge(_theme.base);
+
   final List<TapGestureRecognizer> _recognizers = [];
 
   @override
@@ -58,12 +70,7 @@ class _TextNodeViewState extends State<TextNodeView> {
 
     _trimRecognizers(actionIndex);
 
-    return Text.rich(
-      TextSpan(
-        style: DefaultTextStyle.of(context).style.merge(_theme.base),
-        children: spans,
-      ),
-    );
+    return Text.rich(TextSpan(style: _rootStyle(context), children: spans));
   }
 
   InlineSpan _verbatimSpan(BuildContext context, VerbatimSpanNode node) =>
@@ -91,7 +98,7 @@ class _TextNodeViewState extends State<TextNodeView> {
         );
 
     if (span.isAction) {
-      final built = widget.scope.actions.buildSpan?.call(
+      final built = _actions.buildSpan?.call(
         context,
         span.text,
         style.copyWith(fontSize: style.fontSize ?? _baseFontSize(context)),
@@ -101,7 +108,7 @@ class _TextNodeViewState extends State<TextNodeView> {
     }
 
     GestureRecognizer? recognizer;
-    final onTap = widget.scope.actions.onTap;
+    final onTap = _actions.onTap;
     if (span.isAction && onTap != null) {
       final text = span.text;
       recognizer = _recognizerAt(nextAction())..onTap = () => onTap(text);
@@ -116,14 +123,8 @@ class _TextNodeViewState extends State<TextNodeView> {
   }
 
   /// The size a run of this line draws at before any `:+` or `:-`.
-  ///
-  /// Must be the same expression the root span is built from in [build], or
-  /// a sized run counts from a different baseline than its neighbours -- and
-  /// with a theme whose `base` names a size, `:+` renders *smaller* than the
-  /// text beside it.
   double _baseFontSize(BuildContext context) =>
-      DefaultTextStyle.of(context).style.merge(_theme.base).fontSize ??
-      _theme.baseFontSize;
+      _rootStyle(context).fontSize ?? _theme.baseFontSize;
 
   double _fontSizeFor(BuildContext context, int sizeOffset) {
     final ambient = _baseFontSize(context);
