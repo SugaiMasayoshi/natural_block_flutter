@@ -29,7 +29,10 @@ void main() {
     ) async {
       final node = TextNode(
         children: [
-          TextSpanNode(text: 'danger', color: SemanticColor.danger),
+          TextSpanNode(
+            text: 'danger',
+            decoration: SpanDecoration(color: SemanticColor.danger),
+          ),
           TextSpanNode(text: 'plain'),
         ],
       );
@@ -56,8 +59,10 @@ void main() {
         children: [
           TextSpanNode(
             text: 'urgent',
-            color: SemanticColor.danger,
-            emphasis: true,
+            decoration: SpanDecoration(
+              color: SemanticColor.danger,
+              emphasis: true,
+            ),
           ),
         ],
       );
@@ -84,7 +89,9 @@ void main() {
       tester,
     ) async {
       final node = TextNode(
-        children: [TextSpanNode(text: 'big', sizeOffset: 2)],
+        children: [
+          TextSpanNode(text: 'big', decoration: SpanDecoration(sizeOffset: 2)),
+        ],
       );
       const theme = NaturalBlockTheme();
 
@@ -115,7 +122,10 @@ void main() {
       final node = TextNode(
         children: [
           TextSpanNode(text: 'plain'),
-          TextSpanNode(text: 'bigger', sizeOffset: 1),
+          TextSpanNode(
+            text: 'bigger',
+            decoration: SpanDecoration(sizeOffset: 1),
+          ),
         ],
       );
 
@@ -149,7 +159,12 @@ void main() {
     testWidgets('clamps a large negative sizeOffset to minFontSize instead of '
         'producing a zero or negative font size', (tester) async {
       final node = TextNode(
-        children: [TextSpanNode(text: 'tiny', sizeOffset: -5)],
+        children: [
+          TextSpanNode(
+            text: 'tiny',
+            decoration: SpanDecoration(sizeOffset: -5),
+          ),
+        ],
       );
       const theme = NaturalBlockTheme();
 
@@ -179,7 +194,12 @@ void main() {
       tester,
     ) async {
       final node = TextNode(
-        children: [TextSpanNode(text: 'tap me', isAction: true)],
+        children: [
+          TextSpanNode(
+            text: 'tap me',
+            decoration: SpanDecoration(isAction: true),
+          ),
+        ],
       );
       const theme = NaturalBlockTheme();
 
@@ -202,7 +222,10 @@ void main() {
     ) async {
       final node = TextNode(
         children: [
-          TextSpanNode(text: 'tap me', isAction: true, emphasis: true),
+          TextSpanNode(
+            text: 'tap me',
+            decoration: SpanDecoration(isAction: true, emphasis: true),
+          ),
         ],
       );
       const theme = NaturalBlockTheme();
@@ -226,7 +249,12 @@ void main() {
       'an actionable span gets a recognizer when onActionTap is given',
       (tester) async {
         final node = TextNode(
-          children: [TextSpanNode(text: 'tap me', isAction: true)],
+          children: [
+            TextSpanNode(
+              text: 'tap me',
+              decoration: SpanDecoration(isAction: true),
+            ),
+          ],
         );
         const theme = NaturalBlockTheme();
 
@@ -251,7 +279,12 @@ void main() {
       'an actionable span gets no recognizer when onActionTap is null',
       (tester) async {
         final node = TextNode(
-          children: [TextSpanNode(text: 'tap me', isAction: true)],
+          children: [
+            TextSpanNode(
+              text: 'tap me',
+              decoration: SpanDecoration(isAction: true),
+            ),
+          ],
         );
         const theme = NaturalBlockTheme();
 
@@ -296,7 +329,10 @@ void main() {
         final tapped = <String>[];
         final node = TextNode(
           children: [
-            TextSpanNode(text: 'actionable', isAction: true),
+            TextSpanNode(
+              text: 'actionable',
+              decoration: SpanDecoration(isAction: true),
+            ),
             TextSpanNode(text: ' plain'),
           ],
         );
@@ -327,7 +363,10 @@ void main() {
       final tapped = <String>[];
       final node = TextNode(
         children: [
-          TextSpanNode(text: 'actionable', isAction: true),
+          TextSpanNode(
+            text: 'actionable',
+            decoration: SpanDecoration(isAction: true),
+          ),
           TextSpanNode(text: ' plain'),
         ],
       );
@@ -362,7 +401,12 @@ void main() {
       // happen: telling a screen reader a run is interactive when no
       // handler is wired is a promise nothing keeps.
       final node = TextNode(
-        children: [TextSpanNode(text: 'tap me', isAction: true)],
+        children: [
+          TextSpanNode(
+            text: 'tap me',
+            decoration: SpanDecoration(isAction: true),
+          ),
+        ],
       );
       const theme = NaturalBlockTheme();
 
@@ -409,7 +453,12 @@ void main() {
         MaterialApp(
           home: TextNodeView(
             node: TextNode(
-              children: [TextSpanNode(text: text, isAction: true)],
+              children: [
+                TextSpanNode(
+                  text: text,
+                  decoration: SpanDecoration(isAction: true),
+                ),
+              ],
             ),
             scope: NaturalBlockScope(
               theme: theme,
@@ -447,7 +496,12 @@ void main() {
             style: const TextStyle(fontSize: 14, color: Color(0xFF000000)),
             child: TextNodeView(
               node: TextNode(
-                children: [TextSpanNode(text: 'press', isAction: true)],
+                children: [
+                  TextSpanNode(
+                    text: 'press',
+                    decoration: SpanDecoration(isAction: true),
+                  ),
+                ],
               ),
               // A different theme instance each time, so the rebuild is
               // real work rather than an identical widget Flutter can skip.
@@ -515,15 +569,17 @@ void main() {
       );
 
       await pumpWith([
-        TextSpanNode(text: 'one', isAction: true),
-        TextSpanNode(text: 'two', isAction: true),
-        TextSpanNode(text: 'three', isAction: true),
+        TextSpanNode(text: 'one', decoration: SpanDecoration(isAction: true)),
+        TextSpanNode(text: 'two', decoration: SpanDecoration(isAction: true)),
+        TextSpanNode(text: 'three', decoration: SpanDecoration(isAction: true)),
       ]);
       expect(tester.takeException(), isNull);
 
       // Fewer actionable spans than before: the surplus recognizers are
       // released here rather than at unmount.
-      await pumpWith([TextSpanNode(text: 'one', isAction: true)]);
+      await pumpWith([
+        TextSpanNode(text: 'one', decoration: SpanDecoration(isAction: true)),
+      ]);
       expect(tester.takeException(), isNull);
 
       await pumpWith([TextSpanNode(text: 'plain')]);

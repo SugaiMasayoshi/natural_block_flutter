@@ -88,16 +88,16 @@ class _TextNodeViewState extends State<TextNodeView> {
     int Function() nextAction,
   ) {
     final style = _theme
-        .styleFor(span.color)
-        .merge(span.emphasis ? _theme.emphasis : null)
-        .merge(span.isAction ? _theme.action : null)
+        .styleFor(span.decoration.color)
+        .merge(span.decoration.emphasis ? _theme.emphasis : null)
+        .merge(span.decoration.isAction ? _theme.action : null)
         .copyWith(
-          fontSize: span.sizeOffset != 0
-              ? _fontSizeFor(context, span.sizeOffset)
+          fontSize: span.decoration.sizeOffset != 0
+              ? _fontSizeFor(context, span.decoration.sizeOffset)
               : null,
         );
 
-    if (span.isAction) {
+    if (span.decoration.isAction) {
       final built = _actions.buildSpan?.call(
         context,
         span.text,
@@ -109,7 +109,7 @@ class _TextNodeViewState extends State<TextNodeView> {
 
     GestureRecognizer? recognizer;
     final onTap = _actions.onTap;
-    if (span.isAction && onTap != null) {
+    if (span.decoration.isAction && onTap != null) {
       final text = span.text;
       recognizer = _recognizerAt(nextAction())..onTap = () => onTap(text);
     }
@@ -118,7 +118,9 @@ class _TextNodeViewState extends State<TextNodeView> {
       text: span.text,
       style: style,
       recognizer: recognizer,
-      semanticsLabel: span.isAction && onTap != null ? span.text : null,
+      semanticsLabel: span.decoration.isAction && onTap != null
+          ? span.text
+          : null,
     );
   }
 
