@@ -113,10 +113,12 @@ void main() {
       // width-filling table would have nothing to be centered within.
       await tester.pumpWidget(wrap(const NaturalBlockView(source: '~=A^B~')));
 
-      final a = tester.getRect(
-        find.byWidget(tester.widget<RichText>(find.byType(RichText).first)),
+      // Its own centre against the surface's, rather than "far enough from
+      // the left edge" -- that would pass for `~>` just as well.
+      expect(
+        tester.getRect(find.byType(Table)).center.dx,
+        closeTo(tester.getRect(find.byType(MaterialApp)).center.dx, 1),
       );
-      expect(a.left, greaterThan(300));
     });
 
     testWidgets('a table in an unbounded width renders without throwing', (

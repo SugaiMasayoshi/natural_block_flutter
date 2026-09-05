@@ -64,30 +64,24 @@ void main() {
       const theme = NaturalBlockTheme();
       expect(theme.copyWith(), theme);
     });
-  });
 
-  group('NaturalBlockTheme equality', () {
-    test('two themes with the same field values are equal and hash equal', () {
-      const a = NaturalBlockTheme();
-      const b = NaturalBlockTheme();
+    test('passing null clears a nullable field', () {
+      // The two nullable fields need `null` to mean *clear*, or a themed
+      // table can never lose its rules: with the usual `?? this.x` form,
+      // an explicit null is indistinguishable from omitting the argument.
+      const base = NaturalBlockTheme(tableStripe: Color(0xFFEEEEEE));
 
-      expect(a, b);
-      expect(a.hashCode, b.hashCode);
+      expect(base.tableBorder, isNotNull);
+      expect(base.copyWith(tableBorder: null).tableBorder, isNull);
+      expect(base.copyWith(tableStripe: null).tableStripe, isNull);
     });
 
-    test('themes differing in one field are not equal', () {
-      const a = NaturalBlockTheme();
-      const b = NaturalBlockTheme(danger: TextStyle(color: Colors.purple));
+    test('clearing one nullable field leaves the other', () {
+      const base = NaturalBlockTheme(tableStripe: Color(0xFFEEEEEE));
+      final copy = base.copyWith(tableBorder: null);
 
-      expect(a, isNot(b));
-    });
-
-    test('themes differing only in action are not equal', () {
-      const a = NaturalBlockTheme();
-      const b = NaturalBlockTheme(action: TextStyle(color: Colors.pink));
-
-      expect(a, isNot(b));
-      expect(a.hashCode, isNot(b.hashCode));
+      expect(copy.tableBorder, isNull);
+      expect(copy.tableStripe, base.tableStripe);
     });
   });
 
@@ -116,172 +110,142 @@ void main() {
       expect(theme.action.color, Colors.indigo);
       expect(theme.action.decoration, TextDecoration.underline);
     });
+  });
 
-    group('copyWith', () {
-      test('an omitted argument leaves the value alone', () {
-        const base = NaturalBlockTheme();
-        final copy = base.copyWith(baseFontSize: 20);
+  group('equality covers every field', () {
+    // Checked field by field rather than with one differing value: with a
+    // hand-written `==`, a field added to the class but forgotten in the
+    // comparison ships green, and a single-field test would never see it.
+    const base = NaturalBlockTheme();
 
-        expect(copy.baseFontSize, 20);
-        expect(copy.tableBorder, base.tableBorder);
-        expect(copy.danger, base.danger);
-      });
+    final differing = <String, NaturalBlockTheme>{
+      'base': base.copyWith(base: const TextStyle(letterSpacing: 3)),
+      'danger': base.copyWith(danger: const TextStyle(color: Colors.pink)),
+      'success': base.copyWith(success: const TextStyle(color: Colors.pink)),
+      'emphasis': base.copyWith(
+        emphasis: const TextStyle(fontStyle: FontStyle.italic),
+      ),
+      'action': base.copyWith(action: const TextStyle(color: Colors.pink)),
+      'baseFontSize': base.copyWith(baseFontSize: 99),
+      'fontSizeStep': base.copyWith(fontSizeStep: 99),
+      'minFontSize': base.copyWith(minFontSize: 99),
+      'tableCellPadding': base.copyWith(
+        tableCellPadding: const EdgeInsets.all(99),
+      ),
+      'tableBorder': base.copyWith(tableBorder: null),
+      'tableStripe': base.copyWith(tableStripe: const Color(0xFF123456)),
+      'verbatim': base.copyWith(
+        verbatim: const TextStyle(fontFamily: 'Courier'),
+      ),
+      'verbatimPadding': base.copyWith(
+        verbatimPadding: const EdgeInsets.all(99),
+      ),
+      'verbatimDecoration': base.copyWith(verbatimDecoration: null),
+      'verbatimScrollsHorizontally': base.copyWith(
+        verbatimScrollsHorizontally: true,
+      ),
+    };
 
-      test('passing null clears a nullable field', () {
-        // The two nullable fields need `null` to mean *clear*, or a themed
-        // table can never lose its rules: with the usual `?? this.x` form,
-        // an explicit null is indistinguishable from omitting the argument.
-        const base = NaturalBlockTheme(tableStripe: Color(0xFFEEEEEE));
-
-        expect(base.tableBorder, isNotNull);
-        expect(base.copyWith(tableBorder: null).tableBorder, isNull);
-        expect(base.copyWith(tableStripe: null).tableStripe, isNull);
-      });
-
-      test('clearing one nullable field leaves the other', () {
-        const base = NaturalBlockTheme(tableStripe: Color(0xFFEEEEEE));
-        final copy = base.copyWith(tableBorder: null);
-
-        expect(copy.tableBorder, isNull);
-        expect(copy.tableStripe, base.tableStripe);
-      });
-    });
-
-    group('equality covers every field', () {
-      // Checked field by field rather than with one differing value: with a
-      // hand-written `==`, a field added to the class but forgotten in the
-      // comparison ships green, and a single-field test would never see it.
-      const base = NaturalBlockTheme();
-
-      final differing = <String, NaturalBlockTheme>{
-        'base': base.copyWith(base: const TextStyle(letterSpacing: 3)),
-        'danger': base.copyWith(danger: const TextStyle(color: Colors.pink)),
-        'success': base.copyWith(success: const TextStyle(color: Colors.pink)),
-        'emphasis': base.copyWith(
-          emphasis: const TextStyle(fontStyle: FontStyle.italic),
-        ),
-        'action': base.copyWith(action: const TextStyle(color: Colors.pink)),
-        'baseFontSize': base.copyWith(baseFontSize: 99),
-        'fontSizeStep': base.copyWith(fontSizeStep: 99),
-        'minFontSize': base.copyWith(minFontSize: 99),
-        'tableCellPadding': base.copyWith(
-          tableCellPadding: const EdgeInsets.all(99),
-        ),
-        'tableBorder': base.copyWith(tableBorder: null),
-        'tableStripe': base.copyWith(tableStripe: const Color(0xFF123456)),
-        'verbatim': base.copyWith(
-          verbatim: const TextStyle(fontFamily: 'Courier'),
-        ),
-        'verbatimPadding': base.copyWith(
-          verbatimPadding: const EdgeInsets.all(99),
-        ),
-        'verbatimDecoration': base.copyWith(verbatimDecoration: null),
-        'verbatimScrollsHorizontally': base.copyWith(
-          verbatimScrollsHorizontally: true,
-        ),
-      };
-
-      for (final entry in differing.entries) {
-        test('${entry.key} is part of equality', () {
-          expect(
-            entry.value,
-            isNot(base),
-            reason: 'two themes differing only in ${entry.key} are not equal',
-          );
-          expect(entry.value.hashCode, isNot(base.hashCode));
-        });
-      }
-
-      test('an identical theme is equal', () {
-        expect(const NaturalBlockTheme(), base);
-        expect(const NaturalBlockTheme().hashCode, base.hashCode);
-      });
-    });
-
-    group('striped tables', () {
-      ColorScheme schemeFor(Brightness brightness) => ColorScheme.fromSeed(
-        seedColor: Colors.deepPurple,
-        brightness: brightness,
-      );
-
-      /// Perceived lightness, enough to tell "darker than" from "lighter
-      /// than" without pulling in a color-science dependency.
-      double luminance(Color color) => color.computeLuminance();
-
-      test('striping is off unless asked for', () {
+    for (final entry in differing.entries) {
+      test('${entry.key} is part of equality', () {
         expect(
-          NaturalBlockTheme.fromColorScheme(schemeFor(Brightness.light))
-              .tableStripe,
-          isNull,
+          entry.value,
+          isNot(base),
+          reason: 'two themes differing only in ${entry.key} are not equal',
         );
-        expect(const NaturalBlockTheme().tableStripe, isNull);
+        expect(entry.value.hashCode, isNot(base.hashCode));
       });
+    }
 
-      test('the band darkens a light surface and lightens a dark one', () {
-        // The entire reason this lives on `fromColorScheme` and not on the
-        // default constructor: the band has to move in opposite directions
-        // depending on the theme, so no single constant could serve both.
-        // A fixed translucent black shifts a light surface visibly and a
-        // dark one by about one step per channel -- invisible.
-        for (final brightness in Brightness.values) {
-          final scheme = schemeFor(brightness);
-          final stripe = NaturalBlockTheme.fromColorScheme(
-            scheme,
-            striped: true,
-          ).tableStripe!;
+    test('an identical theme is equal', () {
+      expect(const NaturalBlockTheme(), base);
+      expect(const NaturalBlockTheme().hashCode, base.hashCode);
+    });
+  });
 
-          final surfaceLuminance = luminance(scheme.surface);
-          final stripeLuminance = luminance(stripe);
+  group('striped tables', () {
+    ColorScheme schemeFor(Brightness brightness) => ColorScheme.fromSeed(
+      seedColor: Colors.deepPurple,
+      brightness: brightness,
+    );
 
-          if (brightness == Brightness.light) {
-            expect(
-              stripeLuminance,
-              lessThan(surfaceLuminance),
-              reason: 'a light theme needs a darker band',
-            );
-          } else {
-            expect(
-              stripeLuminance,
-              greaterThan(surfaceLuminance),
-              reason: 'a dark theme needs a lighter band',
-            );
-          }
+    /// Perceived lightness, enough to tell "darker than" from "lighter
+    /// than" without pulling in a color-science dependency.
+    double luminance(Color color) => color.computeLuminance();
+
+    test('striping is off unless asked for', () {
+      expect(
+        NaturalBlockTheme.fromColorScheme(schemeFor(Brightness.light))
+            .tableStripe,
+        isNull,
+      );
+      expect(const NaturalBlockTheme().tableStripe, isNull);
+    });
+
+    test('the band darkens a light surface and lightens a dark one', () {
+      // The entire reason this lives on `fromColorScheme` and not on the
+      // default constructor: the band has to move in opposite directions
+      // depending on the theme, so no single constant could serve both.
+      // A fixed translucent black shifts a light surface visibly and a
+      // dark one by about one step per channel -- invisible.
+      for (final brightness in Brightness.values) {
+        final scheme = schemeFor(brightness);
+        final stripe = NaturalBlockTheme.fromColorScheme(
+          scheme,
+          striped: true,
+        ).tableStripe!;
+
+        final surfaceLuminance = luminance(scheme.surface);
+        final stripeLuminance = luminance(stripe);
+
+        if (brightness == Brightness.light) {
           expect(
-            (stripeLuminance - surfaceLuminance).abs(),
-            greaterThan(0.005),
-            reason: 'the band has to actually be visible in $brightness',
+            stripeLuminance,
+            lessThan(surfaceLuminance),
+            reason: 'a light theme needs a darker band',
+          );
+        } else {
+          expect(
+            stripeLuminance,
+            greaterThan(surfaceLuminance),
+            reason: 'a dark theme needs a lighter band',
           );
         }
-      });
-
-      test('striping replaces the horizontal rules but keeps the rest', () {
-        // Both answer "which cells belong to one row", so drawing both is
-        // noise; the vertical rules and the frame are doing another job.
-        final theme = NaturalBlockTheme.fromColorScheme(
-          schemeFor(Brightness.light),
-          striped: true,
+        expect(
+          (stripeLuminance - surfaceLuminance).abs(),
+          greaterThan(0.005),
+          reason: 'the band has to actually be visible in $brightness',
         );
-        final border = theme.tableBorder!;
+      }
+    });
 
-        expect(border.horizontalInside.style, BorderStyle.none);
-        expect(border.verticalInside.style, BorderStyle.solid);
-        for (final side in [
-          border.top,
-          border.bottom,
-          border.left,
-          border.right,
-        ]) {
-          expect(side.style, BorderStyle.solid);
-        }
-      });
+    test('striping replaces the horizontal rules but keeps the rest', () {
+      // Both answer "which cells belong to one row", so drawing both is
+      // noise; the vertical rules and the frame are doing another job.
+      final theme = NaturalBlockTheme.fromColorScheme(
+        schemeFor(Brightness.light),
+        striped: true,
+      );
+      final border = theme.tableBorder!;
 
-      test('unstriped keeps the horizontal rules', () {
-        final border = NaturalBlockTheme.fromColorScheme(
-          schemeFor(Brightness.light),
-        ).tableBorder!;
+      expect(border.horizontalInside.style, BorderStyle.none);
+      expect(border.verticalInside.style, BorderStyle.solid);
+      for (final side in [
+        border.top,
+        border.bottom,
+        border.left,
+        border.right,
+      ]) {
+        expect(side.style, BorderStyle.solid);
+      }
+    });
 
-        expect(border.horizontalInside.style, BorderStyle.solid);
-      });
+    test('unstriped keeps the horizontal rules', () {
+      final border = NaturalBlockTheme.fromColorScheme(
+        schemeFor(Brightness.light),
+      ).tableBorder!;
+
+      expect(border.horizontalInside.style, BorderStyle.solid);
     });
   });
 }

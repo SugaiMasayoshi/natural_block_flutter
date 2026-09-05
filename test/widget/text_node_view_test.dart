@@ -345,8 +345,12 @@ void main() {
         ),
       );
 
-      final plainSpan = renderedSpans(tester)[1];
-      expect(plainSpan.recognizer, isNull);
+      // Actually tapped, on the plain half of a line whose other half is
+      // actionable. Asserting only that the span carries no recognizer
+      // would say nothing about a stray one somewhere above it.
+      await tester.tapOnText(find.textRange.ofSubstring('plain'));
+      await tester.pump();
+
       expect(tapped, isEmpty);
     });
 
