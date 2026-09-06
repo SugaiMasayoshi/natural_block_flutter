@@ -1,0 +1,9 @@
+# 作業ツリーでも LF を保つ。
+#
+# 既定の core.autocrlf=true は、チェックアウトのたびに CRLF に変換する。
+# それで test/probe.expected.txt の期待値が1行ごとに \r を持つようになり、
+# 探査テストが全行不一致で落ちていた -- Windows で clone した人に最初に
+# 起きることがそれになる。
+* text=auto eol=lf
+
+*.png binary
