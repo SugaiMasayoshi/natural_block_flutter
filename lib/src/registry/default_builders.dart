@@ -43,3 +43,17 @@ Widget buildVerbatimNode(
   NaturalBlockNode node,
   NaturalBlockScope scope,
 ) => VerbatimNodeView(node: node as VerbatimNode, theme: scope.theme);
+
+/// A table's cell draws like a block: its contents stacked, aligned by what
+/// the cell or its column stated.
+Widget buildTableCellNode(
+  BuildContext context,
+  NaturalBlockNode node,
+  NaturalBlockScope scope,
+) {
+  final cell = node as TableCellNode;
+  return ColumnNodeView(
+    align: cell.align,
+    children: scope.buildAll(context, cell.children),
+  );
+}

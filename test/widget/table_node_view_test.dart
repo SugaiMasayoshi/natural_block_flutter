@@ -24,7 +24,7 @@ void main() {
   const theme = NaturalBlockTheme();
 
   /// A single-line cell, the shape the parser produces.
-  ColumnNode cell(String text) => ColumnNode(
+  TableCellNode cell(String text) => TableCellNode(
     children: [
       TextNode(children: [TextSpanNode(text: text)]),
     ],
@@ -249,7 +249,7 @@ void main() {
           TableNodeView(
             node: TableNode(
               children: [
-                RowNode(children: [cell('only')]),
+                TableRowNode(children: [cell('only')]),
               ],
             ),
             scope: NaturalBlockScope(
@@ -275,8 +275,8 @@ void main() {
           TableNodeView(
             node: TableNode(
               children: [
-                RowNode(children: [cell('a'), cell('b')]),
-                RowNode(children: [cell('c')]),
+                TableRowNode(children: [cell('a'), cell('b')]),
+                TableRowNode(children: [cell('c')]),
               ],
             ),
             scope: NaturalBlockScope(
@@ -299,7 +299,10 @@ void main() {
       // cell of row 2 stated nothing, and that the column stated `end`.
       const source = '~|A^>B\n|C^D\n~';
       final table =
-          NaturalBlockParser.parse(source).children.single as TableNode;
+          (NaturalBlockParser.parse(source).children.single as ColumnNode)
+                  .children
+                  .single
+              as TableNode;
 
       expect(table.columns, [null, BlockAlign.end]);
       expect(
@@ -324,7 +327,7 @@ void main() {
   group('registry', () {
     testWidgets('cells are built through the registry', (tester) async {
       final registry = NaturalBlockRegistry.defaults.register(
-        ColumnNode,
+        TableCellNode,
         (context, node, scope) => const Placeholder(),
       );
 
@@ -333,10 +336,10 @@ void main() {
           TableNodeView(
             node: TableNode(
               children: [
-                RowNode(
+                TableRowNode(
                   children: [
-                    ColumnNode(children: []),
-                    ColumnNode(),
+                    TableCellNode(children: []),
+                    TableCellNode(),
                   ],
                 ),
               ],

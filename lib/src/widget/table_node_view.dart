@@ -19,10 +19,10 @@ class TableNodeView extends StatelessWidget {
   /// no alignment of its own is drawn with whatever its column stated -- a
   /// question about how to draw, asked of a tree that only records what was
   /// written. Going back through the registry keeps a caller's own
-  /// `ColumnNode` builder working inside a table.
-  List<NaturalBlockNode> _squared(RowNode row) => [
+  /// `TableCellNode` builder working inside a table.
+  List<NaturalBlockNode> _squared(TableRowNode row) => [
     for (var i = 0; i < node.columns.length; i++)
-      ColumnNode(
+      TableCellNode(
         children: i < row.children.length ? row.children[i].children : const [],
         align:
             (i < row.children.length ? row.children[i].align : null) ??

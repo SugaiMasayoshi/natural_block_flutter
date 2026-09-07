@@ -74,6 +74,7 @@ class NaturalBlockRegistry {
     RowNode: buildRowNode,
     TableNode: buildTableNode,
     ColumnNode: buildColumnNode,
+    TableCellNode: buildTableCellNode,
     TextNode: buildTextNode,
     VerbatimNode: buildVerbatimNode,
   };
