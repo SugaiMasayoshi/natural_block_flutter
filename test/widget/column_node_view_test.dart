@@ -40,9 +40,9 @@ void main() {
     });
 
     for (final entry in {
-      BlockAlign.start: CrossAxisAlignment.start,
-      BlockAlign.center: CrossAxisAlignment.center,
-      BlockAlign.end: CrossAxisAlignment.end,
+      HorizontalAlign.start: CrossAxisAlignment.start,
+      HorizontalAlign.center: CrossAxisAlignment.center,
+      HorizontalAlign.end: CrossAxisAlignment.end,
     }.entries) {
       testWidgets(
         'align: ${entry.key} maps to crossAxisAlignment: ${entry.value}',

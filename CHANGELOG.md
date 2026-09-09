@@ -11,8 +11,8 @@ Initial release.
 - `TextNodeView` draws a line's styled runs, built with `Text.rich` so the
   result takes part in text selection: wrap a view in a `SelectionArea` and
   the text is selectable and copyable across cell and row boundaries.
-- `ColumnNodeView` stacks blocks and honours `BlockAlign`. Unstated and
-  `BlockAlign.start` both draw at the start, but are kept apart so a theme
+- `ColumnNodeView` stacks blocks and honours `HorizontalAlign`. Unstated and
+  `HorizontalAlign.start` both draw at the start, but are kept apart so a theme
   can style unaligned blocks without overriding one that asked. A non-start
   block is wrapped in `Align` rather than a width-filling box, so adding an
   alignment marker can never make a document stop rendering where the

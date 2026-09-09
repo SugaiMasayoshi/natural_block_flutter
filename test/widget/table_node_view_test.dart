@@ -304,10 +304,10 @@ void main() {
                   .single
               as TableNode;
 
-      expect(table.columns, [null, BlockAlign.end]);
+      expect(table.columns, [HorizontalAlign.unstated, HorizontalAlign.end]);
       expect(
         table.children[1].children[1].align,
-        isNull,
+        HorizontalAlign.unstated,
         reason: 'the source wrote no marker on that cell',
       );
 
@@ -317,7 +317,7 @@ void main() {
         find.byType(ColumnNodeView),
       );
       expect(
-        aligned.where((v) => v.align == BlockAlign.end).length,
+        aligned.where((v) => v.align == HorizontalAlign.end).length,
         2,
         reason: 'both cells of the end-aligned column are drawn end-aligned',
       );

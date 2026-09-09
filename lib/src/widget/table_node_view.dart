@@ -2,7 +2,7 @@ import 'package:flutter/widgets.dart';
 import 'package:natural_block/natural_block.dart';
 
 import '../registry/natural_block_registry.dart';
-import 'block_align_layout.dart';
+import 'horizontal_align_layout.dart';
 
 class TableNodeView extends StatelessWidget {
   final TableNode node;
@@ -24,11 +24,20 @@ class TableNodeView extends StatelessWidget {
     for (var i = 0; i < node.columns.length; i++)
       TableCellNode(
         children: i < row.children.length ? row.children[i].children : const [],
-        align:
-            (i < row.children.length ? row.children[i].align : null) ??
-            node.columns[i],
+        align: _effectiveAlign(row, i),
       ),
   ];
+
+  /// What the cell at [i] is drawn with: what it stated, else what its
+  /// column declared.
+  ///
+  /// The resolution the tree deliberately does not do. `unstated` is a
+  /// value rather than a gap, so this is a comparison rather than a `??`.
+  HorizontalAlign _effectiveAlign(TableRowNode row, int i) {
+    if (i >= row.children.length) return node.columns[i];
+    final stated = row.children[i].align;
+    return stated == HorizontalAlign.unstated ? node.columns[i] : stated;
+  }
 
   @override
   Widget build(BuildContext context) {

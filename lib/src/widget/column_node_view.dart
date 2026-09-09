@@ -1,7 +1,7 @@
 import 'package:flutter/widgets.dart';
 import 'package:natural_block/natural_block.dart';
 
-import 'block_align_layout.dart';
+import 'horizontal_align_layout.dart';
 
 class ColumnNodeView extends StatelessWidget {
   final List<Widget> children;
@@ -11,9 +11,13 @@ class ColumnNodeView extends StatelessWidget {
   /// Both draw at the start today. They are kept apart so a theme can give
   /// unaligned blocks a look of its own without also overriding a block that
   /// asked for the start.
-  final BlockAlign? align;
+  final HorizontalAlign align;
 
-  const ColumnNodeView({super.key, required this.children, this.align});
+  const ColumnNodeView({
+    super.key,
+    required this.children,
+    this.align = HorizontalAlign.unstated,
+  });
 
   @override
   Widget build(BuildContext context) {
