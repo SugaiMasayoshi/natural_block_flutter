@@ -2,7 +2,6 @@ import 'package:flutter/widgets.dart';
 import 'package:natural_block/natural_block.dart';
 
 import '../registry/natural_block_registry.dart';
-import 'horizontal_align_layout.dart';
 
 class TableNodeView extends StatelessWidget {
   final TableNode node;
@@ -63,9 +62,7 @@ class TableNodeView extends StatelessWidget {
       ],
     );
 
-    final sized = IntrinsicWidth(child: table);
-
-    if (node.align.isStart) return sized;
-    return Align(alignment: node.align.alignment, child: sized);
+    // Positioned by the block that holds it, like anything else in a block.
+    return IntrinsicWidth(child: table);
   }
 }

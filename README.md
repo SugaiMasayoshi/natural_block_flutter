@@ -44,7 +44,7 @@ const source = '~\n'
     '~';
 ```
 
-Because a table is sized to its content rather than filling the width, it can be positioned: `~=` centers it. And because its columns touch, a table needs spacing and rules that the decoration syntax cannot express -- `NaturalBlockTheme` supplies them:
+Because a table is sized to its content rather than filling the width, the block that holds it can position it: `|=~...~` centers it. A one-cell table, `~注意~`, sets a single thing apart in a frame. And because its columns touch, a table needs spacing and rules that the decoration syntax cannot express -- `NaturalBlockTheme` supplies them:
 
 * `tableCellPadding` -- space between a cell's edge and its text. Defaults to `EdgeInsets.symmetric(horizontal: 8, vertical: 4)`.
 * `tableBorder` -- rules drawn around and between rows and columns. Defaults to hairlines on every edge, outer frame included: a table is the one construct with a declared beginning and end, so a frame states something the source actually says. Pass `TableBorder.symmetric(inside: ...)` for rules without the surrounding box, or `null` for none.

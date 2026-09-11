@@ -108,13 +108,15 @@ void main() {
   });
 
   group('placement', () {
-    testWidgets('`~=` centers the table', (tester) async {
-      // Meaningful only because the table is sized to its content: a
-      // width-filling table would have nothing to be centered within.
-      await tester.pumpWidget(wrap(const NaturalBlockView(source: '~=A^B~')));
+    testWidgets('the block that holds a table centers it', (tester) async {
+      // A table has no alignment of its own; `|=` positions it like anything
+      // else in the block. Meaningful only because the table is sized to its
+      // content: a width-filling table would have nothing to be centered
+      // within.
+      await tester.pumpWidget(wrap(const NaturalBlockView(source: '|=~A^B~')));
 
       // Its own centre against the surface's, rather than "far enough from
-      // the left edge" -- that would pass for `~>` just as well.
+      // the left edge" -- that would pass for `|>` just as well.
       expect(
         tester.getRect(find.byType(Table)).center.dx,
         closeTo(tester.getRect(find.byType(MaterialApp)).center.dx, 1),
@@ -124,15 +126,15 @@ void main() {
     testWidgets('a table in an unbounded width renders without throwing', (
       tester,
     ) async {
-      // Align rather than a width-filling box, for the same reason
-      // ColumnNodeView uses one: adding a marker must never be able to stop
-      // a document rendering.
+      // The block positions it with an Align rather than a width-filling
+      // box: adding a marker must never be able to stop a document
+      // rendering.
       await tester.pumpWidget(
         wrap(
           const Scaffold(
             body: SingleChildScrollView(
               scrollDirection: Axis.horizontal,
-              child: NaturalBlockView(source: '~=A^B|C^D~'),
+              child: NaturalBlockView(source: '|=~A^B|C^D~'),
             ),
           ),
         ),
