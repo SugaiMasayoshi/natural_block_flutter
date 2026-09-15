@@ -21,16 +21,16 @@ void main() {
   group('NaturalBlockTheme.styleFor', () {
     const theme = NaturalBlockTheme();
 
-    test('SemanticColor.danger returns danger', () {
-      expect(theme.styleFor(SemanticColor.danger), theme.danger);
+    test('Tone.negative returns negative', () {
+      expect(theme.styleFor(Tone.negative), theme.negative);
     });
 
-    test('SemanticColor.success returns success', () {
-      expect(theme.styleFor(SemanticColor.success), theme.success);
+    test('Tone.positive returns positive', () {
+      expect(theme.styleFor(Tone.positive), theme.positive);
     });
 
-    test('SemanticColor.none returns base', () {
-      expect(theme.styleFor(SemanticColor.none), theme.base);
+    test('Tone.none returns base', () {
+      expect(theme.styleFor(Tone.none), theme.base);
     });
   });
 
@@ -38,14 +38,14 @@ void main() {
     test('replaces only the given fields, keeping the rest', () {
       const theme = NaturalBlockTheme();
       final copy = theme.copyWith(
-        danger: const TextStyle(color: Colors.purple),
+        negative: const TextStyle(color: Colors.purple),
         fontSizeStep: 10,
       );
 
-      expect(copy.danger, const TextStyle(color: Colors.purple));
+      expect(copy.negative, const TextStyle(color: Colors.purple));
       expect(copy.fontSizeStep, 10);
       expect(copy.base, theme.base);
-      expect(copy.success, theme.success);
+      expect(copy.positive, theme.positive);
       expect(copy.emphasis, theme.emphasis);
       expect(copy.action, theme.action);
       expect(copy.baseFontSize, theme.baseFontSize);
@@ -57,7 +57,7 @@ void main() {
       final copy = theme.copyWith(action: const TextStyle(color: Colors.pink));
 
       expect(copy.action, const TextStyle(color: Colors.pink));
-      expect(copy.danger, theme.danger);
+      expect(copy.negative, theme.negative);
     });
 
     test('called with no arguments returns an equal copy', () {
@@ -86,21 +86,21 @@ void main() {
   });
 
   group('NaturalBlockTheme.fromColorScheme', () {
-    test('danger picks up the scheme\'s error color', () {
+    test('negative picks up the scheme\'s error color', () {
       const scheme = ColorScheme.light(error: Colors.orange);
       final theme = NaturalBlockTheme.fromColorScheme(scheme);
 
-      expect(theme.danger.color, Colors.orange);
+      expect(theme.negative.color, Colors.orange);
     });
 
-    test('success picks up tertiary', () {
+    test('positive picks up tertiary', () {
       const scheme = ColorScheme.light(
         tertiary: Colors.teal,
         primary: Colors.indigo,
       );
       final theme = NaturalBlockTheme.fromColorScheme(scheme);
 
-      expect(theme.success.color, Colors.teal);
+      expect(theme.positive.color, Colors.teal);
     });
 
     test('action picks up primary and is underlined', () {
@@ -120,8 +120,8 @@ void main() {
 
     final differing = <String, NaturalBlockTheme>{
       'base': base.copyWith(base: const TextStyle(letterSpacing: 3)),
-      'danger': base.copyWith(danger: const TextStyle(color: Colors.pink)),
-      'success': base.copyWith(success: const TextStyle(color: Colors.pink)),
+      'negative': base.copyWith(negative: const TextStyle(color: Colors.pink)),
+      'positive': base.copyWith(positive: const TextStyle(color: Colors.pink)),
       'emphasis': base.copyWith(
         emphasis: const TextStyle(fontStyle: FontStyle.italic),
       ),
@@ -134,16 +134,10 @@ void main() {
       ),
       'tableBorder': base.copyWith(tableBorder: null),
       'tableStripe': base.copyWith(tableStripe: const Color(0xFF123456)),
-      'verbatim': base.copyWith(
-        verbatim: const TextStyle(fontFamily: 'Courier'),
-      ),
-      'verbatimPadding': base.copyWith(
-        verbatimPadding: const EdgeInsets.all(99),
-      ),
-      'verbatimDecoration': base.copyWith(verbatimDecoration: null),
-      'verbatimScrollsHorizontally': base.copyWith(
-        verbatimScrollsHorizontally: true,
-      ),
+      'raw': base.copyWith(raw: const TextStyle(fontFamily: 'Courier')),
+      'rawPadding': base.copyWith(rawPadding: const EdgeInsets.all(99)),
+      'rawDecoration': base.copyWith(rawDecoration: null),
+      'rawScrollsHorizontally': base.copyWith(rawScrollsHorizontally: true),
     };
 
     for (final entry in differing.entries) {

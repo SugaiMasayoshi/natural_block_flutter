@@ -64,7 +64,7 @@ class _TextNodeViewState extends State<TextNodeView> {
     var actionIndex = 0;
 
     final spans = widget.node.children.map<InlineSpan>((child) {
-      if (child is VerbatimSpanNode) return _verbatimSpan(context, child);
+      if (child is RawSpanNode) return _rawSpan(context, child);
       return _textSpan(context, child as TextSpanNode, () => actionIndex++);
     }).toList();
 
@@ -73,11 +73,10 @@ class _TextNodeViewState extends State<TextNodeView> {
     return Text.rich(TextSpan(style: _rootStyle(context), children: spans));
   }
 
-  InlineSpan _verbatimSpan(BuildContext context, VerbatimSpanNode node) =>
-      TextSpan(
-        text: node.text,
-        style: DefaultTextStyle.of(context).style.merge(_theme.verbatim),
-      );
+  InlineSpan _rawSpan(BuildContext context, RawSpanNode node) => TextSpan(
+    text: node.text,
+    style: DefaultTextStyle.of(context).style.merge(_theme.raw),
+  );
 
   /// The span for one styled run, or whatever [ActionSpanBuilder] returned
   /// for it. [nextAction] hands out the next recognizer number, and is only
@@ -88,7 +87,7 @@ class _TextNodeViewState extends State<TextNodeView> {
     int Function() nextAction,
   ) {
     final style = _theme
-        .styleFor(span.decoration.color)
+        .styleFor(span.decoration.tone)
         .merge(span.decoration.emphasis ? _theme.emphasis : null)
         .merge(span.decoration.isAction ? _theme.action : null)
         .copyWith(

@@ -11,7 +11,7 @@
 // 【解説】 間でタップが黙って消えるという、旧実装で実際に起きた不具合。
 // 【解説】 破棄そのものは検証できない(dispose は印を残さない)ので、
 // 【解説】 観測できる側だけを見ている。
-// 【解説】 次: test/widget/verbatim_test.dart
+// 【解説】 次: test/widget/raw_test.dart
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -30,8 +30,8 @@ void main() {
       final node = TextNode(
         children: [
           TextSpanNode(
-            text: 'danger',
-            decoration: SpanDecoration(color: SemanticColor.danger),
+            text: 'negative',
+            decoration: SpanDecoration(tone: Tone.negative),
           ),
           TextSpanNode(text: 'plain'),
         ],
@@ -49,8 +49,8 @@ void main() {
 
       final spans = renderedSpans(tester);
 
-      expect(spans[0].text, 'danger');
-      expect(spans[0].style!.color, theme.danger.color);
+      expect(spans[0].text, 'negative');
+      expect(spans[0].style!.color, theme.negative.color);
       expect(spans[1].text, 'plain');
     });
 
@@ -59,10 +59,7 @@ void main() {
         children: [
           TextSpanNode(
             text: 'urgent',
-            decoration: SpanDecoration(
-              color: SemanticColor.danger,
-              emphasis: true,
-            ),
+            decoration: SpanDecoration(tone: Tone.negative, emphasis: true),
           ),
         ],
       );
@@ -79,7 +76,7 @@ void main() {
 
       final span = renderedSpans(tester).first;
 
-      expect(span.style!.color, theme.danger.color);
+      expect(span.style!.color, theme.negative.color);
       expect(span.style!.fontWeight, theme.emphasis.fontWeight);
     });
   });

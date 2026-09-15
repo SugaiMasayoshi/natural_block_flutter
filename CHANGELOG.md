@@ -34,7 +34,7 @@ Initial release.
 
 ### Theming
 
-- `NaturalBlockTheme` maps semantic colors, emphasis, and actionability to
+- `NaturalBlockTheme` maps tones, emphasis, and actionability to
   `TextStyle`s, and controls what a size step is worth (`baseFontSize`,
   `fontSizeStep`, `minFontSize`).
 - Table appearance: `tableCellPadding`, `tableBorder` (a full frame by
@@ -61,14 +61,14 @@ Initial release.
   it: it is the one thing that really does differ per level, and keeping it
   out is what lets the default builder map stay `const`.
 
-### Verbatim regions
+### Raw regions
 
 - A `` ` ``-fenced region renders monospaced, with whitespace and newlines
   exactly as written. Where it was written decides how it is drawn: a region
   that is a line's only content is a padded code block, one among other text
   is a monospaced run.
-- `verbatim`, `verbatimPadding` and `verbatimDecoration` style it.
-- `verbatimScrollsHorizontally` (off by default) makes long lines scroll
+- `raw`, `rawPadding` and `rawDecoration` style it.
+- `rawScrollsHorizontally` (off by default) makes long lines scroll
   rather than wrap. Wrapping is wrong for code, but turning this on puts a
   scroll view inside the caller's layout, which nothing else here does.
 

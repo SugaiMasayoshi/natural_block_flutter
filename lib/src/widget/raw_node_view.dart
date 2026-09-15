@@ -3,26 +3,26 @@ import 'package:natural_block/natural_block.dart';
 
 import 'natural_block_theme.dart';
 
-class VerbatimNodeView extends StatelessWidget {
-  final VerbatimNode node;
+class RawNodeView extends StatelessWidget {
+  final RawNode node;
   final NaturalBlockTheme theme;
 
-  const VerbatimNodeView({super.key, required this.node, required this.theme});
+  const RawNodeView({super.key, required this.node, required this.theme});
 
   @override
   Widget build(BuildContext context) {
     final content = Text.rich(
       TextSpan(
         text: node.text,
-        style: DefaultTextStyle.of(context).style.merge(theme.verbatim),
+        style: DefaultTextStyle.of(context).style.merge(theme.raw),
       ),
-      softWrap: !theme.verbatimScrollsHorizontally,
+      softWrap: !theme.rawScrollsHorizontally,
     );
 
     return Container(
-      padding: theme.verbatimPadding,
-      decoration: theme.verbatimDecoration,
-      child: theme.verbatimScrollsHorizontally
+      padding: theme.rawPadding,
+      decoration: theme.rawDecoration,
+      child: theme.rawScrollsHorizontally
           ? SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: content,

@@ -4,9 +4,9 @@ import 'package:natural_block/natural_block.dart';
 class NaturalBlockTheme {
   final TextStyle base;
 
-  final TextStyle danger;
+  final TextStyle negative;
 
-  final TextStyle success;
+  final TextStyle positive;
 
   final TextStyle emphasis;
 
@@ -24,18 +24,18 @@ class NaturalBlockTheme {
 
   final Color? tableStripe;
 
-  final TextStyle verbatim;
+  final TextStyle raw;
 
-  final EdgeInsets verbatimPadding;
+  final EdgeInsets rawPadding;
 
-  final BoxDecoration? verbatimDecoration;
+  final BoxDecoration? rawDecoration;
 
-  final bool verbatimScrollsHorizontally;
+  final bool rawScrollsHorizontally;
 
   const NaturalBlockTheme({
     this.base = const TextStyle(),
-    this.danger = const TextStyle(color: Colors.red),
-    this.success = const TextStyle(color: Colors.green),
+    this.negative = const TextStyle(color: Colors.red),
+    this.positive = const TextStyle(color: Colors.green),
     this.emphasis = const TextStyle(fontWeight: FontWeight.bold),
     this.action = const TextStyle(
       color: Colors.blue,
@@ -53,13 +53,13 @@ class NaturalBlockTheme {
       outside: BorderSide(color: Color(0x1F000000)),
     ),
     this.tableStripe,
-    this.verbatim = const TextStyle(fontFamily: 'monospace'),
-    this.verbatimPadding = const EdgeInsets.all(12),
-    this.verbatimDecoration = const BoxDecoration(
+    this.raw = const TextStyle(fontFamily: 'monospace'),
+    this.rawPadding = const EdgeInsets.all(12),
+    this.rawDecoration = const BoxDecoration(
       color: Color(0x0A000000),
       borderRadius: BorderRadius.all(Radius.circular(4)),
     ),
-    this.verbatimScrollsHorizontally = false,
+    this.rawScrollsHorizontally = false,
   });
 
   factory NaturalBlockTheme.fromColorScheme(
@@ -78,8 +78,8 @@ class NaturalBlockTheme {
     final rule = BorderSide(color: scheme.outlineVariant);
     return NaturalBlockTheme(
       base: base,
-      danger: TextStyle(color: scheme.error),
-      success: TextStyle(color: scheme.tertiary),
+      negative: TextStyle(color: scheme.error),
+      positive: TextStyle(color: scheme.tertiary),
       emphasis: emphasis,
       action: TextStyle(
         color: scheme.primary,
@@ -110,18 +110,18 @@ class NaturalBlockTheme {
     striped: striped,
   );
 
-  TextStyle styleFor(SemanticColor color) => switch (color) {
-    SemanticColor.danger => danger,
-    SemanticColor.success => success,
-    SemanticColor.none => base,
+  TextStyle styleFor(Tone tone) => switch (tone) {
+    Tone.negative => negative,
+    Tone.positive => positive,
+    Tone.none => base,
   };
 
   static const Object _unchanged = Object();
 
   NaturalBlockTheme copyWith({
     TextStyle? base,
-    TextStyle? danger,
-    TextStyle? success,
+    TextStyle? negative,
+    TextStyle? positive,
     TextStyle? emphasis,
     TextStyle? action,
     double? baseFontSize,
@@ -130,10 +130,10 @@ class NaturalBlockTheme {
     EdgeInsets? tableCellPadding,
     Object? tableBorder = _unchanged,
     Object? tableStripe = _unchanged,
-    TextStyle? verbatim,
-    EdgeInsets? verbatimPadding,
-    Object? verbatimDecoration = _unchanged,
-    bool? verbatimScrollsHorizontally,
+    TextStyle? raw,
+    EdgeInsets? rawPadding,
+    Object? rawDecoration = _unchanged,
+    bool? rawScrollsHorizontally,
   }) {
     assert(
       tableBorder == _unchanged || tableBorder is TableBorder?,
@@ -144,13 +144,13 @@ class NaturalBlockTheme {
       'tableStripe must be a Color or null',
     );
     assert(
-      verbatimDecoration == _unchanged || verbatimDecoration is BoxDecoration?,
-      'verbatimDecoration must be a BoxDecoration or null',
+      rawDecoration == _unchanged || rawDecoration is BoxDecoration?,
+      'rawDecoration must be a BoxDecoration or null',
     );
     return NaturalBlockTheme(
       base: base ?? this.base,
-      danger: danger ?? this.danger,
-      success: success ?? this.success,
+      negative: negative ?? this.negative,
+      positive: positive ?? this.positive,
       emphasis: emphasis ?? this.emphasis,
       action: action ?? this.action,
       baseFontSize: baseFontSize ?? this.baseFontSize,
@@ -163,13 +163,13 @@ class NaturalBlockTheme {
       tableStripe: identical(tableStripe, _unchanged)
           ? this.tableStripe
           : tableStripe as Color?,
-      verbatim: verbatim ?? this.verbatim,
-      verbatimPadding: verbatimPadding ?? this.verbatimPadding,
-      verbatimDecoration: identical(verbatimDecoration, _unchanged)
-          ? this.verbatimDecoration
-          : verbatimDecoration as BoxDecoration?,
-      verbatimScrollsHorizontally:
-          verbatimScrollsHorizontally ?? this.verbatimScrollsHorizontally,
+      raw: raw ?? this.raw,
+      rawPadding: rawPadding ?? this.rawPadding,
+      rawDecoration: identical(rawDecoration, _unchanged)
+          ? this.rawDecoration
+          : rawDecoration as BoxDecoration?,
+      rawScrollsHorizontally:
+          rawScrollsHorizontally ?? this.rawScrollsHorizontally,
     );
   }
 
@@ -178,8 +178,8 @@ class NaturalBlockTheme {
     if (identical(this, other)) return true;
     return other is NaturalBlockTheme &&
         base == other.base &&
-        danger == other.danger &&
-        success == other.success &&
+        negative == other.negative &&
+        positive == other.positive &&
         emphasis == other.emphasis &&
         action == other.action &&
         baseFontSize == other.baseFontSize &&
@@ -188,17 +188,17 @@ class NaturalBlockTheme {
         tableCellPadding == other.tableCellPadding &&
         tableBorder == other.tableBorder &&
         tableStripe == other.tableStripe &&
-        verbatim == other.verbatim &&
-        verbatimPadding == other.verbatimPadding &&
-        verbatimDecoration == other.verbatimDecoration &&
-        verbatimScrollsHorizontally == other.verbatimScrollsHorizontally;
+        raw == other.raw &&
+        rawPadding == other.rawPadding &&
+        rawDecoration == other.rawDecoration &&
+        rawScrollsHorizontally == other.rawScrollsHorizontally;
   }
 
   @override
   int get hashCode => Object.hash(
     base,
-    danger,
-    success,
+    negative,
+    positive,
     emphasis,
     action,
     baseFontSize,
@@ -207,9 +207,9 @@ class NaturalBlockTheme {
     tableCellPadding,
     tableBorder,
     tableStripe,
-    verbatim,
-    verbatimPadding,
-    verbatimDecoration,
-    verbatimScrollsHorizontally,
+    raw,
+    rawPadding,
+    rawDecoration,
+    rawScrollsHorizontally,
   );
 }

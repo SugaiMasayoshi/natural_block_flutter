@@ -1,4 +1,4 @@
-// 【解説】[テスト13/21] verbatim の描画。1つのノードを2通りに描く判断。
+// 【解説】[テスト13/21] raw の描画。1つのノードを2通りに描く判断。
 // 【解説】
 // 【解説】 2つ目の group が核心で、置かれ方が見た目を決める。行の中身が
 // 【解説】 区間だけなら枠付きのコードブロック、文中にあれば等幅のランになる。
@@ -105,7 +105,7 @@ void main() {
         wrap(
           NaturalBlockView(
             source: '`${'word ' * 200}`',
-            theme: const NaturalBlockTheme(verbatimScrollsHorizontally: true),
+            theme: const NaturalBlockTheme(rawScrollsHorizontally: true),
           ),
         ),
       );
@@ -128,9 +128,7 @@ void main() {
             children: [
               NaturalBlockView(
                 source: '`${'word ' * 200}`',
-                theme: const NaturalBlockTheme(
-                  verbatimScrollsHorizontally: true,
-                ),
+                theme: const NaturalBlockTheme(rawScrollsHorizontally: true),
               ),
             ],
           ),
@@ -191,7 +189,7 @@ void main() {
         wrap(
           const NaturalBlockView(
             source: '`x`',
-            theme: NaturalBlockTheme(verbatimDecoration: null),
+            theme: NaturalBlockTheme(rawDecoration: null),
           ),
         ),
       );
@@ -200,7 +198,7 @@ void main() {
   });
 
   group('selection', () {
-    testWidgets('a verbatim region takes part in selection', (tester) async {
+    testWidgets('a raw region takes part in selection', (tester) async {
       await tester.pumpWidget(
         wrap(const SelectionArea(child: NaturalBlockView(source: '`copy me`'))),
       );

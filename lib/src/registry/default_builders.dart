@@ -2,10 +2,10 @@ import 'package:flutter/widgets.dart';
 import 'package:natural_block/natural_block.dart';
 
 import '../widget/column_node_view.dart';
+import '../widget/raw_node_view.dart';
 import '../widget/row_node_view.dart';
 import '../widget/table_node_view.dart';
 import '../widget/text_node_view.dart';
-import '../widget/verbatim_node_view.dart';
 import 'natural_block_registry.dart';
 
 Widget buildRowNode(
@@ -38,11 +38,11 @@ Widget buildTableNode(
   NaturalBlockScope scope,
 ) => TableNodeView(node: node as TableNode, scope: scope);
 
-Widget buildVerbatimNode(
+Widget buildRawNode(
   BuildContext context,
   NaturalBlockNode node,
   NaturalBlockScope scope,
-) => VerbatimNodeView(node: node as VerbatimNode, theme: scope.theme);
+) => RawNodeView(node: node as RawNode, theme: scope.theme);
 
 /// A table's cell draws like a block: its contents stacked, aligned by what
 /// the cell or its column stated.

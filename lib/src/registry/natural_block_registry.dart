@@ -76,7 +76,7 @@ class NaturalBlockRegistry {
     ColumnNode: buildColumnNode,
     TableCellNode: buildTableCellNode,
     TextNode: buildTextNode,
-    VerbatimNode: buildVerbatimNode,
+    RawNode: buildRawNode,
   };
 
   static const NaturalBlockRegistry defaults = NaturalBlockRegistry._(

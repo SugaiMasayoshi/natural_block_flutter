@@ -98,12 +98,12 @@ void main() {
     // in a `source` string actually reaches the screen as styled text,
     // through the full parse -> registry -> widget pipeline.
 
-    testWidgets(':! toggles danger (red) color on and off', (tester) async {
-      await pump(tester, ':!danger:!plain');
+    testWidgets(':! toggles negative (red) color on and off', (tester) async {
+      await pump(tester, ':!negative:!plain');
 
       final spans = renderedSpans(tester);
 
-      expect(spans[0].text, 'danger');
+      expect(spans[0].text, 'negative');
       expect(spans[0].style!.color, Colors.red);
       expect(spans[1].text, 'plain');
       expect(spans[1].style!.color, isNot(Colors.red));
@@ -141,7 +141,7 @@ void main() {
   group('theme and registry customization', () {
     testWidgets('a custom theme changes the rendered color', (tester) async {
       const customTheme = NaturalBlockTheme(
-        danger: TextStyle(color: Colors.purple),
+        negative: TextStyle(color: Colors.purple),
       );
       await pump(tester, ':!alert:!', theme: customTheme);
 

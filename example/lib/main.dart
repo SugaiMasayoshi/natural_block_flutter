@@ -140,7 +140,7 @@ const _samples = [
         '`これは閉じ記号にならない`\n'
         '``',
   ),
-  _Sample(r'閉じ忘れは区間にならない(何も飲み込まない)', 'a `b の後の | はちゃんと区切る'),
+  _Sample('閉じ忘れは文書の終わりまで区間になる(表の ~ と同じ)', 'a `b の後の | も区間の中'),
 ];
 
 class NaturalBlockDemoPage extends StatelessWidget {

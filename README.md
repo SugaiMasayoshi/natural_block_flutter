@@ -2,7 +2,7 @@
 
 Flutter widgets that render the AST produced by [`natural_block`](https://github.com/SugaiMasayoshi/natural_block), a lightweight markup language for structured text layout with semantic decoration.
 
-`natural_block` does the parsing; this package turns its `DocumentNode` / `ColumnNode` / `RowNode` / `TableNode` / `TextNode` / `TextSpanNode` / `VerbatimNode` tree into `Column`, `Row`, `Table`, and `RichText` widgets -- with your own colors, and your own widgets substituted per node type if you want them.
+`natural_block` does the parsing; this package turns its `DocumentNode` / `ColumnNode` / `RowNode` / `TableNode` / `TextNode` / `TextSpanNode` / `RawNode` tree into `Column`, `Row`, `Table`, and `RichText` widgets -- with your own colors, and your own widgets substituted per node type if you want them.
 
 ## A taste of the syntax
 
@@ -95,20 +95,20 @@ class Example extends StatelessWidget {
 `NaturalBlockView` takes five parameters:
 
 * `source` (required) -- the markup text to parse and render.
-* `theme` -- a [`NaturalBlockTheme`](#naturalblocktheme) controlling how semantic colors, emphasis, and base text look. Defaults to `const NaturalBlockTheme()`.
+* `theme` -- a [`NaturalBlockTheme`](#naturalblocktheme) controlling how tones, emphasis, and base text look. Defaults to `const NaturalBlockTheme()`.
 * `registry` -- a [`NaturalBlockRegistry`](#naturalblockregistry) controlling which widget renders each node type. Defaults to `NaturalBlockRegistry.defaults`.
 * `onActionTap` -- called with a span's own text when an [actionable span](#actionable-text) is tapped. Defaults to `null` (actionable spans render styled but aren't tappable).
 * `onActionBuild` -- renders an actionable span as something other than styled text (an image, a chip). Defaults to `null`. See [Rendering an actionable span yourself](#rendering-an-actionable-span-yourself).
 
 ### `NaturalBlockTheme`
 
-Maps each semantic color from `natural_block` (`SemanticColor.danger`, `.success`, `.none`) plus emphasis to a Flutter `TextStyle`:
+Maps each tone from `natural_block` (`Tone.negative`, `.positive`, `.none`) plus emphasis to a Flutter `TextStyle`:
 
 ```dart
 const theme = NaturalBlockTheme(
   base: TextStyle(fontSize: 16),
-  danger: TextStyle(color: Colors.red),
-  success: TextStyle(color: Colors.green),
+  negative: TextStyle(color: Colors.red),
+  positive: TextStyle(color: Colors.green),
   emphasis: TextStyle(fontWeight: FontWeight.bold),
   action: TextStyle(color: Colors.indigo, decoration: TextDecoration.underline),
 );
@@ -124,9 +124,9 @@ Three more fields control what a size step is *worth*, since `natural_block` onl
 * `fontSizeStep` — logical pixels added per `:+` (or removed per `:-`). Defaults to `4`.
 * `minFontSize` — the floor. `:-----` would otherwise be able to drive the size to zero or below, which Flutter asserts on. Defaults to `1`.
 
-`copyWith` returns a modified copy, and `styleFor(SemanticColor)` gives the style for one semantic color (`SemanticColor.none` returns `base`). For `tableBorder` and `tableStripe` — the two nullable fields — passing `null` to `copyWith` *clears* the value; omit the argument to keep it.
+`copyWith` returns a modified copy, and `styleFor(Tone)` gives the style for one tone (`Tone.none` returns `base`). For `tableBorder` and `tableStripe` — the two nullable fields — passing `null` to `copyWith` *clears* the value; omit the argument to keep it.
 
-### Verbatim regions
+### Raw regions
 
 A `` ` ``-fenced region is text the parser stopped reading, so rendering only has to avoid undoing that: monospaced, whitespace and newlines exactly as written, no styling per run.
 
@@ -139,9 +139,9 @@ const block  = '`cat a | grep b`';    // a code block, boxed
 
 Four theme fields control it:
 
-* `verbatim` — the text style. Monospaced by default, because in a region whose whole point is exactness, indentation and the difference between `l` and `1` are part of the content.
-* `verbatimPadding` and `verbatimDecoration` — the box. Pass `null` for no box.
-* `verbatimScrollsHorizontally` — **off by default.** Wrapping is wrong for code, since a line broken in the middle reads as a different program; but turning this on puts a scroll view inside your layout, which nothing else in this package does. Turn it on where the surrounding layout can afford it.
+* `raw` — the text style. Monospaced by default, because in a region whose whole point is exactness, indentation and the difference between `l` and `1` are part of the content.
+* `rawPadding` and `rawDecoration` — the box. Pass `null` for no box.
+* `rawScrollsHorizontally` — **off by default.** Wrapping is wrong for code, since a line broken in the middle reads as a different program; but turning this on puts a scroll view inside your layout, which nothing else in this package does. Turn it on where the surrounding layout can afford it.
 
 The box is never stretched to the available width, for the same reason `ColumnNodeView` uses `Align` rather than a width-filling `SizedBox`: adding a code block must not be able to stop a document rendering.
 
