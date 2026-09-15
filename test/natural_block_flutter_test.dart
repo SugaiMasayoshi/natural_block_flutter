@@ -1,14 +1,3 @@
-// 【解説】[テスト20/21] 統合。文字列を渡してから画面に出るまでを通しで見る。
-// 【解説】
-// 【解説】 ここまでの各ファイルが部品を単体で見ているのに対し、これは
-// 【解説】 パース→registry→ウィジェットの経路が実際に繋がっていることを
-// 【解説】 見る。部品が全部正しくても繋ぎ忘れは起きるので、両方要る。
-// 【解説】
-// 【解説】 選択の group が地味に重要。RichText を直接組むと選択機構に
-// 【解説】 登録されず、SelectionArea で囲んでも黙って何も起きない。
-// 【解説】 「黙って」なので、テストが無ければ気づけない類の性質。
-// 【解説】 次: test/showcase/showcase_test.dart
-
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';

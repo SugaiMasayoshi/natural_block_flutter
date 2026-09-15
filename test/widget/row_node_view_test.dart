@@ -1,15 +1,3 @@
-// 【解説】[テスト15/21] 横並び。Expanded を使う理由と、使えない場合。
-// 【解説】
-// 【解説】 セルを等分するのは、行ごとに独立して描かれるから。等分だけが
-// 【解説】 行をまたいで列を揃える方法で、左^^右 が右端に寄るのもこれ。
-// 【解説】
-// 【解説】 幅が無限のとき(横スクロールの中や Row の入れ子)は分ける幅が
-// 【解説】 無く、Expanded は使えない。内容に合わせて縮む方に落とす。
-// 【解説】 これは同等の代替ではなく劣化で、列は揃わなくなり寄せも効かなく
-// 【解説】 なる。それでも入れているのは、代わりが「描けない」だからで、
-// 【解説】 テストの名前にもその判断が書いてある。
-// 【解説】 次: test/widget/table_node_view_test.dart
-
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:natural_block/natural_block.dart';

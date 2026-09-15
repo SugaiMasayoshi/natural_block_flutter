@@ -1,13 +1,3 @@
-// 【解説】[テスト18/21] 差し替え機構。ノードの型から描画関数を引く表。
-// 【解説】
-// 【解説】 引きが runtimeType の完全一致であることを固定している。部分型で
-// 【解説】 引かないので、登録した型の派生クラスは引っかからず、何も描かない
-// 【解説】 フォールバックに落ちる(デバッグ時のみ警告)。黙って消えるのは
-// 【解説】 気持ち悪いが、部分型で引くと「どちらが勝つか」が曖昧になる。
-// 【解説】
-// 【解説】 empty() から必要な型だけ登録できることも見ている。
-// 【解説】 次: test/widget/natural_block_images_test.dart
-
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:natural_block/natural_block.dart';
