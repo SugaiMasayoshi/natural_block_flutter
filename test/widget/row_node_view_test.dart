@@ -20,6 +20,11 @@ void main() {
                 TextNode(children: [TextSpanNode(text: 'b')]),
               ],
             ),
+            ColumnNode(
+              children: [
+                TextNode(children: [TextSpanNode(text: 'c')]),
+              ],
+            ),
           ],
         );
 
@@ -33,13 +38,13 @@ void main() {
         );
 
         expect(find.byType(Row), findsOneWidget);
-        expect(find.byType(Expanded), findsOneWidget);
-        expect(find.byType(TextNodeView), findsNWidgets(2));
+        expect(find.byType(Expanded), findsNWidgets(2));
+        expect(find.byType(TextNodeView), findsNWidgets(3));
 
-        // The two lines of the one cell are stacked.
+        // The two lines of the first cell are stacked.
         final column = tester.widget<Column>(
           find.descendant(
-            of: find.byType(Expanded),
+            of: find.byType(Expanded).first,
             matching: find.byType(Column),
           ),
         );
@@ -109,23 +114,6 @@ void main() {
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets('an empty RowNode renders an empty Row without throwing', (
-      tester,
-    ) async {
-      await tester.pumpWidget(
-        MaterialApp(
-          home: RowNodeView(
-            node: RowNode(children: []),
-            scope: NaturalBlockScope(theme: theme, registry: registry),
-          ),
-        ),
-      );
-
-      final row = tester.widget<Row>(find.byType(Row));
-      expect(row.children, isEmpty);
-      expect(tester.takeException(), isNull);
-    });
-
     testWidgets(
       'cells are built through the registry, so a custom builder applies '
       'to row cells too',
@@ -134,11 +122,7 @@ void main() {
           ColumnNode,
           (context, node, scope) => const Placeholder(),
         );
-        final node = RowNode(
-          children: [
-            ColumnNode(children: [TextNode(children: [])]),
-          ],
-        );
+        final node = RowNode(children: [ColumnNode(), ColumnNode()]);
 
         await tester.pumpWidget(
           MaterialApp(
@@ -149,7 +133,7 @@ void main() {
           ),
         );
 
-        expect(find.byType(Placeholder), findsOneWidget);
+        expect(find.byType(Placeholder), findsNWidgets(2));
         expect(find.byType(ColumnNodeView), findsNothing);
       },
     );
