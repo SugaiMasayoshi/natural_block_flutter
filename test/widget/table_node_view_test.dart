@@ -314,9 +314,8 @@ void main() {
 
   group('registry', () {
     testWidgets('cells are built through the registry', (tester) async {
-      final registry = NaturalBlockRegistry.defaults.register(
-        TableCellNode,
-        (context, node, scope) => const Placeholder(),
+      final registry = NaturalBlockRegistry(
+        tableCell: (context, node, scope) => const Placeholder(),
       );
 
       await tester.pumpWidget(
@@ -346,7 +345,10 @@ void main() {
       final tapped = <String>[];
       await tester.pumpWidget(
         wrap(
-          NaturalBlockView(source: '~:@tap:@^B|C^D~', onActionTap: tapped.add),
+          NaturalBlockView(
+            source: '~:@tap:@^B|C^D~',
+            actions: NaturalBlockActions(onTap: tapped.add),
+          ),
         ),
       );
 

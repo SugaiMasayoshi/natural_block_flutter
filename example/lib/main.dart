@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widget_previews.dart';
-import 'package:natural_block/natural_block.dart';
 import 'package:natural_block_flutter/natural_block_flutter.dart';
 
 void main() {
@@ -94,7 +93,7 @@ const _samples = [
   _Sample('表を閉じる(~をもう一度書く)\n閉じないと入力の終わりまで表が続く', '~商品^価格|りんご^150~合計^150'),
   _Sample(
     '画像(構文の追加なし、image(url)というアクションの慣習)\n'
-        'このアプリは onActionBuild を渡しているので描画される。'
+        'このアプリは NaturalBlockActions.buildSpan を渡しているので描画される。'
         '渡さなければ読めるテキストのままで通信も起きない',
     ':@image(https://flutter.github.io/assets-for-api-docs/assets/widgets/owl.jpg):@',
   ),
@@ -209,12 +208,14 @@ class NaturalBlockDemoPage extends StatelessWidget {
                         child: NaturalBlockView(
                           source: sample.source,
                           theme: theme,
-                          onActionBuild: NaturalBlockImages.builder,
-                          onActionTap: (text) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('タップされたアクション: $text')),
-                            );
-                          },
+                          actions: NaturalBlockActions(
+                            buildSpan: NaturalBlockImages.builder,
+                            onTap: (text) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text('タップされたアクション: $text')),
+                              );
+                            },
+                          ),
                         ),
                       ),
                     ],
@@ -262,12 +263,11 @@ class _RegistryDemo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final registry = NaturalBlockRegistry.defaults.register(
-      TextNode,
-      (context, node, scope) => Padding(
+    final registry = NaturalBlockRegistry(
+      text: (context, node, scope) => Padding(
         padding: const EdgeInsets.symmetric(vertical: 2),
         child: Chip(
-          label: TextNodeView(node: node as TextNode, scope: scope),
+          label: TextNodeView(node: node, scope: scope),
         ),
       ),
     );
@@ -366,12 +366,14 @@ class _PlaygroundState extends State<_Playground> {
               builder: (context, _) => NaturalBlockView(
                 source: _controller.text,
                 theme: widget.theme,
-                onActionBuild: NaturalBlockImages.builder,
-                onActionTap: (text) {
-                  ScaffoldMessenger.of(
-                    context,
-                  ).showSnackBar(SnackBar(content: Text('タップされたアクション: $text')));
-                },
+                actions: NaturalBlockActions(
+                  buildSpan: NaturalBlockImages.builder,
+                  onTap: (text) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('タップされたアクション: $text')),
+                    );
+                  },
+                ),
               ),
             ),
           ),

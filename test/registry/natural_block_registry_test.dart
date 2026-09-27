@@ -90,31 +90,47 @@ void main() {
         ); // a+b in one Row, c+d in the other
       },
     );
-  });
 
-  group('register / registerAll (custom builders)', () {
-    testWidgets('custom builder overrides the default for its node type', (
+    testWidgets('a node never drawn on its own renders nothing', (
       tester,
     ) async {
-      final registry = NaturalBlockRegistry.defaults.register(
-        TextNode,
-        (context, node, scope) => const Placeholder(),
-      );
-      final nodes = <NaturalBlockNode>[text('a')];
+      // A run and a table row reach a widget only through the line or table
+      // that holds them, so asking for one directly draws an empty box.
+      await buildWith(tester, NaturalBlockRegistry.defaults, [
+        TextSpanNode(text: 'a'),
+        TableRowNode(
+          children: [
+            TableCellNode(children: [text('b')]),
+          ],
+        ),
+      ]);
 
-      await buildWith(tester, registry, nodes);
+      expect(tester.takeException(), isNull);
+      expect(find.byType(TextNodeView), findsNothing);
+      expect(find.text('a'), findsNothing);
+    });
+  });
+
+  group('builders of your own', () {
+    testWidgets('one replaces the default for that kind of node', (
+      tester,
+    ) async {
+      final registry = NaturalBlockRegistry(
+        text: (context, node, scope) => const Placeholder(),
+      );
+
+      await buildWith(tester, registry, [text('a')]);
 
       expect(find.byType(Placeholder), findsOneWidget);
       expect(find.byType(TextNodeView), findsNothing);
     });
 
     testWidgets(
-      'a custom ColumnNode builder also applies to row cells, since cells '
-      'are built through the registry',
+      'a ColumnNode builder also applies to row cells, since cells are '
+      'built through the registry',
       (tester) async {
-        final registry = NaturalBlockRegistry.defaults.register(
-          ColumnNode,
-          (context, node, scope) => const Placeholder(),
+        final registry = NaturalBlockRegistry(
+          column: (context, node, scope) => const Placeholder(),
         );
         final nodes = <NaturalBlockNode>[
           RowNode(
@@ -132,51 +148,17 @@ void main() {
       },
     );
 
-    testWidgets(
-      'buildRowNode throws immediately when registered for a non-RowNode '
-      'type, instead of silently misbehaving',
-      (tester) async {
-        final registry = NaturalBlockRegistry.defaults.register(
-          TextNode,
-          buildRowNode,
-        );
-        final nodes = <NaturalBlockNode>[text('a')];
+    testWidgets('the kinds left out keep their default', (tester) async {
+      final registry = NaturalBlockRegistry(
+        text: (context, node, scope) => const Placeholder(),
+      );
 
-        await tester.pumpWidget(
-          MaterialApp(
-            home: Builder(
-              builder: (context) {
-                NaturalBlockScope(
-                  theme: theme,
-                  registry: registry,
-                ).buildAll(context, nodes);
-                return const SizedBox();
-              },
-            ),
-          ),
-        );
+      await buildWith(tester, registry, [
+        ColumnNode(children: [text('a')]),
+      ]);
 
-        expect(tester.takeException(), isA<TypeError>());
-      },
-    );
-  });
-
-  group('NaturalBlockRegistry.empty', () {
-    testWidgets('empty registry falls back to an empty box without throwing', (
-      tester,
-    ) async {
-      final nodes = <NaturalBlockNode>[
-        RowNode(children: [ColumnNode(), ColumnNode()]),
-        ColumnNode(),
-        text('a'),
-      ];
-
-      await buildWith(tester, const NaturalBlockRegistry.empty(), nodes);
-
-      expect(tester.takeException(), isNull);
-      expect(find.byType(RowNodeView), findsNothing);
-      expect(find.byType(ColumnNodeView), findsNothing);
-      expect(find.byType(TextNodeView), findsNothing);
+      expect(find.byType(ColumnNodeView), findsOneWidget);
+      expect(find.byType(Placeholder), findsOneWidget);
     });
   });
 }

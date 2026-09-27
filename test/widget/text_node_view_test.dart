@@ -227,62 +227,60 @@ void main() {
       expect(span.style!.fontWeight, theme.emphasis.fontWeight);
     });
 
-    testWidgets(
-      'an actionable span gets a recognizer when onActionTap is given',
-      (tester) async {
-        final node = TextNode(
-          children: [
-            TextSpanNode(
-              text: 'tap me',
-              decoration: SpanDecoration(isAction: true),
-            ),
-          ],
-        );
-        const theme = NaturalBlockTheme();
+    testWidgets('an actionable span gets a recognizer when onTap is given', (
+      tester,
+    ) async {
+      final node = TextNode(
+        children: [
+          TextSpanNode(
+            text: 'tap me',
+            decoration: SpanDecoration(isAction: true),
+          ),
+        ],
+      );
+      const theme = NaturalBlockTheme();
 
-        await tester.pumpWidget(
-          MaterialApp(
-            home: TextNodeView(
-              node: node,
-              scope: NaturalBlockScope(
-                theme: theme,
-                actions: NaturalBlockActions(onTap: (_) {}),
-              ),
+      await tester.pumpWidget(
+        MaterialApp(
+          home: TextNodeView(
+            node: node,
+            scope: NaturalBlockScope(
+              theme: theme,
+              actions: NaturalBlockActions(onTap: (_) {}),
             ),
           ),
-        );
+        ),
+      );
 
-        final span = renderedSpans(tester).first;
-        expect(span.recognizer, isA<TapGestureRecognizer>());
-      },
-    );
+      final span = renderedSpans(tester).first;
+      expect(span.recognizer, isA<TapGestureRecognizer>());
+    });
 
-    testWidgets(
-      'an actionable span gets no recognizer when onActionTap is null',
-      (tester) async {
-        final node = TextNode(
-          children: [
-            TextSpanNode(
-              text: 'tap me',
-              decoration: SpanDecoration(isAction: true),
-            ),
-          ],
-        );
-        const theme = NaturalBlockTheme();
-
-        await tester.pumpWidget(
-          MaterialApp(
-            home: TextNodeView(
-              node: node,
-              scope: NaturalBlockScope(theme: theme),
-            ),
+    testWidgets('an actionable span gets no recognizer when onTap is null', (
+      tester,
+    ) async {
+      final node = TextNode(
+        children: [
+          TextSpanNode(
+            text: 'tap me',
+            decoration: SpanDecoration(isAction: true),
           ),
-        );
+        ],
+      );
+      const theme = NaturalBlockTheme();
 
-        final span = renderedSpans(tester).first;
-        expect(span.recognizer, isNull);
-      },
-    );
+      await tester.pumpWidget(
+        MaterialApp(
+          home: TextNodeView(
+            node: node,
+            scope: NaturalBlockScope(theme: theme),
+          ),
+        ),
+      );
+
+      final span = renderedSpans(tester).first;
+      expect(span.recognizer, isNull);
+    });
 
     testWidgets('a non-actionable span gets no recognizer', (tester) async {
       final node = TextNode(children: [TextSpanNode(text: 'plain')]);
@@ -304,42 +302,39 @@ void main() {
       expect(span.recognizer, isNull);
     });
 
-    testWidgets(
-      'tapping an actionable span calls onActionTap with exactly that '
-      "span's text",
-      (tester) async {
-        final tapped = <String>[];
-        final node = TextNode(
-          children: [
-            TextSpanNode(
-              text: 'actionable',
-              decoration: SpanDecoration(isAction: true),
-            ),
-            TextSpanNode(text: ' plain'),
-          ],
-        );
-        const theme = NaturalBlockTheme();
+    testWidgets('tapping an actionable span calls onTap with exactly that '
+        "span's text", (tester) async {
+      final tapped = <String>[];
+      final node = TextNode(
+        children: [
+          TextSpanNode(
+            text: 'actionable',
+            decoration: SpanDecoration(isAction: true),
+          ),
+          TextSpanNode(text: ' plain'),
+        ],
+      );
+      const theme = NaturalBlockTheme();
 
-        await tester.pumpWidget(
-          MaterialApp(
-            home: TextNodeView(
-              node: node,
-              scope: NaturalBlockScope(
-                theme: theme,
-                actions: NaturalBlockActions(onTap: tapped.add),
-              ),
+      await tester.pumpWidget(
+        MaterialApp(
+          home: TextNodeView(
+            node: node,
+            scope: NaturalBlockScope(
+              theme: theme,
+              actions: NaturalBlockActions(onTap: tapped.add),
             ),
           ),
-        );
+        ),
+      );
 
-        final span = renderedSpans(tester).first;
-        (span.recognizer as TapGestureRecognizer).onTap!();
+      final span = renderedSpans(tester).first;
+      (span.recognizer as TapGestureRecognizer).onTap!();
 
-        expect(tapped, ['actionable']);
-      },
-    );
+      expect(tapped, ['actionable']);
+    });
 
-    testWidgets('tapping a non-actionable span does not fire onActionTap', (
+    testWidgets('tapping a non-actionable span does not fire onTap', (
       tester,
     ) async {
       final tapped = <String>[];

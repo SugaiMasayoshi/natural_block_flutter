@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:natural_block/natural_block.dart';
 import 'package:natural_block_flutter/natural_block_flutter.dart';
 
 import 'rendered_spans.dart';
@@ -142,9 +141,8 @@ void main() {
     testWidgets('a custom registry substitutes a widget for a node type', (
       tester,
     ) async {
-      final registry = NaturalBlockRegistry.defaults.register(
-        TextNode,
-        (context, node, scope) => const Placeholder(),
+      final registry = NaturalBlockRegistry(
+        text: (context, node, scope) => const Placeholder(),
       );
 
       await pump(tester, 'Hello world', registry: registry);
@@ -188,9 +186,11 @@ void main() {
           home: SelectionArea(
             child: NaturalBlockView(
               source: 'before :@boxed:@ after',
-              onActionBuild: (context, text, style, theme) => WidgetSpan(
-                alignment: PlaceholderAlignment.middle,
-                child: SizedBox(width: 20, height: 10),
+              actions: NaturalBlockActions(
+                buildSpan: (context, text, style, theme) => WidgetSpan(
+                  alignment: PlaceholderAlignment.middle,
+                  child: SizedBox(width: 20, height: 10),
+                ),
               ),
             ),
           ),
@@ -450,14 +450,12 @@ void main() {
       final builds = <int>[];
       return (
         builds: builds,
-        registry: NaturalBlockRegistry.defaults.register(TextNode, (
-          context,
-          node,
-          scope,
-        ) {
-          builds.add(1);
-          return const SizedBox.shrink();
-        }),
+        registry: NaturalBlockRegistry(
+          text: (context, node, scope) {
+            builds.add(1);
+            return const SizedBox.shrink();
+          },
+        ),
       );
     }
 

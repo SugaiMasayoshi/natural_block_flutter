@@ -118,9 +118,8 @@ void main() {
       'cells are built through the registry, so a custom builder applies '
       'to row cells too',
       (tester) async {
-        final customRegistry = NaturalBlockRegistry.defaults.register(
-          ColumnNode,
-          (context, node, scope) => const Placeholder(),
+        final customRegistry = NaturalBlockRegistry(
+          column: (context, node, scope) => const Placeholder(),
         );
         final node = RowNode(children: [ColumnNode(), ColumnNode()]);
 

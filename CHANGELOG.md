@@ -48,11 +48,16 @@ Initial release.
 
 ### Customization
 
-- `NaturalBlockRegistry` maps node types to the builder that renders them,
-  with `register` / `registerAll`. Lookup is by exact `runtimeType`, and a
-  node with no builder renders nothing with a debug-mode warning.
+- `NaturalBlockRegistry` holds one builder per kind of node -- `row`,
+  `column`, `table`, `tableCell`, `text`, `raw` -- each `null` for "draw it
+  the usual way". The node types are sealed, so the set is closed and can be
+  named: the builder's node type stays exact, nothing is cast on the way in,
+  and a builder written for the wrong kind does not compile. It replaced a
+  `Type`-keyed map, which modelled an openness the AST does not have and
+  needed a fallback for types that cannot occur.
 - Default builders (`buildRowNode`, `buildColumnNode`, `buildTableNode`,
-  `buildTextNode`) are exported so a custom builder can delegate back.
+  `buildTableCellNode`, `buildTextNode`, `buildRawNode`) are exported so a
+  builder of your own can delegate back.
 - A builder receives the node and one `NaturalBlockScope`, which carries the
   theme, the registry and the actions. The three travel together the whole
   way down and no level swaps one of them for its children, so they are one
@@ -74,10 +79,14 @@ Initial release.
 
 ### Actionable runs
 
-- `onActionTap` reports a tap with the run's own text. Nothing here ever
+- `NaturalBlockActions` carries both of these, and `NaturalBlockView` takes
+  it as one `actions` parameter, like `theme` and `registry`. It used to take
+  the two callbacks flat and bundle them internally, which left one thing
+  with two names on the way in.
+- `onTap` reports a tap with the run's own text. Nothing here ever
   interprets that text — no URL is opened, and there is no `url_launcher`
   dependency.
-- `onActionBuild` replaces a run's rendering entirely; returning `null` for
+- `buildSpan` replaces a run's rendering entirely; returning `null` for
   a payload leaves it to the default, so an unrecognized one still reads as
   text.
 - `NaturalBlockImages.builder` is the reference rendering for the

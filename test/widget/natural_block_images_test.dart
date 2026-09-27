@@ -128,8 +128,10 @@ void main() {
         wrap(
           NaturalBlockView(
             source: ':@#section:@',
-            onActionBuild: NaturalBlockImages.builder,
-            onActionTap: tapped.add,
+            actions: NaturalBlockActions(
+              buildSpan: NaturalBlockImages.builder,
+              onTap: tapped.add,
+            ),
           ),
         ),
       );
@@ -150,7 +152,7 @@ void main() {
         wrap(
           const NaturalBlockView(
             source: ':@image(https://example.com/a.png):@',
-            onActionBuild: NaturalBlockImages.builder,
+            actions: NaturalBlockActions(buildSpan: NaturalBlockImages.builder),
           ),
         ),
       );
@@ -206,7 +208,7 @@ void main() {
         wrap(
           const NaturalBlockView(
             source: ':@image(https://example.com/a.png):@',
-            onActionBuild: NaturalBlockImages.builder,
+            actions: NaturalBlockActions(buildSpan: NaturalBlockImages.builder),
           ),
         ),
       );
@@ -216,7 +218,7 @@ void main() {
         wrap(
           const NaturalBlockView(
             source: ':++:@image(https://example.com/a.png):@',
-            onActionBuild: NaturalBlockImages.builder,
+            actions: NaturalBlockActions(buildSpan: NaturalBlockImages.builder),
           ),
         ),
       );
@@ -241,7 +243,7 @@ void main() {
         wrap(
           const NaturalBlockView(
             source: ':@image(https://example.com/a.png):@',
-            onActionBuild: NaturalBlockImages.builder,
+            actions: NaturalBlockActions(buildSpan: NaturalBlockImages.builder),
           ),
         ),
       );
@@ -269,7 +271,7 @@ void main() {
         wrap(
           const NaturalBlockView(
             source: ':@image(https://example.com/a.png):@',
-            onActionBuild: NaturalBlockImages.builder,
+            actions: NaturalBlockActions(buildSpan: NaturalBlockImages.builder),
             theme: NaturalBlockTheme(baseFontSize: 28),
           ),
         ),
@@ -289,7 +291,7 @@ void main() {
         wrap(
           const NaturalBlockView(
             source: ':@image(https://example.com/a.png):@',
-            onActionBuild: NaturalBlockImages.builder,
+            actions: NaturalBlockActions(buildSpan: NaturalBlockImages.builder),
           ),
         ),
       );
@@ -309,7 +311,7 @@ void main() {
         wrap(
           const NaturalBlockView(
             source: r':@image(C:\Users\sugai\a.png):@',
-            onActionBuild: NaturalBlockImages.builder,
+            actions: NaturalBlockActions(buildSpan: NaturalBlockImages.builder),
           ),
         ),
       );
@@ -343,7 +345,7 @@ void main() {
           NaturalBlockView(
             source:
                 r':@image(C:\a.png):@ と :@image(https://example.com/b.png):@',
-            onActionBuild: withLocalFiles,
+            actions: NaturalBlockActions(buildSpan: withLocalFiles),
           ),
         ),
       );
@@ -374,7 +376,7 @@ void main() {
         wrap(
           NaturalBlockView(
             source: ':@user(alice):@ and :@image(https://example.com/a.png):@',
-            onActionBuild: mine,
+            actions: NaturalBlockActions(buildSpan: mine),
           ),
         ),
       );
