@@ -38,54 +38,82 @@ class _TextNodeViewState extends State<TextNodeView> {
   TextStyle _rootStyle(BuildContext context) =>
       DefaultTextStyle.of(context).style.merge(_theme.base);
 
-  // 【解説】 :@ の run に付けるタップ認識器。使い回すため、番号順にリストで持つ。
-  final List<TapGestureRecognizer> _recognizers = [];
+  /// The recognizers for this line's actionable runs, kept across builds and
+  /// keyed by the run's own text.
+  ///
+  /// Reused rather than rebuilt because a recognizer that has taken a pointer
+  /// down owns an entry in the gesture arena; replacing it mid-gesture throws
+  /// that entry away and the tap vanishes silently.
+  ///
+  /// Keyed by text because the text *is* the payload: `onTap` is handed the
+  /// run's own text and nothing else, so two runs reading the same thing want
+  /// the same recognizer, and a run keeps its own however the runs around it
+  /// change. Keying by position instead would shift every later run onto a
+  /// different recognizer whenever one before it was added or removed. The
+  /// cost is the opposite case: editing a run's own text gives it a new
+  /// recognizer, so a tap held across that edit is lost.
+  // 【解説】 Map<鍵, 値>: 鍵から値を引ける入れ物。ここでは run の文字から認識器を引く。
+  final Map<String, TapGestureRecognizer> _recognizers = {};
 
   // 【解説】 ウィジェットが画面から完全に外れるときに呼ばれる。認識器は必ず dispose する必要がある。
   @override
   void dispose() {
-    for (final recognizer in _recognizers) {
+    for (final recognizer in _recognizers.values) {
       recognizer.dispose();
     }
     _recognizers.clear();
     super.dispose();
   }
 
-  // 【解説】 index 番目の認識器を返す。足りなければ作って足す(前回の build で作った物は使い回す)。
-  TapGestureRecognizer _recognizerAt(int index) {
-    while (_recognizers.length <= index) {
-      _recognizers.add(TapGestureRecognizer());
-    }
-    return _recognizers[index];
-  }
+  /// The texts this line needs a recognizer for, and none at all when nothing
+  /// is wired to them.
+  // 【解説】 { for (...) ... } は集合(Set)のリテラル。同じ文字は自然に1つにまとまる。
+  Set<String> get _actionTexts => _actions.onTap == null
+      ? const {}
+      : {
+          for (final child in widget.node.children)
+            if (child is TextSpanNode && child.decoration.isAction) child.text,
+        };
 
-  // 【解説】 今回使った数(keep)より多い分を後ろから捨てる。:@ の run が減ったときの後始末。
-  void _trimRecognizers(int keep) {
-    while (_recognizers.length > keep) {
-      _recognizers.removeLast().dispose();
+  /// Makes the pool hold exactly [texts], keeping every recognizer already in
+  /// it and disposing the ones no longer needed.
+  // 【解説】 前回の build で作った物はそのまま残るので、使い回しになる。
+  void _syncRecognizers(Set<String> texts) {
+    // 【解説】 removeWhere: 条件に合う要素を消す。消す前に dispose しておく。
+    _recognizers.removeWhere((text, recognizer) {
+      if (texts.contains(text)) return false;
+      recognizer.dispose();
+      return true;
+    });
+    for (final text in texts) {
+      // 【解説】 putIfAbsent: その鍵がまだ無いときだけ、右の関数で作って入れる。
+      // 【解説】 onTap は作るとき一度だけ設定する。呼ばれた時点の _actions を読むので、
+      // 【解説】 利用者が渡す関数が差し替わっても付け直す必要がない。
+      _recognizers.putIfAbsent(
+        text,
+        () => TapGestureRecognizer()..onTap = () => _actions.onTap?.call(text),
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    // Recognizers are numbered across the whole line and reclaimed by count,
-    // so the tally is issued and collected in the same place. A span that
-    // needs one asks for the next number; `_trimRecognizers` disposes the
-    // rest.
-    // 【解説】 この build で使った認識器の数。下の関数(クロージャ)が増やしていく。
-    var actionIndex = 0;
+    // The pool is filled before the spans are built, so building one is only
+    // a lookup by the run's own text.
+    _syncRecognizers(_actionTexts);
 
     // 【解説】 map<InlineSpan>: 変換後の型を明示している。書かないと推論が片方の型に寄ることがある。
     final spans = widget.node.children.map<InlineSpan>((child) {
       // 【解説】 is: 型の判定。true の後はこのブロックの中で child が RawSpanNode として扱われる。
       if (child is RawSpanNode) return _rawSpan(context, child);
-      // 【解説】 () => actionIndex++ は「呼ぶたびに今の番号を返してから1増やす」関数。
-      // 【解説】 外の変数 actionIndex を閉じ込めて(クロージャ)いるので、呼ばれた分だけ数が進む。
-      return _textSpan(context, child as TextSpanNode, () => actionIndex++);
+      final run = child as TextSpanNode;
+      // 【解説】 押せる run なら自分の文字で認識器を引く。onTap が無ければプールが空で null。
+      return _textSpan(
+        context,
+        run,
+        run.decoration.isAction ? _recognizers[run.text] : null,
+      );
     }).toList();
-
-    // 【解説】 map は遅延評価なので、toList() の後で初めて actionIndex が確定する。その数まで残して捨てる。
-    _trimRecognizers(actionIndex);
 
     // 【解説】 行全体の基準の書式を親の TextSpan に置き、各 run はその上に自分の書式を重ねる。
     return Text.rich(TextSpan(style: _rootStyle(context), children: spans));
@@ -98,13 +126,12 @@ class _TextNodeViewState extends State<TextNodeView> {
   );
 
   /// The span for one styled run, or whatever [ActionSpanBuilder] returned
-  /// for it. [nextAction] hands out the next recognizer number, and is only
-  /// called when a recognizer is actually taken.
+  /// for it. [recognizer] is this run's own, or null when the run is not
+  /// actionable or nothing is wired to it.
   InlineSpan _textSpan(
     BuildContext context,
     TextSpanNode span,
-    // 【解説】 int Function() は「引数なしで int を返す関数」の型。
-    int Function() nextAction,
+    TapGestureRecognizer? recognizer,
   ) {
     // 【解説】 装飾を順に重ねて1つの書式にする。. で始まる行はメソッドの連鎖。
     final style = _theme
@@ -133,24 +160,12 @@ class _TextNodeViewState extends State<TextNodeView> {
       if (built != null) return built;
     }
 
-    // 【解説】 ? 付きの型は null を入れられる。押せない run では null のまま。
-    GestureRecognizer? recognizer;
-    // 【解説】 一度ローカル変数に取り出すと、以降この変数は null でないと Dart が判断できる。
-    final onTap = _actions.onTap;
-    if (span.decoration.isAction && onTap != null) {
-      final text = span.text;
-      // 【解説】 ..onTap = ...: カスケード。左の認識器に onTap を設定し、認識器そのものを返す。
-      recognizer = _recognizerAt(nextAction())..onTap = () => onTap(text);
-    }
-
     return TextSpan(
       text: span.text,
       style: style,
       recognizer: recognizer,
-      // 【解説】 読み上げ用の文字。押せる run のときだけ付ける。
-      semanticsLabel: span.decoration.isAction && onTap != null
-          ? span.text
-          : null,
+      // 【解説】 読み上げ用の文字。実際に押せる run のときだけ付ける。
+      semanticsLabel: recognizer != null ? span.text : null,
     );
   }
 

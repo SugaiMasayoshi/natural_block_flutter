@@ -417,43 +417,84 @@ void main() {
       expect(renderedSpans(tester).single.semanticsLabel, 'tap me');
     });
 
-    testWidgets('a recognizer survives a rebuild rather than being replaced', (
-      tester,
-    ) async {
+    group('recognizers are reused, keyed by the run\'s own text', () {
       // The property the whole design turns on. A recognizer that has taken
       // a pointer down owns an entry in the gesture arena; replacing it
       // mid-gesture throws that entry away. Reusing the object is what makes
-      // the next test possible.
-      const theme = NaturalBlockTheme();
+      // the interrupted-tap test below possible.
+      //
+      // The text is the key because the text is the payload: `onTap` is
+      // handed the run's own text and nothing else.
+      TextSpanNode action(String text) =>
+          TextSpanNode(text: text, decoration: SpanDecoration(isAction: true));
 
-      Future<void> pumpWith(String text) => tester.pumpWidget(
-        MaterialApp(
-          home: TextNodeView(
-            node: TextNode(
-              children: [
-                TextSpanNode(
-                  text: text,
-                  decoration: SpanDecoration(isAction: true),
+      Future<void> pumpRuns(WidgetTester tester, List<InlineNode> runs) =>
+          tester.pumpWidget(
+            MaterialApp(
+              home: TextNodeView(
+                node: TextNode(children: runs),
+                scope: NaturalBlockScope(
+                  // A fresh scope each time, so the rebuild is real work
+                  // rather than an identical widget Flutter can skip.
+                  actions: NaturalBlockActions(onTap: (_) {}),
                 ),
-              ],
+              ),
             ),
-            scope: NaturalBlockScope(
-              theme: theme,
-              actions: NaturalBlockActions(onTap: (_) {}),
-            ),
-          ),
-        ),
-      );
+          );
 
-      await pumpWith('tap me');
-      final first = renderedSpans(tester).single.recognizer;
+      Map<String, GestureRecognizer?> recognizersOf(WidgetTester tester) => {
+        for (final span in renderedSpans(tester)) span.text!: span.recognizer,
+      };
 
-      await pumpWith('tap again');
-      expect(
-        renderedSpans(tester).single.recognizer,
-        same(first),
-        reason: 'the same recognizer object is reused across builds',
-      );
+      testWidgets('a run keeps its recognizer across a rebuild', (
+        tester,
+      ) async {
+        await pumpRuns(tester, [action('tap me')]);
+        final first = recognizersOf(tester)['tap me'];
+
+        await pumpRuns(tester, [action('tap me')]);
+
+        expect(recognizersOf(tester)['tap me'], same(first));
+      });
+
+      testWidgets('a run keeps its recognizer when another one is removed', (
+        tester,
+      ) async {
+        // What keying by position could not do: dropping a run used to shift
+        // every later one onto a different recognizer.
+        await pumpRuns(tester, [action('A'), action('B'), action('C')]);
+        final before = recognizersOf(tester);
+
+        await pumpRuns(tester, [action('A'), action('C')]);
+        final after = recognizersOf(tester);
+
+        expect(after['A'], same(before['A']));
+        expect(after['C'], same(before['C']));
+      });
+
+      testWidgets('two runs reading the same thing share one recognizer', (
+        tester,
+      ) async {
+        // Correct because both hand `onTap` the same payload.
+        await pumpRuns(tester, [action('same'), action('same')]);
+
+        final spans = renderedSpans(tester);
+        expect(spans, hasLength(2));
+        expect(spans[1].recognizer, same(spans[0].recognizer));
+      });
+
+      testWidgets('editing a run\'s own text gives it a new recognizer', (
+        tester,
+      ) async {
+        // The cost of keying by text, pinned so it is a decision rather than
+        // a surprise: a tap held across an edit to the pressed run is lost.
+        await pumpRuns(tester, [action('tap me')]);
+        final first = recognizersOf(tester)['tap me'];
+
+        await pumpRuns(tester, [action('tap again')]);
+
+        expect(recognizersOf(tester)['tap again'], isNot(same(first)));
+      });
     });
 
     testWidgets('a tap interrupted by a rebuild still fires', (tester) async {
