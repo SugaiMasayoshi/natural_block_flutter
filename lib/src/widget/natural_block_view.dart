@@ -72,7 +72,7 @@ class _NaturalBlockViewState extends State<NaturalBlockView> {
     );
 
     // 【解説】 文書の子(列と行)を、それぞれの種類に応じたウィジェットに変える。
-    final children = scope.buildAll(context, _document.children);
+    final children = scope.buildLayouts(context, _document.children);
 
     // 【解説】 文書全体を縦に積む。寄せは指定しない(unstated)ので左詰め。
     return ColumnNodeView(children: children);

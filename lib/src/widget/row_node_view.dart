@@ -15,7 +15,7 @@ class RowNodeView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // 【解説】 各セル(ColumnNode)を対応表経由でウィジェットにする。独自の描き方もセルに効く。
-    final cells = scope.buildAll(context, node.children);
+    final cells = scope.buildLayouts(context, node.children);
 
     // 【解説】 LayoutBuilder: 親から与えられた大きさの制約を見てから、中身を決めるウィジェット。
     return LayoutBuilder(

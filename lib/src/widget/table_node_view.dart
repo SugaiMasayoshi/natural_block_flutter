@@ -24,7 +24,7 @@ class TableNodeView extends StatelessWidget {
   /// written. Going back through the registry keeps a caller's own
   /// `TableCellNode` builder working inside a table.
   // 【解説】 表の列数(node.columns.length)だけ、新しい TableCellNode を作り直して並べる。
-  List<NaturalBlockNode> _squared(TableRowNode row) => [
+  List<TableCellNode> _squared(TableRowNode row) => [
     for (var i = 0; i < node.columns.length; i++)
       TableCellNode(
         // 【解説】 この行にその列のセルがあれば中身を使い、無ければ空(const [])で埋める。
@@ -64,11 +64,12 @@ class TableNodeView extends StatelessWidget {
                 : null,
             children: [
               // 【解説】 埋めた行を対応表経由でウィジェットにし、それぞれ余白で包む。
-              for (final cell in scope.buildAll(
-                context,
-                _squared(node.children[i]),
-              ))
-                Padding(padding: scope.theme.tableCellPadding, child: cell),
+              // 【解説】 セルは種類が1つなので、振り分けずに tableCell を直接呼ぶ。
+              for (final cell in _squared(node.children[i]))
+                Padding(
+                  padding: scope.theme.tableCellPadding,
+                  child: scope.registry.tableCell(context, cell, scope),
+                ),
             ],
           ),
       ],

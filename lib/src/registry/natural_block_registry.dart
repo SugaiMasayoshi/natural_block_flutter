@@ -62,11 +62,18 @@ class NaturalBlockScope {
     this.actions = NaturalBlockActions.none,
   });
 
-  /// Builds a widget for each of [nodes], whatever kind they are.
+  /// Builds a widget for each of [nodes]: the blocks and rows a document
+  /// holds, or the cells a row holds.
   // 【解説】 [ for (...) 式 ] は collection-for。ループの各回の値でリストを作る。
   // 【解説】 this(自分)を子にも渡すので、見た目と差し替えが木の下まで届く。
-  List<Widget> buildAll(BuildContext context, List<NaturalBlockNode> nodes) => [
-    for (final node in nodes) registry.build(context, node, this),
+  List<Widget> buildLayouts(BuildContext context, List<LayoutNode> nodes) => [
+    for (final node in nodes) registry.buildLayout(context, node, this),
+  ];
+
+  /// Builds a widget for each of [nodes]: the lines, raw blocks and tables a
+  /// block or a table cell holds.
+  List<Widget> buildContents(BuildContext context, List<ContentNode> nodes) => [
+    for (final node in nodes) registry.buildContent(context, node, this),
   ];
 }
 
@@ -77,52 +84,56 @@ class NaturalBlockScope {
 /// builder's node type exact -- no cast on the way in, and a builder written
 /// for the wrong kind does not compile.
 class NaturalBlockRegistry {
-  // 【解説】 null は「既定の描き方(4)を使う」。差し替えたい種類だけ渡す。
-  final NodeBuilder<RowNode>? row;
+  // 【解説】 既定値は 4 の描き方そのもの。差し替えたい種類だけ渡す。
+  // 【解説】 トップレベル関数の名前は定数なので、既定値に書いても const のまま。
+  final NodeBuilder<RowNode> row;
 
-  final NodeBuilder<ColumnNode>? column;
+  final NodeBuilder<ColumnNode> column;
 
-  final NodeBuilder<TableNode>? table;
+  final NodeBuilder<TableNode> table;
 
-  final NodeBuilder<TableCellNode>? tableCell;
+  final NodeBuilder<TableCellNode> tableCell;
 
-  final NodeBuilder<TextNode>? text;
+  final NodeBuilder<TextNode> text;
 
-  final NodeBuilder<RawNode>? raw;
+  final NodeBuilder<RawNode> raw;
 
   // 【解説】 すべて省略できるので、既定の表は const で作れる。
   const NaturalBlockRegistry({
-    this.row,
-    this.column,
-    this.table,
-    this.tableCell,
-    this.text,
-    this.raw,
+    this.row = buildRowNode,
+    this.column = buildColumnNode,
+    this.table = buildTableNode,
+    this.tableCell = buildTableCellNode,
+    this.text = buildTextNode,
+    this.raw = buildRawNode,
   });
 
   static const NaturalBlockRegistry defaults = NaturalBlockRegistry();
 
-  /// The widget for [node], from this registry or the default for its kind.
+  /// The widget for [node], a block or a row.
   // 【解説】 switch のパターン(RowNode() など)が型を絞るので、この中の node は
   // 【解説】 その型として扱える。キャストは要らない。
-  // 【解説】 ?? は「左が null なら右」。差し替えが無ければ既定の描き方を使う。
-  // 【解説】 sealed なので、書き漏らした型があるとコンパイルエラーになる。
-  Widget build(
+  // 【解説】 LayoutNode は sealed で中身はこの2つだけなので、これで網羅。
+  Widget buildLayout(
     BuildContext context,
-    NaturalBlockNode node,
+    LayoutNode node,
     NaturalBlockScope scope,
   ) => switch (node) {
-    RowNode() => (row ?? buildRowNode)(context, node, scope),
-    ColumnNode() => (column ?? buildColumnNode)(context, node, scope),
-    TableNode() => (table ?? buildTableNode)(context, node, scope),
-    TableCellNode() => (tableCell ?? buildTableCellNode)(context, node, scope),
-    TextNode() => (text ?? buildTextNode)(context, node, scope),
-    RawNode() => (raw ?? buildRawNode)(context, node, scope),
-    // 【解説】 ここに並ぶのは、単体では描かれないノード。文書は NaturalBlockView が、
-    // 【解説】 表の行は表が、run は文章が、それぞれ自分の中で扱う。
-    DocumentNode() ||
-    TableRowNode() ||
-    TextSpanNode() ||
-    RawSpanNode() => const SizedBox.shrink(),
+    RowNode() => row(context, node, scope),
+    ColumnNode() => column(context, node, scope),
+  };
+
+  /// The widget for [node], one of the things a block or a table cell holds.
+  // 【解説】 入口を「ブロック・行」と「その中身」に分けてあるので、単体では
+  // 【解説】 描かれないノード(文書・表の行・run)はそもそも渡せない。
+  // 【解説】 表のセルは種類が1つしかないので、振り分けずに tableCell を直接呼ぶ。
+  Widget buildContent(
+    BuildContext context,
+    ContentNode node,
+    NaturalBlockScope scope,
+  ) => switch (node) {
+    TableNode() => table(context, node, scope),
+    TextNode() => text(context, node, scope),
+    RawNode() => raw(context, node, scope),
   };
 }

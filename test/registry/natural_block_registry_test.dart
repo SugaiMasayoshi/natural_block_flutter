@@ -9,17 +9,17 @@ void main() {
   Future<List<Widget>> buildWith(
     WidgetTester tester,
     NaturalBlockRegistry registry,
-    List<NaturalBlockNode> nodes,
+    List<Widget> Function(BuildContext context, NaturalBlockScope scope) build,
   ) async {
     late List<Widget> built;
     await tester.pumpWidget(
       MaterialApp(
         home: Builder(
           builder: (context) {
-            built = NaturalBlockScope(
-              theme: theme,
-              registry: registry,
-            ).buildAll(context, nodes);
+            built = build(
+              context,
+              NaturalBlockScope(theme: theme, registry: registry),
+            );
             return Column(children: built);
           },
         ),
@@ -28,13 +28,27 @@ void main() {
     return built;
   }
 
+  /// The blocks and rows a document holds.
+  Future<List<Widget>> buildLayouts(
+    WidgetTester tester,
+    NaturalBlockRegistry registry,
+    List<LayoutNode> nodes,
+  ) => buildWith(tester, registry, (c, scope) => scope.buildLayouts(c, nodes));
+
+  /// The lines, raw blocks and tables a block holds.
+  Future<List<Widget>> buildContents(
+    WidgetTester tester,
+    NaturalBlockRegistry registry,
+    List<ContentNode> nodes,
+  ) => buildWith(tester, registry, (c, scope) => scope.buildContents(c, nodes));
+
   TextNode text(String s) => TextNode(children: [TextSpanNode(text: s)]);
 
   group('NaturalBlockRegistry.defaults', () {
-    testWidgets('default registry renders Row/Column/Text via their views', (
+    testWidgets('a document\'s blocks and rows go to their views', (
       tester,
     ) async {
-      final nodes = <NaturalBlockNode>[
+      await buildLayouts(tester, NaturalBlockRegistry.defaults, [
         RowNode(
           children: [
             ColumnNode(children: [text('a')]),
@@ -42,45 +56,58 @@ void main() {
           ],
         ),
         ColumnNode(children: [text('c')]),
-        text('d'),
-      ];
-
-      await buildWith(tester, NaturalBlockRegistry.defaults, nodes);
+      ]);
 
       expect(find.byType(RowNodeView), findsOneWidget);
       // One direct ColumnNode, and one for each of the RowNode's two cells.
       expect(find.byType(ColumnNodeView), findsNWidgets(3));
-      // One direct TextNode, one in the top-level ColumnNode, and one in
-      // each of the RowNode's cells.
-      expect(find.byType(TextNodeView), findsNWidgets(4));
+      expect(find.byType(TextNodeView), findsNWidgets(3));
+    });
+
+    testWidgets('a block\'s contents go to their views', (tester) async {
+      await buildContents(tester, NaturalBlockRegistry.defaults, [
+        text('line'),
+        RawNode(text: 'code'),
+        TableNode(
+          children: [
+            TableRowNode(
+              children: [
+                TableCellNode(children: [text('cell')]),
+              ],
+            ),
+          ],
+        ),
+      ]);
+
+      expect(find.byType(TextNodeView), findsNWidgets(2)); // the line, and
+      expect(find.byType(RawNodeView), findsOneWidget); // the table's cell
+      expect(find.byType(TableNodeView), findsOneWidget);
     });
 
     testWidgets(
-      'one RowNode renders as one Row, keeping other nodes separate',
+      'one RowNode renders as one Row, keeping other blocks separate',
       (tester) async {
-        final nodes = <NaturalBlockNode>[
-          RowNode(
-            children: [
-              ColumnNode(children: [text('a')]),
-              ColumnNode(children: [text('b')]),
-            ],
-          ),
-          text('between'),
-          RowNode(
-            children: [
-              ColumnNode(children: [text('c')]),
-              ColumnNode(children: [text('d')]),
-            ],
-          ),
-        ];
-
-        final built = await buildWith(
+        final built = await buildLayouts(
           tester,
           NaturalBlockRegistry.defaults,
-          nodes,
+          [
+            RowNode(
+              children: [
+                ColumnNode(children: [text('a')]),
+                ColumnNode(children: [text('b')]),
+              ],
+            ),
+            ColumnNode(children: [text('between')]),
+            RowNode(
+              children: [
+                ColumnNode(children: [text('c')]),
+                ColumnNode(children: [text('d')]),
+              ],
+            ),
+          ],
         );
 
-        // 2 RowNodes + 1 plain text = 3 top-level widgets.
+        // 2 RowNodes + 1 plain block = 3 top-level widgets.
         expect(built.length, 3);
         expect(find.byType(RowNodeView), findsNWidgets(2));
         expect(find.byType(Row), findsNWidgets(2));
@@ -90,25 +117,6 @@ void main() {
         ); // a+b in one Row, c+d in the other
       },
     );
-
-    testWidgets('a node never drawn on its own renders nothing', (
-      tester,
-    ) async {
-      // A run and a table row reach a widget only through the line or table
-      // that holds them, so asking for one directly draws an empty box.
-      await buildWith(tester, NaturalBlockRegistry.defaults, [
-        TextSpanNode(text: 'a'),
-        TableRowNode(
-          children: [
-            TableCellNode(children: [text('b')]),
-          ],
-        ),
-      ]);
-
-      expect(tester.takeException(), isNull);
-      expect(find.byType(TextNodeView), findsNothing);
-      expect(find.text('a'), findsNothing);
-    });
   });
 
   group('builders of your own', () {
@@ -119,7 +127,7 @@ void main() {
         text: (context, node, scope) => const Placeholder(),
       );
 
-      await buildWith(tester, registry, [text('a')]);
+      await buildContents(tester, registry, [text('a')]);
 
       expect(find.byType(Placeholder), findsOneWidget);
       expect(find.byType(TextNodeView), findsNothing);
@@ -132,16 +140,15 @@ void main() {
         final registry = NaturalBlockRegistry(
           column: (context, node, scope) => const Placeholder(),
         );
-        final nodes = <NaturalBlockNode>[
+
+        await buildLayouts(tester, registry, [
           RowNode(
             children: [
               ColumnNode(children: [text('a')]),
               ColumnNode(children: [text('b')]),
             ],
           ),
-        ];
-
-        await buildWith(tester, registry, nodes);
+        ]);
 
         expect(find.byType(Placeholder), findsNWidgets(2));
         expect(find.byType(TextNodeView), findsNothing);
@@ -153,7 +160,7 @@ void main() {
         text: (context, node, scope) => const Placeholder(),
       );
 
-      await buildWith(tester, registry, [
+      await buildLayouts(tester, registry, [
         ColumnNode(children: [text('a')]),
       ]);
 

@@ -26,7 +26,7 @@ Widget buildColumnNode(
   NaturalBlockScope scope,
 ) => ColumnNodeView(
   align: node.align,
-  children: scope.buildAll(context, node.children),
+  children: scope.buildContents(context, node.children),
 );
 
 Widget buildTextNode(
@@ -57,5 +57,5 @@ Widget buildTableCellNode(
   NaturalBlockScope scope,
 ) => ColumnNodeView(
   align: node.align,
-  children: scope.buildAll(context, node.children),
+  children: scope.buildContents(context, node.children),
 );
