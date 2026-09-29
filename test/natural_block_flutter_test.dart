@@ -81,6 +81,48 @@ void main() {
     });
   });
 
+  group('the default theme', () {
+    // No constant can be right in both a light and a dark theme -- the same
+    // reason striping is offered only on `fromColorScheme`. So a view given
+    // no theme derives one from the surrounding ColorScheme rather than
+    // falling back to a fixed red.
+    const error = Color(0xFF00AAFF);
+
+    final themed = ThemeData(
+      colorScheme: ColorScheme.fromSeed(
+        seedColor: Colors.indigo,
+      ).copyWith(error: error),
+    );
+
+    testWidgets('a view given no theme takes its tones from the ambient '
+        'ColorScheme', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: themed,
+          home: const NaturalBlockView(source: ':!tone'),
+        ),
+      );
+
+      expect(renderedSpans(tester).first.style!.color, error);
+    });
+
+    testWidgets('a theme passed in still wins over the ambient one', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: themed,
+          home: const NaturalBlockView(
+            source: ':!tone',
+            theme: NaturalBlockTheme(negative: TextStyle(color: Colors.red)),
+          ),
+        ),
+      );
+
+      expect(renderedSpans(tester).first.style!.color, Colors.red);
+    });
+  });
+
   group('decoration rendering (end-to-end)', () {
     // This is the package's whole purpose: verifying that decoration markup
     // in a `source` string actually reaches the screen as styled text,

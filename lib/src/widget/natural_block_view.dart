@@ -14,8 +14,15 @@ class NaturalBlockView extends StatefulWidget {
   // 【解説】 表示するマークアップの文字列。
   final String source;
 
-  // 【解説】 色・大きさ・表の罫線などの見た目の設定(11)。
-  final NaturalBlockTheme theme;
+  /// How this document looks, or null to take it from the ambient theme.
+  ///
+  /// Null rather than a constant default because no constant can be right in
+  /// both a light and a dark theme -- the same reason `striped` is offered
+  /// only on `fromColorScheme`. A fixed red reads on a light surface and
+  /// muddies a dark one, so the default is derived from the surrounding
+  /// `ColorScheme` instead of guessing.
+  // 【解説】 null は「祖先のテーマ(Theme.of)から作る」。上書きしたいときだけ渡す。
+  final NaturalBlockTheme? theme;
 
   // 【解説】 ノードの種類ごとに、どのウィジェットで描くかの差し替え(3)。
   final NaturalBlockRegistry registry;
@@ -29,8 +36,7 @@ class NaturalBlockView extends StatefulWidget {
     super.key,
     // 【解説】 required: 名前付き引数だが省略できない。
     required this.source,
-    // 【解説】 this.theme = ...: 渡されなければ既定値を使う。既定値は定数である必要がある。
-    this.theme = const NaturalBlockTheme(),
+    this.theme,
     this.registry = NaturalBlockRegistry.defaults,
     this.actions = NaturalBlockActions.none,
   });
@@ -65,8 +71,9 @@ class _NaturalBlockViewState extends State<NaturalBlockView> {
   @override
   Widget build(BuildContext context) {
     // 【解説】 見た目・差し替え・押したときの処理を1つにまとめ、木の下へ持ち回る(3)。
+    // 【解説】 テーマが渡されていなければ、祖先の配色から作る。
     final scope = NaturalBlockScope(
-      theme: widget.theme,
+      theme: widget.theme ?? NaturalBlockTheme.fromContext(context),
       registry: widget.registry,
       actions: widget.actions,
     );

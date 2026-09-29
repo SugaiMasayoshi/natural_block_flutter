@@ -95,7 +95,7 @@ class Example extends StatelessWidget {
 `NaturalBlockView` takes four parameters:
 
 * `source` (required) -- the markup text to parse and render.
-* `theme` -- a [`NaturalBlockTheme`](#naturalblocktheme) controlling how tones, emphasis, and base text look. Defaults to `const NaturalBlockTheme()`.
+* `theme` -- a [`NaturalBlockTheme`](#naturalblocktheme) controlling how tones, emphasis, and base text look. Defaults to `null`, meaning `NaturalBlockTheme.fromContext(context)`: the tones come from the surrounding `ColorScheme`, so a document reads correctly in a light theme and a dark one without being told which it is in.
 * `registry` -- a [`NaturalBlockRegistry`](#naturalblockregistry) controlling which widget renders each kind of node. Defaults to `NaturalBlockRegistry.defaults`.
 * `actions` -- a `NaturalBlockActions` holding what to do with an [actionable span](#actionable-text): `onTap`, called with the span's own text when it is tapped, and `buildSpan`, which renders the span as something other than styled text (an image, a chip). Defaults to `NaturalBlockActions.none`, which leaves actionable spans styled but not tappable.
 
@@ -116,6 +116,8 @@ NaturalBlockView(source: source, theme: theme);
 ```
 
 Every field has a sensible default, so you only need to override the ones you want to change.
+
+Passing a theme at all is opting out of the ambient one. A `NaturalBlockView` given no theme uses `NaturalBlockTheme.fromContext(context)`, which reads the app's `ColorScheme`; a `const NaturalBlockTheme()` built by hand uses fixed colors that cannot suit both a light and a dark surface. Reach for the constructor to change specific things, and for `fromColorScheme`/`fromContext` when you want the app's palette with a few adjustments.
 
 Three more fields control what a size step is *worth*, since `natural_block` only reports a relative offset and never an absolute size:
 
