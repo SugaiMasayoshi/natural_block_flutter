@@ -68,20 +68,77 @@ class _NaturalBlockViewState extends State<NaturalBlockView> {
     }
   }
 
+  /// The tree last drawn, and what it was drawn from.
+  ///
+  /// Returning the very same widget object is what lets Flutter skip the
+  /// whole subtree: `updateChild` stops at a child whose widget has not
+  /// changed. `build` runs for reasons the tree owes nothing to -- an
+  /// ancestor rebuilding, every frame of an animating parent -- and without
+  /// this each of those redrew the document.
+  // 【解説】 _cached が null でなく、かつ _drawnFrom が今回の鍵と等しければ、前回の木を返す。
+  Widget? _cached;
+  _DrawnFrom? _drawnFrom;
+
+  /// The actions handed to the tree: a stand-in that reads the current widget
+  /// when it fires.
+  ///
+  /// This is what keeps `onTap` out of the comparison below. A caller writes
+  /// it as a closure in their own `build`, and two closures are never equal in
+  /// Dart, so comparing it would miss every single time. Reading it at tap
+  /// time instead means a cached tree still calls the newest callback.
+  ///
+  /// Null is passed through, because whether a run is tappable at all -- and
+  /// so whether it is announced to a screen reader -- depends on it.
+  NaturalBlockActions _liveActions() => NaturalBlockActions(
+    onTap: widget.actions.onTap == null
+        ? null
+        : (text) => widget.actions.onTap!(text),
+    buildSpan: widget.actions.buildSpan == null
+        ? null
+        : (context, text, style, theme) =>
+              widget.actions.buildSpan!(context, text, style, theme),
+  );
+
   @override
   Widget build(BuildContext context) {
-    // 【解説】 見た目・差し替え・押したときの処理を1つにまとめ、木の下へ持ち回る(3)。
     // 【解説】 テーマが渡されていなければ、祖先の配色から作る。
-    final scope = NaturalBlockScope(
-      theme: widget.theme ?? NaturalBlockTheme.fromContext(context),
+    final theme = widget.theme ?? NaturalBlockTheme.fromContext(context);
+
+    // 【解説】 (a, b, c) はレコード。中身が等しければ == も等しくなるので、鍵にできる。
+    // 【解説】 onTap は上の理由で入れず、「あるか無いか」だけを入れる。
+    final from = (
+      document: _document,
+      theme: theme,
       registry: widget.registry,
-      actions: widget.actions,
+      buildSpan: widget.actions.buildSpan,
+      tappable: widget.actions.onTap != null,
     );
 
-    // 【解説】 文書の子(列と行)を、それぞれの種類に応じたウィジェットに変える。
-    final children = scope.buildLayouts(context, _document.children);
+    if (_cached == null || from != _drawnFrom) {
+      _drawnFrom = from;
+      // 【解説】 見た目・差し替え・押したときの処理を1つにまとめ、木の下へ持ち回る(3)。
+      final scope = NaturalBlockScope(
+        theme: theme,
+        registry: widget.registry,
+        actions: _liveActions(),
+      );
+      // 【解説】 文書の子(列と行)をウィジェットに変え、文書全体を縦に積む。
+      // 【解説】 寄せは指定しない(unstated)ので左詰め。
+      _cached = ColumnNodeView(
+        children: scope.buildLayouts(context, _document.children),
+      );
+    }
 
-    // 【解説】 文書全体を縦に積む。寄せは指定しない(unstated)ので左詰め。
-    return ColumnNodeView(children: children);
+    return _cached!;
   }
 }
+
+/// What a drawn tree was drawn from, so the next `build` can tell whether it
+/// still holds.
+typedef _DrawnFrom = ({
+  DocumentNode document,
+  NaturalBlockTheme theme,
+  NaturalBlockRegistry registry,
+  ActionSpanBuilder? buildSpan,
+  bool tappable,
+});

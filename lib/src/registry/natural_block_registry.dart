@@ -136,4 +136,27 @@ class NaturalBlockRegistry {
     TextNode() => text(context, node, scope),
     RawNode() => raw(context, node, scope),
   };
+
+  /// Two registries are equal when they name the same builder for every kind.
+  ///
+  /// Worth having because the view compares registries to decide whether the
+  /// tree it drew is still good. A function written out as a literal is never
+  /// equal to another, so a registry built inline in a `build` compares as
+  /// changed every time -- which costs a rebuild, never correctness. Naming
+  /// the builders (a top-level function, or a method on your state) makes
+  /// this hold.
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is NaturalBlockRegistry &&
+        row == other.row &&
+        column == other.column &&
+        table == other.table &&
+        tableCell == other.tableCell &&
+        text == other.text &&
+        raw == other.raw;
+  }
+
+  @override
+  int get hashCode => Object.hash(row, column, table, tableCell, text, raw);
 }

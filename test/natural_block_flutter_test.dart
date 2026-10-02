@@ -481,11 +481,12 @@ void main() {
     );
   });
 
-  group('parsing happens once per source, not once per frame', () {
-    // Nothing about the parse depends on the BuildContext, but `build` runs
-    // whenever an ancestor rebuilds. Counting is the only way to see this:
-    // a rebuilt view renders identically whether or not it re-parsed, so no
-    // assertion about the widgets it produces would ever catch a regression.
+  group('the document is drawn once per source, not once per frame', () {
+    // Nothing about the document depends on the BuildContext, but `build`
+    // runs whenever an ancestor rebuilds. Counting is the only way to see
+    // this: a rebuilt view renders identically whether or not it redrew, so
+    // no assertion about the widgets it produces would ever catch a
+    // regression.
 
     /// A registry that counts how many times a document reaches it.
     ({NaturalBlockRegistry registry, List<int> builds}) counting() {
@@ -536,8 +537,10 @@ void main() {
       );
       expect(
         counter.builds.length,
-        afterFirst + 3 * 5,
-        reason: 'widgets are rebuilt each frame -- the parse is not',
+        afterFirst,
+        reason:
+            'the view hands back the very same tree, so nothing below it is '
+            'built again -- not the parse, and not the widgets either',
       );
     });
 
