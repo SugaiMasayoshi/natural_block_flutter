@@ -38,86 +38,93 @@ class _TextNodeViewState extends State<TextNodeView> {
   TextStyle _rootStyle(BuildContext context) =>
       DefaultTextStyle.of(context).style.merge(_theme.base);
 
-  /// The recognizers for this line's actionable runs, kept across builds and
-  /// keyed by the run's own text.
+  /// This line's runs as spans, built once and kept until something they are
+  /// made of changes.
   ///
-  /// Reused rather than rebuilt because a recognizer that has taken a pointer
-  /// down owns an entry in the gesture arena; replacing it mid-gesture throws
-  /// that entry away and the tap vanishes silently.
+  /// Not built in `build`, because `build` runs for reasons the spans owe
+  /// nothing to -- an ancestor rebuilding, every frame of an animating
+  /// parent. Rebuilding them there replaced the recognizers below on each of
+  /// those, and a recognizer that has taken a pointer down owns an entry in
+  /// the gesture arena: replace it mid-gesture and the tap vanishes silently.
+  /// Keeping the spans is what keeps the recognizers.
+  // 【解説】 late: 最初に読まれるまで初期化を遅らせる。didChangeDependencies で入れる。
+  late List<InlineSpan> _spans;
+
+  /// The recognizers the spans above carry, owned so they can be disposed.
   ///
-  /// Keyed by text because the text *is* the payload: `onTap` is handed the
-  /// run's own text and nothing else, so two runs reading the same thing want
-  /// the same recognizer, and a run keeps its own however the runs around it
-  /// change. Keying by position instead would shift every later run onto a
-  /// different recognizer whenever one before it was added or removed. The
-  /// cost is the opposite case: editing a run's own text gives it a new
-  /// recognizer, so a tap held across that edit is lost.
-  // 【解説】 Map<鍵, 値>: 鍵から値を引ける入れ物。ここでは run の文字から認識器を引く。
-  final Map<String, TapGestureRecognizer> _recognizers = {};
+  /// A flat list, because they are only ever created and released together
+  /// with the spans -- there is no pool to keep in step with anything.
+  final List<TapGestureRecognizer> _recognizers = [];
+
+  /// Rebuilds the spans when an inherited widget they read changes.
+  ///
+  /// `DefaultTextStyle` is one: it decides what every run starts from, and it
+  /// can change without this widget's own fields changing at all.
+  // 【解説】 祖先の設定(InheritedWidget)が変わったときにフレームワークが呼ぶ。
+  // 【解説】 最初の build の前にも必ず一度呼ばれるので、初期化もここで済む。
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _buildSpans();
+  }
+
+  /// Rebuilds the spans when what they are made of changes.
+  ///
+  /// `onTap`'s identity is deliberately not compared -- only whether it is
+  /// null, which is what decides if a run carries a recognizer at all. The
+  /// callback itself is read at tap time, so a caller writing a fresh closure
+  /// on every build does not cost a rebuild here.
+  @override
+  void didUpdateWidget(TextNodeView oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final old = oldWidget.scope;
+    if (widget.node != oldWidget.node ||
+        _theme != old.theme ||
+        _actions.buildSpan != old.actions.buildSpan ||
+        (_actions.onTap == null) != (old.actions.onTap == null)) {
+      _buildSpans();
+    }
+  }
 
   // 【解説】 ウィジェットが画面から完全に外れるときに呼ばれる。認識器は必ず dispose する必要がある。
   @override
   void dispose() {
-    for (final recognizer in _recognizers.values) {
-      recognizer.dispose();
-    }
-    _recognizers.clear();
+    _disposeRecognizers();
     super.dispose();
   }
 
-  /// The texts this line needs a recognizer for, and none at all when nothing
-  /// is wired to them.
-  // 【解説】 { for (...) ... } は集合(Set)のリテラル。同じ文字は自然に1つにまとまる。
-  Set<String> get _actionTexts => _actions.onTap == null
-      ? const {}
-      : {
-          for (final child in widget.node.children)
-            if (child is TextSpanNode && child.decoration.isAction) child.text,
-        };
-
-  /// Makes the pool hold exactly [texts], keeping every recognizer already in
-  /// it and disposing the ones no longer needed.
-  // 【解説】 前回の build で作った物はそのまま残るので、使い回しになる。
-  void _syncRecognizers(Set<String> texts) {
-    // 【解説】 removeWhere: 条件に合う要素を消す。消す前に dispose しておく。
-    _recognizers.removeWhere((text, recognizer) {
-      if (texts.contains(text)) return false;
+  void _disposeRecognizers() {
+    for (final recognizer in _recognizers) {
       recognizer.dispose();
-      return true;
-    });
-    for (final text in texts) {
-      // 【解説】 putIfAbsent: その鍵がまだ無いときだけ、右の関数で作って入れる。
-      // 【解説】 onTap は作るとき一度だけ設定する。呼ばれた時点の _actions を読むので、
-      // 【解説】 利用者が渡す関数が差し替わっても付け直す必要がない。
-      _recognizers.putIfAbsent(
-        text,
-        () => TapGestureRecognizer()..onTap = () => _actions.onTap?.call(text),
-      );
     }
+    _recognizers.clear();
+  }
+
+  /// Builds the spans, releasing the recognizers the previous ones carried.
+  void _buildSpans() {
+    _disposeRecognizers();
+    // 【解説】 map<InlineSpan>: 変換後の型を明示している。書かないと推論が片方の型に寄ることがある。
+    _spans = widget.node.children.map<InlineSpan>((child) {
+      // 【解説】 is: 型の判定。true の後はこのブロックの中で child が RawSpanNode として扱われる。
+      if (child is RawSpanNode) return _rawSpan(context, child);
+      return _textSpan(context, child as TextSpanNode);
+    }).toList();
+  }
+
+  /// A recognizer for a run reading [text], owned by this state.
+  // 【解説】 onTap は作るとき一度だけ設定する。呼ばれた時点の _actions を読むので、
+  // 【解説】 利用者が渡す関数が差し替わっても付け直す必要がない。
+  TapGestureRecognizer _recognizerFor(String text) {
+    final recognizer = TapGestureRecognizer()
+      ..onTap = () => _actions.onTap?.call(text);
+    _recognizers.add(recognizer);
+    return recognizer;
   }
 
   @override
-  Widget build(BuildContext context) {
-    // The pool is filled before the spans are built, so building one is only
-    // a lookup by the run's own text.
-    _syncRecognizers(_actionTexts);
-
-    // 【解説】 map<InlineSpan>: 変換後の型を明示している。書かないと推論が片方の型に寄ることがある。
-    final spans = widget.node.children.map<InlineSpan>((child) {
-      // 【解説】 is: 型の判定。true の後はこのブロックの中で child が RawSpanNode として扱われる。
-      if (child is RawSpanNode) return _rawSpan(context, child);
-      final run = child as TextSpanNode;
-      // 【解説】 押せる run なら自分の文字で認識器を引く。onTap が無ければプールが空で null。
-      return _textSpan(
-        context,
-        run,
-        run.decoration.isAction ? _recognizers[run.text] : null,
-      );
-    }).toList();
-
-    // 【解説】 行全体の基準の書式を親の TextSpan に置き、各 run はその上に自分の書式を重ねる。
-    return Text.rich(TextSpan(style: _rootStyle(context), children: spans));
-  }
+  Widget build(BuildContext context) =>
+      // 【解説】 行全体の基準の書式を親の TextSpan に置き、各 run はその上に自分の書式を重ねる。
+      Text.rich(TextSpan(style: _rootStyle(context), children: _spans));
 
   // 【解説】 文中の raw は、祖先の既定の書式にテーマの raw 用の書式(等幅など)を重ねて描く。
   InlineSpan _rawSpan(BuildContext context, RawSpanNode node) => TextSpan(
@@ -126,13 +133,8 @@ class _TextNodeViewState extends State<TextNodeView> {
   );
 
   /// The span for one styled run, or whatever [ActionSpanBuilder] returned
-  /// for it. [recognizer] is this run's own, or null when the run is not
-  /// actionable or nothing is wired to it.
-  InlineSpan _textSpan(
-    BuildContext context,
-    TextSpanNode span,
-    TapGestureRecognizer? recognizer,
-  ) {
+  /// for it.
+  InlineSpan _textSpan(BuildContext context, TextSpanNode span) {
     // 【解説】 装飾を順に重ねて1つの書式にする。. で始まる行はメソッドの連鎖。
     final style = _theme
         // 【解説】 色合い(negative / positive / なし)に応じた書式から始める。
@@ -159,6 +161,12 @@ class _TextNodeViewState extends State<TextNodeView> {
       // 【解説】 差し替えが何かを返したらそれを使う。null なら普通の文字として続きを描く。
       if (built != null) return built;
     }
+
+    // 【解説】 押せて、かつ押したときの処理があるときだけ認識器を作る。
+    // 【解説】 差し替えで描かれた run はここに来ないので、無駄な認識器も作られない。
+    final recognizer = span.decoration.isAction && _actions.onTap != null
+        ? _recognizerFor(span.text)
+        : null;
 
     return TextSpan(
       text: span.text,

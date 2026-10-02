@@ -417,83 +417,118 @@ void main() {
       expect(renderedSpans(tester).single.semanticsLabel, 'tap me');
     });
 
-    group('recognizers are reused, keyed by the run\'s own text', () {
+    group('the spans, and the recognizers they carry', () {
       // The property the whole design turns on. A recognizer that has taken
       // a pointer down owns an entry in the gesture arena; replacing it
-      // mid-gesture throws that entry away. Reusing the object is what makes
-      // the interrupted-tap test below possible.
-      //
-      // The text is the key because the text is the payload: `onTap` is
-      // handed the run's own text and nothing else.
+      // mid-gesture throws that entry away. The spans are built outside
+      // `build` so that the recognizers survive a rebuild -- see the
+      // interrupted-tap test below.
       TextSpanNode action(String text) =>
           TextSpanNode(text: text, decoration: SpanDecoration(isAction: true));
 
-      Future<void> pumpRuns(WidgetTester tester, List<InlineNode> runs) =>
-          tester.pumpWidget(
-            MaterialApp(
-              home: TextNodeView(
-                node: TextNode(children: runs),
-                scope: NaturalBlockScope(
-                  // A fresh scope each time, so the rebuild is real work
-                  // rather than an identical widget Flutter can skip.
-                  actions: NaturalBlockActions(onTap: (_) {}),
-                ),
-              ),
-            ),
-          );
+      Future<void> pumpRuns(
+        WidgetTester tester,
+        List<InlineNode> runs, {
+        NaturalBlockTheme theme = const NaturalBlockTheme(),
+        OnActionTap? onTap,
+        TextStyle? ambient,
+      }) {
+        final view = TextNodeView(
+          node: TextNode(children: runs),
+          scope: NaturalBlockScope(
+            theme: theme,
+            // A fresh closure each time, the way a caller writing it inline
+            // in their own `build` would hand one over.
+            actions: NaturalBlockActions(onTap: onTap ?? (_) {}),
+          ),
+        );
+        return tester.pumpWidget(
+          MaterialApp(
+            home: ambient == null
+                ? view
+                : DefaultTextStyle(style: ambient, child: view),
+          ),
+        );
+      }
 
-      Map<String, GestureRecognizer?> recognizersOf(WidgetTester tester) => {
-        for (final span in renderedSpans(tester)) span.text!: span.recognizer,
-      };
+      GestureRecognizer? recognizerOf(WidgetTester tester, [int index = 0]) =>
+          renderedSpans(tester)[index].recognizer;
 
-      testWidgets('a run keeps its recognizer across a rebuild', (
+      testWidgets('a rebuild with the same runs keeps the recognizer', (
         tester,
       ) async {
         await pumpRuns(tester, [action('tap me')]);
-        final first = recognizersOf(tester)['tap me'];
+        final first = recognizerOf(tester);
 
         await pumpRuns(tester, [action('tap me')]);
 
-        expect(recognizersOf(tester)['tap me'], same(first));
+        expect(recognizerOf(tester), same(first));
       });
 
-      testWidgets('a run keeps its recognizer when another one is removed', (
+      testWidgets('a fresh onTap closure is not a reason to rebuild', (
         tester,
       ) async {
-        // What keying by position could not do: dropping a run used to shift
-        // every later one onto a different recognizer.
-        await pumpRuns(tester, [action('A'), action('B'), action('C')]);
-        final before = recognizersOf(tester);
+        // What makes the above hold for a real caller: `onTap` is read at tap
+        // time, so its identity is deliberately left out of the comparison.
+        // Comparing it would miss every time, since two closures are never
+        // equal in Dart even when they read the same.
+        await pumpRuns(tester, [action('tap me')], onTap: (_) {});
+        final first = recognizerOf(tester);
 
-        await pumpRuns(tester, [action('A'), action('C')]);
-        final after = recognizersOf(tester);
+        await pumpRuns(tester, [action('tap me')], onTap: (_) {});
 
-        expect(after['A'], same(before['A']));
-        expect(after['C'], same(before['C']));
+        expect(recognizerOf(tester), same(first));
       });
 
-      testWidgets('two runs reading the same thing share one recognizer', (
+      testWidgets('the onTap called is the one the caller passed last', (
         tester,
       ) async {
-        // Correct because both hand `onTap` the same payload.
-        await pumpRuns(tester, [action('same'), action('same')]);
+        final calls = <String>[];
+        await pumpRuns(tester, [action('x')], onTap: (t) => calls.add('第1 $t'));
+        await pumpRuns(tester, [action('x')], onTap: (t) => calls.add('第2 $t'));
 
-        final spans = renderedSpans(tester);
-        expect(spans, hasLength(2));
-        expect(spans[1].recognizer, same(spans[0].recognizer));
+        (recognizerOf(tester)! as TapGestureRecognizer).onTap!();
+
+        expect(calls, ['第2 x']);
       });
 
-      testWidgets('editing a run\'s own text gives it a new recognizer', (
-        tester,
-      ) async {
-        // The cost of keying by text, pinned so it is a decision rather than
-        // a surprise: a tap held across an edit to the pressed run is lost.
+      testWidgets('changed runs rebuild the spans', (tester) async {
+        // The accepted cost: a tap held across an edit to this line is lost.
         await pumpRuns(tester, [action('tap me')]);
-        final first = recognizersOf(tester)['tap me'];
+        final first = recognizerOf(tester);
 
         await pumpRuns(tester, [action('tap again')]);
 
-        expect(recognizersOf(tester)['tap again'], isNot(same(first)));
+        expect(recognizerOf(tester), isNot(same(first)));
+      });
+
+      testWidgets('a changed theme rebuilds the spans', (tester) async {
+        await pumpRuns(tester, [action('tap me')]);
+        final first = recognizerOf(tester);
+
+        await pumpRuns(tester, [
+          action('tap me'),
+        ], theme: const NaturalBlockTheme(fontSizeStep: 9));
+
+        expect(recognizerOf(tester), isNot(same(first)));
+      });
+
+      testWidgets('a changed ambient text style rebuilds the spans', (
+        tester,
+      ) async {
+        // Reached through didChangeDependencies rather than didUpdateWidget:
+        // `DefaultTextStyle` decides what every run starts from and can
+        // change without any of this widget's own fields changing.
+        await pumpRuns(tester, [
+          action('tap me'),
+        ], ambient: const TextStyle(fontSize: 14));
+        final first = recognizerOf(tester);
+
+        await pumpRuns(tester, [
+          action('tap me'),
+        ], ambient: const TextStyle(fontSize: 22));
+
+        expect(recognizerOf(tester), isNot(same(first)));
       });
     });
 
