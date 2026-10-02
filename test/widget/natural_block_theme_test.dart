@@ -51,23 +51,33 @@ void main() {
       expect(theme.copyWith(), theme);
     });
 
-    test('passing null clears a nullable field', () {
-      // The two nullable fields need `null` to mean *clear*, or a themed
-      // table can never lose its rules: with the usual `?? this.x` form,
-      // an explicit null is indistinguishable from omitting the argument.
+    test('null leaves a field alone, the way Flutter\'s copyWith does', () {
+      // No argument can set a field *to* null, and none needs to: "none" is
+      // a value in every type here that has one.
       const base = NaturalBlockTheme(tableStripe: Color(0xFFEEEEEE));
 
-      expect(base.tableBorder, isNotNull);
-      expect(base.copyWith(tableBorder: null).tableBorder, isNull);
-      expect(base.copyWith(tableStripe: null).tableStripe, isNull);
+      expect(base.copyWith(tableBorder: null).tableBorder, base.tableBorder);
+      expect(base.copyWith(tableStripe: null).tableStripe, base.tableStripe);
+      expect(
+        base.copyWith(rawDecoration: null).rawDecoration,
+        base.rawDecoration,
+      );
     });
 
-    test('clearing one nullable field leaves the other', () {
-      const base = NaturalBlockTheme(tableStripe: Color(0xFFEEEEEE));
-      final copy = base.copyWith(tableBorder: null);
+    test('none is written as a value', () {
+      // What replaced clearing. `const TableBorder()` has BorderSide.none on
+      // every side and measures the same as no border at all; a
+      // `const BoxDecoration()` names no colour, border or shadow.
+      const base = NaturalBlockTheme();
 
-      expect(copy.tableBorder, isNull);
-      expect(copy.tableStripe, base.tableStripe);
+      final unruled = base.copyWith(tableBorder: const TableBorder());
+      expect(unruled.tableBorder.top.style, BorderStyle.none);
+      expect(unruled.tableBorder.horizontalInside.style, BorderStyle.none);
+
+      final unboxed = base.copyWith(rawDecoration: const BoxDecoration());
+      expect(unboxed.rawDecoration.color, isNull);
+      expect(unboxed.rawDecoration.border, isNull);
+      expect(unboxed.rawDecoration.boxShadow, isNull);
     });
   });
 
@@ -118,11 +128,11 @@ void main() {
       'tableCellPadding': base.copyWith(
         tableCellPadding: const EdgeInsets.all(99),
       ),
-      'tableBorder': base.copyWith(tableBorder: null),
+      'tableBorder': base.copyWith(tableBorder: const TableBorder()),
       'tableStripe': base.copyWith(tableStripe: const Color(0xFF123456)),
       'raw': base.copyWith(raw: const TextStyle(fontFamily: 'Courier')),
       'rawPadding': base.copyWith(rawPadding: const EdgeInsets.all(99)),
-      'rawDecoration': base.copyWith(rawDecoration: null),
+      'rawDecoration': base.copyWith(rawDecoration: const BoxDecoration()),
       'rawScrollsHorizontally': base.copyWith(rawScrollsHorizontally: true),
     };
 
@@ -206,7 +216,7 @@ void main() {
         schemeFor(Brightness.light),
         striped: true,
       );
-      final border = theme.tableBorder!;
+      final border = theme.tableBorder;
 
       expect(border.horizontalInside.style, BorderStyle.none);
       expect(border.verticalInside.style, BorderStyle.solid);
@@ -223,7 +233,7 @@ void main() {
     test('unstriped keeps the horizontal rules', () {
       final border = NaturalBlockTheme.fromColorScheme(
         schemeFor(Brightness.light),
-      ).tableBorder!;
+      ).tableBorder;
 
       expect(border.horizontalInside.style, BorderStyle.solid);
     });

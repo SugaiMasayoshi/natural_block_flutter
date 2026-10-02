@@ -31,16 +31,36 @@ class NaturalBlockTheme {
 
   final EdgeInsets tableCellPadding;
 
-  // 【解説】 ? 付きなので null にでき、null なら罫線なし。
-  final TableBorder? tableBorder;
+  /// The rules drawn around and between a table's rows and columns.
+  ///
+  /// Not nullable, because the type already says "none": every side of a
+  /// `const TableBorder()` defaults to `BorderSide.none`, which draws nothing
+  /// and measures the same as no border at all. Writing none as a value
+  /// rather than as null is what lets `copyWith` below stay plain.
+  // 【解説】 罫線なしは const TableBorder()。全辺が BorderSide.none になる。
+  final TableBorder tableBorder;
 
+  /// A background painted on every other row, or null for none.
+  ///
+  /// The one field here where null earns its keep. `Color` has no "none" of
+  /// its own, and a transparent one is still a fill: it would put a
+  /// `BoxDecoration` on every other row of every table, where null leaves
+  /// `TableRow.decoration` off entirely. Flutter types that field the same
+  /// way, and for the same reason.
   final Color? tableStripe;
 
   final TextStyle raw;
 
   final EdgeInsets rawPadding;
 
-  final BoxDecoration? rawDecoration;
+  /// The box drawn around a raw block.
+  ///
+  /// Not nullable for the same reason as [tableBorder]: a
+  /// `const BoxDecoration()` names no colour, border or shadow, so it draws
+  /// nothing. It costs one inert `DecoratedBox` per raw block, which buys a
+  /// `copyWith` with no sentinel in it.
+  // 【解説】 箱なしは const BoxDecoration()。色も枠も影も無いので何も描かない。
+  final BoxDecoration rawDecoration;
 
   final bool rawScrollsHorizontally;
 
@@ -117,6 +137,11 @@ class NaturalBlockTheme {
             )
           : TableBorder.symmetric(inside: rule, outside: rule),
       tableStripe: striped ? scheme.surfaceContainerHigh : null,
+      // 【解説】 raw ブロックの箱も配色から作る。既定の固定色のままだと暗いテーマで見えない。
+      rawDecoration: BoxDecoration(
+        color: scheme.surfaceContainerHigh,
+        borderRadius: const BorderRadius.all(Radius.circular(4)),
+      ),
     );
   }
 
@@ -138,8 +163,13 @@ class NaturalBlockTheme {
 
   // 【解説】 「引数が渡されなかった」ことを表す番兵(目印)の値。
   // 【解説】 null は「罫線を消す」という意味で使いたいので、「変えない」を null とは別に表す必要がある。
-  static const Object _unchanged = Object();
-
+  /// This theme with the given fields replaced.
+  ///
+  /// Every argument means "leave this alone" when omitted, the way Flutter's
+  /// own `copyWith` methods do. None of them can set a field *to* null, and
+  /// none needs to: "no rules" is `const TableBorder()`, "no box" is
+  /// `const BoxDecoration()`, and a theme without stripes is what
+  /// [NaturalBlockTheme.fromColorScheme] gives you unless you ask for them.
   NaturalBlockTheme copyWith({
     TextStyle? base,
     TextStyle? negative,
@@ -150,56 +180,31 @@ class NaturalBlockTheme {
     double? fontSizeStep,
     double? minFontSize,
     EdgeInsets? tableCellPadding,
-    // 【解説】 型を Object? にして既定値を番兵にしている。渡さなければ _unchanged、null を渡せば null。
-    Object? tableBorder = _unchanged,
-    Object? tableStripe = _unchanged,
+    TableBorder? tableBorder,
+    Color? tableStripe,
     TextStyle? raw,
     EdgeInsets? rawPadding,
-    Object? rawDecoration = _unchanged,
+    BoxDecoration? rawDecoration,
     bool? rawScrollsHorizontally,
-  }) {
-    // 【解説】 型が Object? なので、間違った型を渡してもコンパイルは通る。デバッグ時にここで捕まえる。
-    // 【解説】 is TableBorder? は「TableBorder か null か」の判定。
-    assert(
-      tableBorder == _unchanged || tableBorder is TableBorder?,
-      'tableBorder must be a TableBorder or null',
-    );
-    assert(
-      tableStripe == _unchanged || tableStripe is Color?,
-      'tableStripe must be a Color or null',
-    );
-    assert(
-      rawDecoration == _unchanged || rawDecoration is BoxDecoration?,
-      'rawDecoration must be a BoxDecoration or null',
-    );
-    return NaturalBlockTheme(
-      // 【解説】 base ?? this.base: 引数が渡されていれば(null でなければ)それ、無ければ今の値。
-      base: base ?? this.base,
-      negative: negative ?? this.negative,
-      positive: positive ?? this.positive,
-      emphasis: emphasis ?? this.emphasis,
-      action: action ?? this.action,
-      baseFontSize: baseFontSize ?? this.baseFontSize,
-      fontSizeStep: fontSizeStep ?? this.fontSizeStep,
-      minFontSize: minFontSize ?? this.minFontSize,
-      tableCellPadding: tableCellPadding ?? this.tableCellPadding,
-      // 【解説】 identical: 同じオブジェクトかどうか。番兵のままなら今の値、そうでなければ渡された値。
-      // 【解説】 as TableBorder? で、Object? から本来の型に戻している。
-      tableBorder: identical(tableBorder, _unchanged)
-          ? this.tableBorder
-          : tableBorder as TableBorder?,
-      tableStripe: identical(tableStripe, _unchanged)
-          ? this.tableStripe
-          : tableStripe as Color?,
-      raw: raw ?? this.raw,
-      rawPadding: rawPadding ?? this.rawPadding,
-      rawDecoration: identical(rawDecoration, _unchanged)
-          ? this.rawDecoration
-          : rawDecoration as BoxDecoration?,
-      rawScrollsHorizontally:
-          rawScrollsHorizontally ?? this.rawScrollsHorizontally,
-    );
-  }
+  }) => NaturalBlockTheme(
+    // 【解説】 base ?? this.base: 引数が渡されていれば(null でなければ)それ、無ければ今の値。
+    base: base ?? this.base,
+    negative: negative ?? this.negative,
+    positive: positive ?? this.positive,
+    emphasis: emphasis ?? this.emphasis,
+    action: action ?? this.action,
+    baseFontSize: baseFontSize ?? this.baseFontSize,
+    fontSizeStep: fontSizeStep ?? this.fontSizeStep,
+    minFontSize: minFontSize ?? this.minFontSize,
+    tableCellPadding: tableCellPadding ?? this.tableCellPadding,
+    tableBorder: tableBorder ?? this.tableBorder,
+    tableStripe: tableStripe ?? this.tableStripe,
+    raw: raw ?? this.raw,
+    rawPadding: rawPadding ?? this.rawPadding,
+    rawDecoration: rawDecoration ?? this.rawDecoration,
+    rawScrollsHorizontally:
+        rawScrollsHorizontally ?? this.rawScrollsHorizontally,
+  );
 
   // 【解説】 全項目が同じなら等しい。テーマの変更を見分けるために使う。
   @override

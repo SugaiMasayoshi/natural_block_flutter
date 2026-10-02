@@ -171,11 +171,15 @@ void main() {
         wrap(
           const NaturalBlockView(
             source: '~A^B|C^D~',
-            theme: NaturalBlockTheme(tableBorder: null),
+            theme: NaturalBlockTheme(tableBorder: TableBorder()),
           ),
         ),
       );
-      expect(tester.widget<Table>(find.byType(Table)).border, isNull);
+      // None is a value, not null: every side draws nothing.
+      final unruled = tester.widget<Table>(find.byType(Table)).border!;
+      expect(unruled.horizontalInside.style, BorderStyle.none);
+      expect(unruled.verticalInside.style, BorderStyle.none);
+      expect(unruled.top.style, BorderStyle.none);
     });
 
     testWidgets('striping is off by default and paints odd rows when set', (

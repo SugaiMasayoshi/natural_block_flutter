@@ -47,7 +47,7 @@ const source = '~\n'
 Because a table is sized to its content rather than filling the width, the block that holds it can position it: `|=~...~` centers it. A one-cell table, `~注意~`, sets a single thing apart in a frame. And because its columns touch, a table needs spacing and rules that the decoration syntax cannot express -- `NaturalBlockTheme` supplies them:
 
 * `tableCellPadding` -- space between a cell's edge and its text. Defaults to `EdgeInsets.symmetric(horizontal: 8, vertical: 4)`.
-* `tableBorder` -- rules drawn around and between rows and columns. Defaults to hairlines on every edge, outer frame included: a table is the one construct with a declared beginning and end, so a frame states something the source actually says. Pass `TableBorder.symmetric(inside: ...)` for rules without the surrounding box, or `null` for none.
+* `tableBorder` -- rules drawn around and between rows and columns. Defaults to hairlines on every edge, outer frame included: a table is the one construct with a declared beginning and end, so a frame states something the source actually says. Pass `TableBorder.symmetric(inside: ...)` for rules without the surrounding box, or `const TableBorder()` for none -- every side of that defaults to `BorderSide.none`.
 * `tableStripe` -- a background painted on every other row, starting with the second. Off by default.
 
 To band a table's rows instead of ruling them, use `NaturalBlockTheme.fromColorScheme(scheme, striped: true)` (or `fromContext(context, striped: true)`), which sets the band and drops the horizontal rules, keeping the vertical ones and the frame:
@@ -125,7 +125,7 @@ Three more fields control what a size step is *worth*, since `natural_block` onl
 * `fontSizeStep` — logical pixels added per `:+` (or removed per `:-`). Defaults to `4`.
 * `minFontSize` — the floor. `:-----` would otherwise be able to drive the size to zero or below, which Flutter asserts on. Defaults to `1`.
 
-`copyWith` returns a modified copy, and `styleFor(Tone)` gives the style for one tone (`Tone.none` returns `base`). For `tableBorder` and `tableStripe` — the two nullable fields — passing `null` to `copyWith` *clears* the value; omit the argument to keep it.
+`copyWith` returns a modified copy, and `styleFor(Tone)` gives the style for one tone (`Tone.none` returns `base`). Every `copyWith` argument means "leave this alone" when omitted, the way Flutter's own do, and none of them can set a field *to* null -- "none" is written as a value instead (`const TableBorder()`, `const BoxDecoration()`), and a theme without stripes is what `fromColorScheme` gives you unless you ask for them.
 
 ### Raw regions
 
@@ -141,7 +141,7 @@ const block  = '`cat a | grep b`';    // a code block, boxed
 Four theme fields control it:
 
 * `raw` — the text style. Monospaced by default, because in a region whose whole point is exactness, indentation and the difference between `l` and `1` are part of the content.
-* `rawPadding` and `rawDecoration` — the box. Pass `null` for no box.
+* `rawPadding` and `rawDecoration` — the box. Pass `const BoxDecoration()` for no box; it names no colour, border or shadow, so it draws nothing.
 * `rawScrollsHorizontally` — **off by default.** Wrapping is wrong for code, since a line broken in the middle reads as a different program; but turning this on puts a scroll view inside your layout, which nothing else in this package does. Turn it on where the surrounding layout can afford it.
 
 The box is never stretched to the available width, for the same reason `ColumnNodeView` uses `Align` rather than a width-filling `SizedBox`: adding a code block must not be able to stop a document rendering.

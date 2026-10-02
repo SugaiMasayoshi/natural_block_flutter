@@ -179,11 +179,17 @@ void main() {
         wrap(
           const NaturalBlockView(
             source: '`x`',
-            theme: NaturalBlockTheme(rawDecoration: null),
+            theme: NaturalBlockTheme(rawDecoration: BoxDecoration()),
           ),
         ),
       );
-      expect(decoratedBoxes(tester), isEmpty);
+      // None is a value, not null: the Container is still there, drawing
+      // nothing. One inert decoration per raw block is what buys a `copyWith`
+      // with no sentinel in it.
+      expect(
+        decoratedBoxes(tester).single.decoration,
+        const BoxDecoration(),
+      );
     });
   });
 
