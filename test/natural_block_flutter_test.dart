@@ -10,10 +10,10 @@ void main() {
     WidgetTester tester,
     String source, {
     NaturalBlockTheme theme = const NaturalBlockTheme(),
-    NaturalBlockRegistry registry = NaturalBlockRegistry.defaults,
+    NaturalBlockBuilders builders = NaturalBlockBuilders.defaults,
   }) => tester.pumpWidget(
     MaterialApp(
-      home: NaturalBlockView(source: source, theme: theme, registry: registry),
+      home: NaturalBlockView(source: source, theme: theme, builders: builders),
     ),
   );
 
@@ -89,9 +89,8 @@ void main() {
     const error = Color(0xFF00AAFF);
 
     final themed = ThemeData(
-      colorScheme: ColorScheme.fromSeed(
-        seedColor: Colors.indigo,
-      ).copyWith(error: error),
+      colorScheme: ColorScheme.fromSeed(seedColor: Colors.indigo)
+          .copyWith(error: error),
     );
 
     testWidgets('a view given no theme takes its tones from the ambient '
@@ -126,7 +125,7 @@ void main() {
   group('decoration rendering (end-to-end)', () {
     // This is the package's whole purpose: verifying that decoration markup
     // in a `source` string actually reaches the screen as styled text,
-    // through the full parse -> registry -> widget pipeline.
+    // through the full parse -> builders -> widget pipeline.
 
     testWidgets(':! toggles negative (red) color on and off', (tester) async {
       await pump(tester, ':!negative:!plain');
@@ -168,7 +167,7 @@ void main() {
     });
   });
 
-  group('theme and registry customization', () {
+  group('theme and builder customization', () {
     testWidgets('a custom theme changes the rendered color', (tester) async {
       const customTheme = NaturalBlockTheme(
         negative: TextStyle(color: Colors.purple),
@@ -180,14 +179,14 @@ void main() {
       expect(span.style!.color, Colors.purple);
     });
 
-    testWidgets('a custom registry substitutes a widget for a node type', (
+    testWidgets('a custom builder substitutes a widget for a node type', (
       tester,
     ) async {
-      final registry = NaturalBlockRegistry(
+      final builders = NaturalBlockBuilders(
         text: (context, node, scope) => const Placeholder(),
       );
 
-      await pump(tester, 'Hello world', registry: registry);
+      await pump(tester, 'Hello world', builders: builders);
 
       expect(find.byType(Placeholder), findsOneWidget);
       expect(find.byType(TextNodeView), findsNothing);
@@ -488,12 +487,12 @@ void main() {
     // no assertion about the widgets it produces would ever catch a
     // regression.
 
-    /// A registry that counts how many times a document reaches it.
-    ({NaturalBlockRegistry registry, List<int> builds}) counting() {
+    /// Builders that count how many times a document reaches them.
+    ({NaturalBlockBuilders builders, List<int> builds}) counting() {
       final builds = <int>[];
       return (
         builds: builds,
-        registry: NaturalBlockRegistry(
+        builders: NaturalBlockBuilders(
           text: (context, node, scope) {
             builds.add(1);
             return const SizedBox.shrink();
@@ -515,7 +514,7 @@ void main() {
               padding: EdgeInsets.all(value.toDouble()),
               child: NaturalBlockView(
                 source: 'one|two|three',
-                registry: counter.registry,
+                builders: counter.builders,
               ),
             ),
           ),

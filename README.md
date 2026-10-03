@@ -96,7 +96,7 @@ class Example extends StatelessWidget {
 
 * `source` (required) -- the markup text to parse and render.
 * `theme` -- a [`NaturalBlockTheme`](#naturalblocktheme) controlling how tones, emphasis, and base text look. Defaults to `null`, meaning `NaturalBlockTheme.fromContext(context)`: the tones come from the surrounding `ColorScheme`, so a document reads correctly in a light theme and a dark one without being told which it is in.
-* `registry` -- a [`NaturalBlockRegistry`](#naturalblockregistry) controlling which widget renders each kind of node. Defaults to `NaturalBlockRegistry.defaults`.
+* `builders` -- a [`NaturalBlockBuilders`](#naturalblockbuilders) controlling which widget renders each kind of node. Defaults to `NaturalBlockBuilders.defaults`.
 * `actions` -- a `NaturalBlockActions` holding what to do with an [actionable span](#actionable-text): `onTap`, called with the span's own text when it is tapped, and `buildSpan`, which renders the span as something other than styled text (an image, a chip). Defaults to `NaturalBlockActions.none`, which leaves actionable spans styled but not tappable.
 
 ### `NaturalBlockTheme`
@@ -154,23 +154,23 @@ Actionable runs are announced to a screen reader only when something is actually
 
 Tables carry no row/column semantics yet — a screen reader reads their cells as an undifferentiated stream, losing the structure the `~` declaration exists to express.
 
-### `NaturalBlockRegistry`
+### `NaturalBlockBuilders`
 
 Holds one builder per kind of node: `row`, `column`, `table`, `tableCell`, `text` and `raw`. This is how you customize *what* renders, not just how it looks -- give it a builder for one kind and it takes over rendering wherever that node appears, including nested inside `Column`/`Row` blocks built by the default builders.
 
 ```dart
-const registry = NaturalBlockRegistry(
+const builders = NaturalBlockBuilders(
   text: myTextBuilder, // (context, TextNode node, scope) => Widget
 );
 
-NaturalBlockView(source: source, registry: registry);
+NaturalBlockView(source: source, builders: builders);
 ```
 
-A builder receives the node — already typed as the kind it was registered for, so there is no cast — and a `NaturalBlockScope`: the theme, the registry and a `NaturalBlockActions`, which travel together the whole way down. Recurse into a node's own children with `scope.buildLayouts(context, node.children)` for the blocks and rows a document or a row holds, or `scope.buildContents(context, node.children)` for the lines, raw blocks and tables a block or a table cell holds. Either keeps every child on the same theme, registry and actions.
+A builder receives the node — already typed as the kind it was registered for, so there is no cast — and a `NaturalBlockScope`: the theme, the builders and a `NaturalBlockActions`, which travel together the whole way down. Recurse into a node's own children with `buildLayouts(context, node.children, scope)` for the blocks and rows a document holds, or `buildContents(context, node.children, scope)` for the lines, raw blocks and tables a block or a table cell holds. Either keeps every child on the same theme, builders and actions. Where the tree already names one kind -- a row's cells, a table's rows -- reach for that field directly (`scope.builders.column(context, cell, scope)`), since there is nothing to choose.
 
-Every field defaults to the builder that draws that kind the usual way, so a registry names only what it changes. Those defaults (`buildRowNode`, `buildColumnNode`, `buildTableNode`, `buildTableCellNode`, `buildTextNode`, `buildRawNode`) are exported, so a builder of your own can delegate back to one.
+Every field defaults to the builder that draws that kind the usual way, so a set of builders names only what it changes. Those defaults (`buildRowNode`, `buildColumnNode`, `buildTableNode`, `buildTableCellNode`, `buildTextNode`, `buildRawNode`) are exported, so a builder of your own can delegate back to one.
 
-**The node types are sealed**, so this set is the whole set: a field per kind rather than a map keyed by type, which is what keeps each builder's node type exact and makes a builder written for the wrong kind a compile error. The two entry points are narrowed the same way: `buildLayouts` takes only `LayoutNode`s and `buildContents` only `ContentNode`s, so `DocumentNode`, `TableRowNode` and the two run types — which are never drawn on their own, the view and the table and the line drawing them instead — cannot be handed to the registry at all. A table's cells skip the dispatch entirely, since `TableCellNode` is the only kind a cell can be.
+**The node types are sealed**, so this set is the whole set: a field per kind rather than a map keyed by type, which is what keeps each builder's node type exact and makes a builder written for the wrong kind a compile error. The two entry points are narrowed the same way: `buildLayouts` takes only `LayoutNode`s and `buildContents` only `ContentNode`s, so `DocumentNode`, `TableRowNode` and the two run types — which are never drawn on their own, the view and the table and the line drawing them instead — cannot be handed to the builders at all. A table's cells skip the dispatch entirely, since `TableCellNode` is the only kind a cell can be.
 
 The widgets the default builders use are exported as well (`TextNodeView`, `ColumnNodeView`, `RowNodeView`, `TableNodeView`), so a custom builder can wrap or reuse one rather than reimplementing it. So are the types a builder signature needs: `NodeBuilder`, `NaturalBlockScope`, `NaturalBlockActions`, `OnActionTap`, `ActionSpanBuilder`, and `ImageSourceKind`.
 
@@ -256,26 +256,36 @@ Shipping the reference implementation anyway is the point: declining to interpre
 
 ##### Local files
 
-`NaturalBlockImages.builder` renders network URLs and declines everything else. Drawing a local file needs `Image.file`, and so `dart:io`, which does not exist on the web — taking that on here would cost this package its web support for a capability only some apps want. Supply it in your own builder instead:
+`NaturalBlockImages.builder` renders network URLs and declines everything else. `NaturalBlockImages.withLocalFiles` renders both:
+
+```dart
+actions: NaturalBlockActions(buildSpan: NaturalBlockImages.withLocalFiles),
+```
+
+**Two entry points rather than one setting, because they are two decisions.** Fetching a remote image discloses to a third party that the document was opened; drawing a local one puts a file from the reader's own machine on screen under whatever text the document's author wrote. For a note synced between your own machines that is the whole point; for a document someone else wrote it is a way to show the reader their own files, and to learn which paths exist from whether they draw. Only the app knows which kind of document it renders.
+
+Drawing a file needs `Image.file`, and so `dart:io`, which the web does not have. A conditional import settles that at build time: the web compiles a stub, so a local path declines there exactly as it does for an app that never asked for local files, and the package keeps its web support either way.
+
+The convention does not fork — it is still `image(...)`, and only the *resolution* differs — so local file support cannot split the language.
+
+A relative payload (`image(assets/a.png)`) is declined by both, since resolving one needs an asset bundle or a base that only the app has. Compose your own builder for those, falling back for the rest:
 
 ```dart
 buildSpan: (context, text, style, theme) {
   final source = NaturalBlockImages.urlOf(text);
   if (source != null &&
-      NaturalBlockImages.kindOf(source) == ImageSourceKind.file) {
-    return WidgetSpan(child: Image.file(File(source)));
+      NaturalBlockImages.kindOf(source) == ImageSourceKind.relative) {
+    return WidgetSpan(child: Image.asset(source));
   }
-  return NaturalBlockImages.builder(context, text, style, theme);
+  return NaturalBlockImages.withLocalFiles(context, text, style, theme);
 },
 ```
-
-The convention does not fork when you do this — it is still `image(...)`, and only the *resolution* differs — so unlike a new syntax, local file support cannot split the language.
 
 `NaturalBlockImages.kindOf` is provided because the classification has a trap in it: `Uri.parse` reads `C:\Users\a.png` as a URI **whose scheme is `c`**, so the obvious "does it have a scheme, then it's a URL" test mistakes every Windows path for one. It reads the string only — no `dart:io`, works on every platform.
 
 **Write Windows paths with forward slashes**: `image(C:/Users/you/a.png)`. Dart's `File` accepts them on Windows, and it avoids backslashes entirely — relevant because `\` escapes itself in the markup, so a UNC path has to be written `\\\\server` to survive as `\\server`.
 
-Note also that letting documents name local files lets them probe for one: a path that exists draws, one that does not falls back to text. One more reason this is the app's call.
+Note also that letting documents name local files lets them probe for one: a path that exists draws, one that does not falls back to text. One more reason this is the app's call, and why it is a separate entry point.
 
 #### A convention for what the text means (non-normative)
 

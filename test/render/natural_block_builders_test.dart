@@ -8,7 +8,7 @@ void main() {
 
   Future<List<Widget>> buildWith(
     WidgetTester tester,
-    NaturalBlockRegistry registry,
+    NaturalBlockBuilders builders,
     List<Widget> Function(BuildContext context, NaturalBlockScope scope) build,
   ) async {
     late List<Widget> built;
@@ -18,7 +18,7 @@ void main() {
           builder: (context) {
             built = build(
               context,
-              NaturalBlockScope(theme: theme, registry: registry),
+              NaturalBlockScope(theme: theme, builders: builders),
             );
             return Column(children: built);
           },
@@ -29,26 +29,27 @@ void main() {
   }
 
   /// The blocks and rows a document holds.
-  Future<List<Widget>> buildLayouts(
+  Future<List<Widget>> pumpLayouts(
     WidgetTester tester,
-    NaturalBlockRegistry registry,
+    NaturalBlockBuilders builders,
     List<LayoutNode> nodes,
-  ) => buildWith(tester, registry, (c, scope) => scope.buildLayouts(c, nodes));
+  ) => buildWith(tester, builders, (c, scope) => buildLayouts(c, nodes, scope));
 
   /// The lines, raw blocks and tables a block holds.
-  Future<List<Widget>> buildContents(
+  Future<List<Widget>> pumpContents(
     WidgetTester tester,
-    NaturalBlockRegistry registry,
+    NaturalBlockBuilders builders,
     List<ContentNode> nodes,
-  ) => buildWith(tester, registry, (c, scope) => scope.buildContents(c, nodes));
+  ) =>
+      buildWith(tester, builders, (c, scope) => buildContents(c, nodes, scope));
 
   TextNode text(String s) => TextNode(children: [TextSpanNode(text: s)]);
 
-  group('NaturalBlockRegistry.defaults', () {
+  group('NaturalBlockBuilders.defaults', () {
     testWidgets('a document\'s blocks and rows go to their views', (
       tester,
     ) async {
-      await buildLayouts(tester, NaturalBlockRegistry.defaults, [
+      await pumpLayouts(tester, NaturalBlockBuilders.defaults, [
         RowNode(
           children: [
             ColumnNode(children: [text('a')]),
@@ -65,7 +66,7 @@ void main() {
     });
 
     testWidgets('a block\'s contents go to their views', (tester) async {
-      await buildContents(tester, NaturalBlockRegistry.defaults, [
+      await pumpContents(tester, NaturalBlockBuilders.defaults, [
         text('line'),
         RawNode(text: 'code'),
         TableNode(
@@ -87,25 +88,21 @@ void main() {
     testWidgets(
       'one RowNode renders as one Row, keeping other blocks separate',
       (tester) async {
-        final built = await buildLayouts(
-          tester,
-          NaturalBlockRegistry.defaults,
-          [
-            RowNode(
-              children: [
-                ColumnNode(children: [text('a')]),
-                ColumnNode(children: [text('b')]),
-              ],
-            ),
-            ColumnNode(children: [text('between')]),
-            RowNode(
-              children: [
-                ColumnNode(children: [text('c')]),
-                ColumnNode(children: [text('d')]),
-              ],
-            ),
-          ],
-        );
+        final built = await pumpLayouts(tester, NaturalBlockBuilders.defaults, [
+          RowNode(
+            children: [
+              ColumnNode(children: [text('a')]),
+              ColumnNode(children: [text('b')]),
+            ],
+          ),
+          ColumnNode(children: [text('between')]),
+          RowNode(
+            children: [
+              ColumnNode(children: [text('c')]),
+              ColumnNode(children: [text('d')]),
+            ],
+          ),
+        ]);
 
         // 2 RowNodes + 1 plain block = 3 top-level widgets.
         expect(built.length, 3);
@@ -123,11 +120,11 @@ void main() {
     testWidgets('one replaces the default for that kind of node', (
       tester,
     ) async {
-      final registry = NaturalBlockRegistry(
+      final builders = NaturalBlockBuilders(
         text: (context, node, scope) => const Placeholder(),
       );
 
-      await buildContents(tester, registry, [text('a')]);
+      await pumpContents(tester, builders, [text('a')]);
 
       expect(find.byType(Placeholder), findsOneWidget);
       expect(find.byType(TextNodeView), findsNothing);
@@ -135,13 +132,13 @@ void main() {
 
     testWidgets(
       'a ColumnNode builder also applies to row cells, since cells are '
-      'built through the registry',
+      'built through the builders',
       (tester) async {
-        final registry = NaturalBlockRegistry(
+        final builders = NaturalBlockBuilders(
           column: (context, node, scope) => const Placeholder(),
         );
 
-        await buildLayouts(tester, registry, [
+        await pumpLayouts(tester, builders, [
           RowNode(
             children: [
               ColumnNode(children: [text('a')]),
@@ -156,11 +153,11 @@ void main() {
     );
 
     testWidgets('the kinds left out keep their default', (tester) async {
-      final registry = NaturalBlockRegistry(
+      final builders = NaturalBlockBuilders(
         text: (context, node, scope) => const Placeholder(),
       );
 
-      await buildLayouts(tester, registry, [
+      await pumpLayouts(tester, builders, [
         ColumnNode(children: [text('a')]),
       ]);
 

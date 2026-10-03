@@ -5,7 +5,7 @@ import 'package:natural_block_flutter/natural_block_flutter.dart';
 
 void main() {
   const theme = NaturalBlockTheme();
-  const registry = NaturalBlockRegistry.defaults;
+  const builders = NaturalBlockBuilders.defaults;
 
   group('RowNodeView', () {
     testWidgets(
@@ -32,7 +32,7 @@ void main() {
           MaterialApp(
             home: RowNodeView(
               node: node,
-              scope: NaturalBlockScope(theme: theme, registry: registry),
+              scope: NaturalBlockScope(theme: theme, builders: builders),
             ),
           ),
         );
@@ -74,7 +74,7 @@ void main() {
         MaterialApp(
           home: RowNodeView(
             node: node,
-            scope: NaturalBlockScope(theme: theme, registry: registry),
+            scope: NaturalBlockScope(theme: theme, builders: builders),
           ),
         ),
       );
@@ -104,7 +104,7 @@ void main() {
         MaterialApp(
           home: RowNodeView(
             node: node,
-            scope: NaturalBlockScope(theme: theme, registry: registry),
+            scope: NaturalBlockScope(theme: theme, builders: builders),
           ),
         ),
       );
@@ -115,10 +115,10 @@ void main() {
     });
 
     testWidgets(
-      'cells are built through the registry, so a custom builder applies '
+      'cells are built through the builders, so a custom builder applies '
       'to row cells too',
       (tester) async {
-        final customRegistry = NaturalBlockRegistry(
+        final customBuilders = NaturalBlockBuilders(
           column: (context, node, scope) => const Placeholder(),
         );
         final node = RowNode(children: [ColumnNode(), ColumnNode()]);
@@ -127,7 +127,7 @@ void main() {
           MaterialApp(
             home: RowNodeView(
               node: node,
-              scope: NaturalBlockScope(theme: theme, registry: customRegistry),
+              scope: NaturalBlockScope(theme: theme, builders: customBuilders),
             ),
           ),
         );

@@ -223,7 +223,7 @@ class NaturalBlockDemoPage extends StatelessWidget {
                 },
               ),
             ),
-            _RegistryDemo(theme: theme),
+            _BuildersDemo(theme: theme),
           ],
         ),
       ),
@@ -254,16 +254,16 @@ class _Toggle extends StatelessWidget {
   }
 }
 
-class _RegistryDemo extends StatelessWidget {
+class _BuildersDemo extends StatelessWidget {
   final NaturalBlockTheme theme;
 
-  const _RegistryDemo({required this.theme});
+  const _BuildersDemo({required this.theme});
 
   static const _source = '通常の行|:!注意の行:!|もう一行';
 
   @override
   Widget build(BuildContext context) {
-    final registry = NaturalBlockRegistry(
+    final builders = NaturalBlockBuilders(
       text: (context, node, scope) => Padding(
         padding: const EdgeInsets.symmetric(vertical: 2),
         child: Chip(
@@ -280,7 +280,7 @@ class _RegistryDemo extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'registry で描画を差し替える',
+            'builders で描画を差し替える',
             style: Theme.of(context).textTheme.titleMedium,
           ),
           const SizedBox(height: 8),
@@ -295,7 +295,7 @@ class _RegistryDemo extends StatelessWidget {
                 child: NaturalBlockView(
                   source: _source,
                   theme: theme,
-                  registry: registry,
+                  builders: builders,
                 ),
               ),
             ],

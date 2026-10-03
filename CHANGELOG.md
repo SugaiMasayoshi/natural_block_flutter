@@ -29,7 +29,7 @@ Initial release.
   requires every row to hold the same number of children) and resolves each
   cell's alignment against its column (`cell.align ?? table.columns[i]`).
   Both are questions about drawing, asked of a tree that records only what
-  the author wrote. Cells still go through the registry, so a caller's own
+  the author wrote. Cells still go through the builders, so a caller's own
   `ColumnNode` builder applies inside a table.
 
 ### Theming
@@ -48,7 +48,7 @@ Initial release.
 
 ### Customization
 
-- `NaturalBlockRegistry` holds one builder per kind of node -- `row`,
+- `NaturalBlockBuilders` holds one builder per kind of node -- `row`,
   `column`, `table`, `tableCell`, `text`, `raw` -- each `null` for "draw it
   the usual way". The node types are sealed, so the set is closed and can be
   named: the builder's node type stays exact, nothing is cast on the way in,
@@ -59,7 +59,7 @@ Initial release.
   `buildTableCellNode`, `buildTextNode`, `buildRawNode`) are exported so a
   builder of your own can delegate back.
 - A builder receives the node and one `NaturalBlockScope`, which carries the
-  theme, the registry and the actions. The three travel together the whole
+  theme, the builders and the actions. The three travel together the whole
   way down and no level swaps one of them for its children, so they are one
   value rather than three parameters repeated at every level. `buildAll`
   lives on the scope for the same reason. The `BuildContext` stays outside
@@ -80,7 +80,7 @@ Initial release.
 ### Actionable runs
 
 - `NaturalBlockActions` carries both of these, and `NaturalBlockView` takes
-  it as one `actions` parameter, like `theme` and `registry`. It used to take
+  it as one `actions` parameter, like `theme` and `builders`. It used to take
   the two callbacks flat and bundle them internally, which left one thing
   with two names on the way in.
 - `onTap` reports a tap with the run's own text. Nothing here ever
@@ -95,4 +95,11 @@ Initial release.
   document, which is a disclosure decision belonging to the app.
   `NaturalBlockImages.kindOf` classifies a payload as network, file, or
   relative without needing `dart:io`.
+- `NaturalBlockImages.withLocalFiles` draws local files as well. A second
+  entry point rather than a setting on the first, because the two are
+  different decisions: a remote image tells a third party the document was
+  opened, a local one puts the reader's own file on screen under someone
+  else's text. A note synced between your own machines wants it; a document
+  written by someone else may not. `dart:io` stays off the web through a
+  conditional import, so a local path there declines as it always did.
 - A run is announced to a screen reader only when something is wired to it.

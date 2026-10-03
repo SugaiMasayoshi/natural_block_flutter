@@ -246,7 +246,7 @@ void main() {
             ),
             scope: NaturalBlockScope(
               theme: theme,
-              registry: NaturalBlockRegistry.defaults,
+              builders: NaturalBlockBuilders.defaults,
             ),
           ),
         ),
@@ -273,7 +273,7 @@ void main() {
             ),
             scope: NaturalBlockScope(
               theme: theme,
-              registry: NaturalBlockRegistry.defaults,
+              builders: NaturalBlockBuilders.defaults,
             ),
           ),
         ),
@@ -316,9 +316,9 @@ void main() {
     });
   });
 
-  group('registry', () {
-    testWidgets('cells are built through the registry', (tester) async {
-      final registry = NaturalBlockRegistry(
+  group('builders', () {
+    testWidgets('cells are built through the builders', (tester) async {
+      final builders = NaturalBlockBuilders(
         tableCell: (context, node, scope) => const Placeholder(),
       );
 
@@ -335,7 +335,7 @@ void main() {
                 ),
               ],
             ),
-            scope: NaturalBlockScope(theme: theme, registry: registry),
+            scope: NaturalBlockScope(theme: theme, builders: builders),
           ),
         ),
       );

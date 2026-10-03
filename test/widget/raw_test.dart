@@ -186,10 +186,7 @@ void main() {
       // None is a value, not null: the Container is still there, drawing
       // nothing. One inert decoration per raw block is what buys a `copyWith`
       // with no sentinel in it.
-      expect(
-        decoratedBoxes(tester).single.decoration,
-        const BoxDecoration(),
-      );
+      expect(decoratedBoxes(tester).single.decoration, const BoxDecoration());
     });
   });
 
