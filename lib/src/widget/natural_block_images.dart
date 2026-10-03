@@ -1,73 +1,88 @@
-// 【解説】 読む順番 12/12: :@image(URL):@ と書いた run を、文字の代わりに画像で描く部品。
-// 【解説】 ActionSpanBuilder(3)の形をした builder を、NaturalBlockActions.buildSpan に渡して使う。
-// 【解説】 ネットワーク上の画像だけを描き、ファイルや相対パスは描かずに文字のまま残す。
 import 'package:flutter/widgets.dart';
 
+import 'local_file_image_stub.dart'
+    if (dart.library.io) 'local_file_image_io.dart';
 import 'natural_block_theme.dart';
 
-// 【解説】 画像の置き場所の種類。
 enum ImageSourceKind { network, file, relative }
 
-// 【解説】 abstract final class: インスタンスを作れず(abstract)、継承も実装もできない(final)。
-// 【解説】 static なものだけを入れる「名前空間」として使っている。
 abstract final class NaturalBlockImages {
-  // 【解説】 r'...' は raw 文字列(\ をそのまま書ける)。image( と ) に挟まれた部分を取り出す正規表現。
-  // 【解説】 dotAll: true で . が改行にも一致する。
   static final RegExp _pattern = RegExp(r'^image\((.+)\)$', dotAll: true);
 
+  /// Draws `image(<url>)` payloads that name a network image, and declines
+  /// everything else.
   static InlineSpan? builder(
     BuildContext context,
     String text,
     TextStyle style,
     NaturalBlockTheme theme,
-  ) {
-    final url = urlOf(text);
-    // 【解説】 image(...) の形でないか、ネットワーク上の画像でなければ null を返し、普通の文字として描かせる。
-    if (url == null || kindOf(url) != ImageSourceKind.network) return null;
+  ) => _span(text, style, theme, localFiles: false);
 
-    // 【解説】 画像の大きさを、その run の文字の大きさに合わせるための倍率。
-    // 【解説】 Image の scale は「大きいほど小さく描く」ので、基準 ÷ 今の大きさになる。
+  /// The same, and local files as well.
+  ///
+  /// A document that names a local file draws one from the reader's own
+  /// machine, which is a different decision from fetching a remote one: a
+  /// shared note rendering the reader's own picture is the point in one app
+  /// and a way to put someone else's file on the reader's screen in another.
+  /// Only the app knows which it is, so this is a second entry point rather
+  /// than a change to [builder].
+  ///
+  /// Where `dart:io` does not exist -- the web -- a local file declines as
+  /// before, so a document degrades the same way it does everywhere else.
+  static InlineSpan? withLocalFiles(
+    BuildContext context,
+    String text,
+    TextStyle style,
+    NaturalBlockTheme theme,
+  ) => _span(text, style, theme, localFiles: true);
+
+  static InlineSpan? _span(
+    String text,
+    TextStyle style,
+    NaturalBlockTheme theme, {
+    required bool localFiles,
+  }) {
+    final url = urlOf(text);
+    if (url == null) return null;
+
+    final kind = kindOf(url);
+    if (kind == ImageSourceKind.relative) return null;
+    if (kind == ImageSourceKind.file && !localFiles) return null;
+
     final size = style.fontSize ?? theme.baseFontSize;
     final scale = theme.baseFontSize / size;
+    Widget asText(BuildContext context, Object error, StackTrace? stack) =>
+        Text(text, style: style);
 
-    // 【解説】 WidgetSpan: 文章の途中にウィジェットを埋め込む InlineSpan。
-    return WidgetSpan(
-      // 【解説】 行の中で、画像を文字の上下中央に揃える。
-      alignment: PlaceholderAlignment.middle,
-      child: Image.network(
-        url,
-        scale: scale,
-        semanticLabel: url,
-        // 【解説】 読み込みに失敗したら、元の文字をそのまま出す。
-        errorBuilder: (context, error, stackTrace) => Text(text, style: style),
-        // 【解説】 読み込み中(progress が null でない間)は、文字1つ分の空きを取っておく。
-        loadingBuilder: (context, child, progress) =>
-            progress == null ? child : SizedBox(height: size, width: size),
-      ),
-    );
+    final image = kind == ImageSourceKind.network
+        ? Image.network(
+            url,
+            scale: scale,
+            semanticLabel: url,
+            errorBuilder: asText,
+            loadingBuilder: (context, child, progress) =>
+                progress == null ? child : SizedBox(height: size, width: size),
+          )
+        : localFileImage(url, scale: scale, errorBuilder: asText);
+    if (image == null) return null;
+
+    return WidgetSpan(alignment: PlaceholderAlignment.middle, child: image);
   }
 
-  // 【解説】 ?. は「左が null なら、そこで止めて null」。一致しなければ null を返す。
-  // 【解説】 group(1) は正規表現の1つ目の ( ) に一致した部分(URL)。
   static String? urlOf(String text) =>
       _pattern.firstMatch(text.trim())?.group(1)?.trim();
 
-  // 【解説】 C: のような、Windows のドライブ名で始まるかを見る正規表現。
   static final RegExp _driveLetter = RegExp(r'^[A-Za-z]:');
 
-  // 【解説】 置き場所の種類を、文字列の形だけから判断する。
   static ImageSourceKind kindOf(String source) {
     final trimmed = source.trim();
     if (trimmed.isEmpty) return ImageSourceKind.relative;
 
-    // 【解説】 \\server\... の形(Windows の共有フォルダ)、ドライブ名、/ で始まる絶対パスはファイル。
     if (trimmed.startsWith(r'\\')) return ImageSourceKind.file;
     if (_driveLetter.hasMatch(trimmed)) return ImageSourceKind.file;
     if (trimmed.startsWith('/')) return ImageSourceKind.file;
 
-    // 【解説】 tryParse は、読めなければ例外ではなく null を返す。
     final uri = Uri.tryParse(trimmed);
-    // 【解説】 http: などのスキームがあれば、file: ならファイル、それ以外はネットワーク。
     if (uri != null && uri.hasScheme) {
       return uri.scheme == 'file'
           ? ImageSourceKind.file

@@ -320,6 +320,64 @@ void main() {
       expect(renderedSpans(tester).single.text, r'image(C:\Users\sugai\a.png)');
     });
 
+    testWidgets('withLocalFiles draws a local path from a file', (
+      tester,
+    ) async {
+      // The second entry point, for an app that knows its documents name
+      // files the reader is meant to see -- a note shared between the
+      // reader's own machines, say.
+      await tester.pumpWidget(
+        wrap(
+          const NaturalBlockView(
+            source: r':@image(C:\a.png):@',
+            actions: NaturalBlockActions(
+              buildSpan: NaturalBlockImages.withLocalFiles,
+            ),
+          ),
+        ),
+      );
+
+      expect(tester.widget<Image>(find.byType(Image)).image, isA<FileImage>());
+    });
+
+    testWidgets('withLocalFiles still draws a network image', (tester) async {
+      await tester.pumpWidget(
+        wrap(
+          const NaturalBlockView(
+            source: ':@image(https://example.com/a.png):@',
+            actions: NaturalBlockActions(
+              buildSpan: NaturalBlockImages.withLocalFiles,
+            ),
+          ),
+        ),
+      );
+
+      expect(
+        tester.widget<Image>(find.byType(Image)).image,
+        isA<NetworkImage>(),
+      );
+    });
+
+    testWidgets('withLocalFiles leaves a relative path to the app', (
+      tester,
+    ) async {
+      // Resolving `assets/a.png` needs something only the app has: an asset
+      // bundle, or a base to join it to.
+      await tester.pumpWidget(
+        wrap(
+          const NaturalBlockView(
+            source: ':@image(assets/a.png):@',
+            actions: NaturalBlockActions(
+              buildSpan: NaturalBlockImages.withLocalFiles,
+            ),
+          ),
+        ),
+      );
+
+      expect(find.byType(Image), findsNothing);
+      expect(renderedSpans(tester).single.text, 'image(assets/a.png)');
+    });
+
     testWidgets('an app can render local paths by composing', (tester) async {
       // The pattern the README documents. Note the convention is unchanged
       // -- still `image(...)` -- so supporting local files invents no new
