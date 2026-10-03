@@ -6,11 +6,11 @@ import 'horizontal_align_layout.dart';
 class ColumnNodeView extends StatelessWidget {
   final List<Widget> children;
 
-  /// The alignment the source stated, or null when it stated none.
+  /// The alignment the source stated, or `unstated` when it stated none.
   ///
-  /// Both draw at the start today. They are kept apart so a theme can give
-  /// unaligned blocks a look of its own without also overriding a block that
-  /// asked for the start.
+  /// `unstated` and `start` both draw at the start today. They are kept apart
+  /// so a theme can give unaligned blocks a look of its own without also
+  /// overriding a block that asked for the start.
   final HorizontalAlign align;
 
   const ColumnNodeView({

@@ -72,6 +72,9 @@ class _NaturalBlockViewState extends State<NaturalBlockView> {
   ///
   /// Null is passed through, because whether a run is tappable at all -- and
   /// so whether it is announced to a screen reader -- depends on it.
+  ///
+  /// `buildSpan` gets no such treatment and is compared below: it *makes* the
+  /// span, and a span already made is kept. A different one has to redraw.
   NaturalBlockActions _liveActions() => NaturalBlockActions(
     onTap: widget.actions.onTap == null
         ? null

@@ -93,10 +93,13 @@ class _TextNodeViewState extends State<TextNodeView> {
   /// Builds the spans, releasing the recognizers the previous ones carried.
   void _buildSpans() {
     _disposeRecognizers();
-    _spans = widget.node.children.map<InlineSpan>((child) {
-      if (child is RawSpanNode) return _rawSpan(context, child);
-      return _textSpan(context, child as TextSpanNode);
-    }).toList();
+    _spans = [
+      for (final child in widget.node.children)
+        switch (child) {
+          RawSpanNode() => _rawSpan(context, child),
+          TextSpanNode() => _textSpan(context, child),
+        },
+    ];
   }
 
   /// A recognizer for a run reading [text], owned by this state.

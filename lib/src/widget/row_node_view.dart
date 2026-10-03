@@ -12,8 +12,8 @@ class RowNodeView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // A row holds cells and nothing else, so there is no kind to choose:
-    // the cell builder is called straight from the builders.
+    // A row's cells are `ColumnNode`s and nothing else, so there is no kind
+    // to choose: the column builder is called straight from the builders.
     final cells = [
       for (final cell in node.children)
         scope.builders.column(context, cell, scope),
