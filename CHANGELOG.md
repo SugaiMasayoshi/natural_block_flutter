@@ -32,6 +32,15 @@ Initial release.
   the author wrote. Cells still go through the builders, so a caller's own
   `ColumnNode` builder applies inside a table.
 
+- The mapping from `HorizontalAlign` to Flutter layout lives in one
+  extension. Both views used to hold a copy of it, one written as a `switch`
+  statement and one as a switch expression, which made the duplication easy
+  to miss.
+- Every run of a line starts from one expression: the ambient style with the
+  theme's `base` merged over it. The root span and the baseline a `:+`
+  counts from were once computed separately, and a theme whose `base` named
+  a size made `:+` render smaller than the text beside it.
+
 ### Theming
 
 - `NaturalBlockTheme` maps tones, emphasis, and actionability to

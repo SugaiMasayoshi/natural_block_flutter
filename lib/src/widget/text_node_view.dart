@@ -23,10 +23,9 @@ class _TextNodeViewState extends State<TextNodeView> {
   /// What every run of this line starts from: the ambient style with the
   /// theme's `base` merged over it.
   ///
-  /// One expression, because two of them is a bug rather than a repetition.
-  /// The root span is built from this and so is the baseline a `:+` counts
-  /// from; when they drifted apart, a theme whose `base` named a size made
-  /// `:+` render *smaller* than the text beside it.
+  /// The root span and the baseline a `:+` counts from must be this same
+  /// expression. Two of them drift, and then a theme whose `base` names a
+  /// size makes `:+` render *smaller* than the text beside it.
   TextStyle _rootStyle(BuildContext context) =>
       DefaultTextStyle.of(context).style.merge(_theme.base);
 

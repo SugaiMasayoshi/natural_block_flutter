@@ -1,11 +1,7 @@
 import 'package:flutter/widgets.dart';
 import 'package:natural_block/natural_block.dart';
 
-/// How a `HorizontalAlign` becomes Flutter layout.
-///
-/// Both views used to hold their own copy of this mapping, written once as a
-/// `switch` statement and once as a switch expression, which made the
-/// duplication easy to miss.
+/// How a `HorizontalAlign` becomes Flutter layout, in one place.
 ///
 /// An unstated alignment draws at the start, which is a *drawing* decision:
 /// the tree keeps it apart from `start` so a theme can tell them apart, and

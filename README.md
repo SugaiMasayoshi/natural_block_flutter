@@ -166,6 +166,8 @@ const builders = NaturalBlockBuilders(
 NaturalBlockView(source: source, builders: builders);
 ```
 
+**Which of the two extension points to reach for.** `builders` changes how a *kind of node* is drawn, everywhere it appears. `actions.buildSpan` replaces one *actionable run* with something that is not styled text — an image, a chip — and declines the rest by returning null. An actionable run is not a node: `:@` is a decoration a run carries, like a tone or emphasis, so there is nothing for a builder to key on.
+
 A builder receives the node — already typed as the kind it was registered for, so there is no cast — and a `NaturalBlockScope`: the theme, the builders and a `NaturalBlockActions`, which travel together the whole way down. Recurse into a node's own children with `buildLayouts(context, node.children, scope)` for the blocks and rows a document holds, or `buildContents(context, node.children, scope)` for the lines, raw blocks and tables a block or a table cell holds. Either keeps every child on the same theme, builders and actions. Where the tree already names one kind -- a row's cells, a table's rows -- reach for that field directly (`scope.builders.column(context, cell, scope)`), since there is nothing to choose.
 
 Every field defaults to the builder that draws that kind the usual way, so a set of builders names only what it changes. Those defaults (`buildRowNode`, `buildColumnNode`, `buildTableNode`, `buildTableCellNode`, `buildTextNode`, `buildRawNode`) are exported, so a builder of your own can delegate back to one.

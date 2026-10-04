@@ -12,11 +12,9 @@ class NaturalBlockView extends StatefulWidget {
 
   /// How this document looks, or null to take it from the ambient theme.
   ///
-  /// Null rather than a constant default because no constant can be right in
-  /// both a light and a dark theme -- the same reason `striped` is offered
-  /// only on `fromColorScheme`. A fixed red reads on a light surface and
-  /// muddies a dark one, so the default is derived from the surrounding
-  /// `ColorScheme` instead of guessing.
+  /// Null rather than a constant default: no constant is right in both a
+  /// light and a dark theme, so the default is derived from the surrounding
+  /// `ColorScheme` instead of guessed.
   final NaturalBlockTheme? theme;
 
   final NaturalBlockBuilders builders;
