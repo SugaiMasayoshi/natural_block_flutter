@@ -2,8 +2,8 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/widgets.dart';
 import 'package:natural_block/natural_block.dart';
 
-import '../render/natural_block_actions.dart';
 import '../render/natural_block_builders.dart';
+import 'inline_node_span.dart';
 import 'natural_block_theme.dart';
 
 class TextNodeView extends StatefulWidget {
@@ -19,8 +19,6 @@ class TextNodeView extends StatefulWidget {
 
 class _TextNodeViewState extends State<TextNodeView> {
   NaturalBlockTheme get _theme => widget.scope.theme;
-
-  NaturalBlockActions get _actions => widget.scope.actions;
 
   /// What every run of this line starts from: the ambient style with the
   /// theme's `base` merged over it.
@@ -44,10 +42,7 @@ class _TextNodeViewState extends State<TextNodeView> {
   late List<InlineSpan> _spans;
 
   /// The recognizers the spans above carry, owned so they can be disposed.
-  ///
-  /// A flat list, because they are only ever created and released together
-  /// with the spans -- there is no pool to keep in step with anything.
-  final List<TapGestureRecognizer> _recognizers = [];
+  List<TapGestureRecognizer> _recognizers = [];
 
   /// Rebuilds the spans when an inherited widget they read changes.
   ///
@@ -71,8 +66,8 @@ class _TextNodeViewState extends State<TextNodeView> {
     final old = oldWidget.scope;
     if (widget.node != oldWidget.node ||
         _theme != old.theme ||
-        _actions.buildSpan != old.actions.buildSpan ||
-        (_actions.onTap == null) != (old.actions.onTap == null)) {
+        widget.scope.actions.buildSpan != old.actions.buildSpan ||
+        (widget.scope.actions.onTap == null) != (old.actions.onTap == null)) {
       _buildSpans();
     }
   }
@@ -87,80 +82,30 @@ class _TextNodeViewState extends State<TextNodeView> {
     for (final recognizer in _recognizers) {
       recognizer.dispose();
     }
-    _recognizers.clear();
+    _recognizers = [];
   }
 
   /// Builds the spans, releasing the recognizers the previous ones carried.
   void _buildSpans() {
     _disposeRecognizers();
-    _spans = [
-      for (final child in widget.node.children)
-        switch (child) {
-          RawSpanNode() => _rawSpan(context, child),
-          TextSpanNode() => _textSpan(context, child),
-        },
-    ];
+    final built = buildInlineSpans(
+      context,
+      widget.node,
+      widget.scope,
+      _rootStyle(context),
+      // Read at tap time rather than captured, so a caller writing a fresh
+      // closure on every build keeps the spans -- and the recognizers -- as
+      // they are. Whether there is one at all is settled here, because that
+      // decides if a run is tappable.
+      onTap: widget.scope.actions.onTap == null ? null : _handleTap,
+    );
+    _spans = built.spans;
+    _recognizers = built.recognizers;
   }
 
-  /// A recognizer for a run reading [text], owned by this state.
-  TapGestureRecognizer _recognizerFor(String text) {
-    final recognizer = TapGestureRecognizer()
-      ..onTap = () => _actions.onTap?.call(text);
-    _recognizers.add(recognizer);
-    return recognizer;
-  }
+  void _handleTap(String text) => widget.scope.actions.onTap?.call(text);
 
   @override
   Widget build(BuildContext context) =>
       Text.rich(TextSpan(style: _rootStyle(context), children: _spans));
-
-  InlineSpan _rawSpan(BuildContext context, RawSpanNode node) => TextSpan(
-    text: node.text,
-    style: DefaultTextStyle.of(context).style.merge(_theme.raw),
-  );
-
-  /// The span for one styled run, or whatever [ActionSpanBuilder] returned
-  /// for it.
-  InlineSpan _textSpan(BuildContext context, TextSpanNode span) {
-    final style = _theme
-        .styleFor(span.decoration.tone)
-        .merge(span.decoration.emphasis ? _theme.emphasis : null)
-        .merge(span.decoration.isAction ? _theme.action : null)
-        .copyWith(
-          fontSize: span.decoration.sizeOffset != 0
-              ? _fontSizeFor(context, span.decoration.sizeOffset)
-              : null,
-        );
-
-    if (span.decoration.isAction) {
-      final built = _actions.buildSpan?.call(
-        context,
-        span.text,
-        style.copyWith(fontSize: style.fontSize ?? _baseFontSize(context)),
-        _theme,
-      );
-      if (built != null) return built;
-    }
-
-    final recognizer = span.decoration.isAction && _actions.onTap != null
-        ? _recognizerFor(span.text)
-        : null;
-
-    return TextSpan(
-      text: span.text,
-      style: style,
-      recognizer: recognizer,
-      semanticsLabel: recognizer != null ? span.text : null,
-    );
-  }
-
-  /// The size a run of this line draws at before any `:+` or `:-`.
-  double _baseFontSize(BuildContext context) =>
-      _rootStyle(context).fontSize ?? _theme.baseFontSize;
-
-  double _fontSizeFor(BuildContext context, int sizeOffset) {
-    final ambient = _baseFontSize(context);
-    final scaled = ambient + sizeOffset * _theme.fontSizeStep;
-    return scaled < _theme.minFontSize ? _theme.minFontSize : scaled;
-  }
 }
