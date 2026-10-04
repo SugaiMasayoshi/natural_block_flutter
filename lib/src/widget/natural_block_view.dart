@@ -42,6 +42,18 @@ class _NaturalBlockViewState extends State<NaturalBlockView> {
   /// parent. Parsing there charged the whole document to each of those.
   late DocumentNode _document = NaturalBlockParser.parse(widget.source);
 
+  /// Drops the drawn tree when an inherited widget changes.
+  ///
+  /// A builder of the caller's own is handed this context and may read one --
+  /// a `MediaQuery`, their own theme -- and bake what it read into the
+  /// widget. The tree cannot say what was read, so the only safe answer is
+  /// to draw again.
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _cached = null;
+  }
+
   @override
   void didUpdateWidget(NaturalBlockView oldWidget) {
     super.didUpdateWidget(oldWidget);
@@ -71,16 +83,16 @@ class _NaturalBlockViewState extends State<NaturalBlockView> {
   /// Null is passed through, because whether a run is tappable at all -- and
   /// so whether it is announced to a screen reader -- depends on it.
   ///
-  /// `buildSpan` gets no such treatment and is compared below: it *makes* the
-  /// span, and a span already made is kept. A different one has to redraw.
+  /// `buildSpan` is handed over as it came. It *makes* the span, and a span
+  /// already made is kept, so a different one has to redraw -- which is why
+  /// it is compared below. Wrapping it would give the lines a fresh identity
+  /// on every rebuild, and every line would redraw its spans even when only
+  /// one of them changed.
   NaturalBlockActions _liveActions() => NaturalBlockActions(
     onTap: widget.actions.onTap == null
         ? null
         : (text) => widget.actions.onTap!(text),
-    buildSpan: widget.actions.buildSpan == null
-        ? null
-        : (context, text, style, theme) =>
-              widget.actions.buildSpan!(context, text, style, theme),
+    buildSpan: widget.actions.buildSpan,
   );
 
   @override

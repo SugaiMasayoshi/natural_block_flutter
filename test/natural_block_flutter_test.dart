@@ -501,6 +501,64 @@ void main() {
       );
     }
 
+    testWidgets('a builder reading an inherited widget sees it change', (
+      tester,
+    ) async {
+      // The drawn tree cannot say what a caller's builder read through the
+      // context it was handed, so a dependency changing has to drop it.
+      final builders = NaturalBlockBuilders(
+        text: (context, node, scope) =>
+            Text('${MediaQuery.sizeOf(context).width.round()}'),
+      );
+
+      Widget view(double width) => MediaQuery(
+        data: MediaQueryData(size: Size(width, 600)),
+        child: MaterialApp(
+          home: NaturalBlockView(source: 'anything', builders: builders),
+        ),
+      );
+
+      await tester.pumpWidget(view(300));
+      expect(find.text('300'), findsOneWidget);
+
+      await tester.pumpWidget(view(500));
+      expect(find.text('500'), findsOneWidget);
+    });
+
+    testWidgets('editing one line leaves the other lines as they were', (
+      tester,
+    ) async {
+      // `buildSpan` is handed to the lines as it came rather than wrapped,
+      // so a line compares it against the same object and keeps its spans.
+      // Wrapping gave every line a fresh identity, and a one-line edit
+      // rebuilt every line's spans and recognizers.
+      var calls = 0;
+      InlineSpan? counting(
+        BuildContext context,
+        String text,
+        TextStyle style,
+        NaturalBlockTheme theme,
+      ) {
+        calls++;
+        return null;
+      }
+
+      Widget view(String source) => MaterialApp(
+        home: NaturalBlockView(
+          source: source,
+          actions: NaturalBlockActions(buildSpan: counting),
+        ),
+      );
+
+      await tester.pumpWidget(view('one :@a:@|two :@b:@'));
+      expect(calls, 2, reason: 'both lines built their action span');
+
+      calls = 0;
+      await tester.pumpWidget(view('ONE :@a:@|two :@b:@'));
+
+      expect(calls, 1, reason: 'only the edited line builds its spans again');
+    });
+
     testWidgets('an ancestor rebuild does not re-parse', (tester) async {
       final counter = counting();
       final rebuild = ValueNotifier<int>(0);

@@ -358,6 +358,28 @@ void main() {
       );
     });
 
+    testWidgets('withLocalFiles declines a file URI it cannot turn into a '
+        'path, rather than throwing', (tester) async {
+      // `Uri.toFilePath` throws for a query, a fragment, or an authority off
+      // Windows. A document is outside input, so one of those has to read as
+      // text like any other payload the builder does not handle -- throwing
+      // would break the line it sits on.
+      await tester.pumpWidget(
+        wrap(
+          const NaturalBlockView(
+            source: ':@image(file:///a.png?v=1):@',
+            actions: NaturalBlockActions(
+              buildSpan: NaturalBlockImages.withLocalFiles,
+            ),
+          ),
+        ),
+      );
+
+      expect(tester.takeException(), isNull);
+      expect(find.byType(Image), findsNothing);
+      expect(renderedSpans(tester).single.text, 'image(file:///a.png?v=1)');
+    });
+
     testWidgets('withLocalFiles leaves a relative path to the app', (
       tester,
     ) async {

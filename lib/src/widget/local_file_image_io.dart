@@ -10,17 +10,29 @@ Widget? localFileImage(
   String source, {
   required double scale,
   required ImageErrorWidgetBuilder errorBuilder,
-}) => Image.file(
-  File(_pathOf(source)),
-  scale: scale,
-  semanticLabel: source,
-  errorBuilder: errorBuilder,
-);
+}) {
+  final path = _pathOf(source);
+  if (path == null) return null;
+  return Image.file(
+    File(path),
+    scale: scale,
+    semanticLabel: source,
+    errorBuilder: errorBuilder,
+  );
+}
 
-/// A `file:` URI as the path it names, and anything else unchanged.
-String _pathOf(String source) {
+/// A `file:` URI as the path it names, or null when it names none.
+///
+/// `toFilePath` throws for a URI carrying a query, a fragment, or (off
+/// Windows) an authority. A document is outside input, so one of those has
+/// to decline like any other payload rather than break the line it sits on.
+String? _pathOf(String source) {
   if (!source.startsWith('file:')) return source;
   final uri = Uri.tryParse(source);
-  if (uri == null) return source;
-  return uri.toFilePath(windows: Platform.isWindows);
+  if (uri == null) return null;
+  try {
+    return uri.toFilePath(windows: Platform.isWindows);
+  } on UnsupportedError {
+    return null;
+  }
 }
