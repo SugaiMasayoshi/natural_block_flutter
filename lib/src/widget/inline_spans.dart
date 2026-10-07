@@ -1,20 +1,6 @@
 import 'package:flutter/widgets.dart';
-import 'package:natural_block/natural_block.dart';
 
-import '../render/natural_block_actions.dart';
-import '../render/natural_block_builders.dart';
-import 'natural_block_theme.dart';
 import 'run_span.dart';
-
-/// What a set of spans was built from, so the next [InlineSpans.update] can
-/// tell whether they still hold.
-typedef _From = ({
-  TextNode node,
-  NaturalBlockTheme theme,
-  TextStyle rootStyle,
-  ActionSpanBuilder? buildSpan,
-  void Function(String text)? onTap,
-});
 
 /// A line's runs as spans, kept until what they are made of changes.
 ///
@@ -27,38 +13,22 @@ typedef _From = ({
 class InlineSpans {
   List<InlineSpan> spans = const [];
 
-  _From? _from;
+  SpanInputs? _from;
 
-  /// Rebuilds the spans if what they are made of has changed, and does
-  /// nothing if it has not.
+  /// Rebuilds the spans if [from] differs from what the current ones were
+  /// built from, and does nothing if it does not.
   ///
-  /// [onTap] is compared like everything else, so hand over something stable
-  /// -- a method of the owning state rather than a closure written here.
-  /// Dart never considers two closure literals equal, so a fresh one each
-  /// time would rebuild every time, and every tap held across a rebuild
-  /// would be lost.
-  void update(
-    BuildContext context,
-    TextNode node,
-    NaturalBlockScope scope,
-    TextStyle rootStyle, {
-    required void Function(String text)? onTap,
-  }) {
-    final from = (
-      node: node,
-      theme: scope.theme,
-      rootStyle: rootStyle,
-      buildSpan: scope.actions.buildSpan,
-      onTap: onTap,
-    );
+  /// `onTap` is compared like the rest of [from], so hand over something
+  /// stable -- a method of the owning state rather than a closure written at
+  /// the call site. Dart never considers two closure literals equal, so a
+  /// fresh one each time would rebuild every time, and every tap held across
+  /// a rebuild would be lost.
+  void update(BuildContext context, SpanInputs from) {
     if (from == _from) return;
     _from = from;
 
     dispose();
-    spans = [
-      for (final run in node.children)
-        runSpan(context, run, scope, rootStyle, onTap: onTap),
-    ];
+    spans = [for (final run in from.node.children) runSpan(context, run, from)];
   }
 
   /// Releases the recognizers the current spans carry.

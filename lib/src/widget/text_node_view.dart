@@ -40,20 +40,19 @@ class _TextNodeViewState extends State<TextNodeView> {
     // from are the same expression, because two of them drift -- and then a
     // theme whose `base` names a size makes `:+` render *smaller* than the
     // text beside it.
-    final rootStyle = DefaultTextStyle.of(
-      context,
-    ).style.merge(widget.scope.theme.base);
+    final rootStyle = DefaultTextStyle.of(context).style
+        .merge(widget.scope.theme.base);
 
     // Asked on every build rather than from `didUpdateWidget` and
     // `didChangeDependencies`: build runs after both, and `update` does
-    // nothing when nothing it reads has changed.
-    _line.update(
-      context,
-      widget.node,
-      widget.scope,
-      rootStyle,
+    // nothing when nothing it is given has changed.
+    _line.update(context, (
+      node: widget.node,
+      theme: widget.scope.theme,
+      rootStyle: rootStyle,
+      buildSpan: widget.scope.actions.buildSpan,
       onTap: widget.scope.actions.onTap == null ? null : _handleTap,
-    );
+    ));
 
     return Text.rich(TextSpan(style: rootStyle, children: _line.spans));
   }
