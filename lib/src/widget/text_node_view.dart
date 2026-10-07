@@ -16,50 +16,10 @@ class TextNodeView extends StatefulWidget {
 }
 
 class _TextNodeViewState extends State<TextNodeView> {
-  /// This line's spans, which own the recognizers and decide for themselves
-  /// when they are stale. Everything this view does is tell them what they
-  /// would be made of now.
+  /// This line's spans, which own the recognizers and keep themselves until
+  /// what they are made of changes. Stateful only to hold these: they have to
+  /// outlive a build, or a tap held across one is lost.
   final InlineSpans _line = InlineSpans();
-
-  /// What every run of this line starts from: the ambient style with the
-  /// theme's `base` merged over it.
-  ///
-  /// The root span and the baseline a `:+` counts from must be this same
-  /// expression. Two of them drift, and then a theme whose `base` names a
-  /// size makes `:+` render *smaller* than the text beside it.
-  TextStyle _rootStyle(BuildContext context) =>
-      DefaultTextStyle.of(context).style.merge(widget.scope.theme.base);
-
-  /// Both of the framework's "something may have changed" calls lead here.
-  ///
-  /// `didChangeDependencies` covers what is read through the context --
-  /// `DefaultTextStyle` decides what every run starts from and can change
-  /// without this widget's own fields changing at all. `didUpdateWidget`
-  /// covers the fields. Neither knows whether the change reaches the spans,
-  /// so both ask the same question in the same place.
-  void _update() => _line.update(
-    context,
-    widget.node,
-    widget.scope,
-    _rootStyle(context),
-    // A method of this state rather than a closure, so it compares equal
-    // across rebuilds: a caller writing a fresh `onTap` on every build keeps
-    // the spans -- and the recognizers -- as they are. Whether there is one
-    // at all still shows through, because that decides if a run is tappable.
-    onTap: widget.scope.actions.onTap == null ? null : _handleTap,
-  );
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    _update();
-  }
-
-  @override
-  void didUpdateWidget(TextNodeView oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    _update();
-  }
 
   @override
   void dispose() {
@@ -67,9 +27,34 @@ class _TextNodeViewState extends State<TextNodeView> {
     super.dispose();
   }
 
+  /// A method rather than a closure, so it compares equal across builds: a
+  /// caller writing a fresh `onTap` on every build keeps the spans -- and the
+  /// recognizers -- as they are. Whether there is one at all still shows
+  /// through, because that decides if a run is tappable.
   void _handleTap(String text) => widget.scope.actions.onTap?.call(text);
 
   @override
-  Widget build(BuildContext context) =>
-      Text.rich(TextSpan(style: _rootStyle(context), children: _line.spans));
+  Widget build(BuildContext context) {
+    // What every run of this line starts from: the ambient style with the
+    // theme's `base` merged over it. The root span and the size a `:+` counts
+    // from are the same expression, because two of them drift -- and then a
+    // theme whose `base` names a size makes `:+` render *smaller* than the
+    // text beside it.
+    final rootStyle = DefaultTextStyle.of(
+      context,
+    ).style.merge(widget.scope.theme.base);
+
+    // Asked on every build rather than from `didUpdateWidget` and
+    // `didChangeDependencies`: build runs after both, and `update` does
+    // nothing when nothing it reads has changed.
+    _line.update(
+      context,
+      widget.node,
+      widget.scope,
+      rootStyle,
+      onTap: widget.scope.actions.onTap == null ? null : _handleTap,
+    );
+
+    return Text.rich(TextSpan(style: rootStyle, children: _line.spans));
+  }
 }
