@@ -1,8 +1,6 @@
 import 'package:flutter/widgets.dart';
 import 'package:natural_block/natural_block.dart';
 
-import 'horizontal_align_layout.dart';
-
 class ColumnNodeView extends StatelessWidget {
   final List<Widget> children;
 
@@ -21,12 +19,31 @@ class ColumnNodeView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Alignment reaches the drawing twice: `lines` sets where each line sits
+    // inside the block, `block` where the block sits in the space it was
+    // given. A block drawn at the start needs no `block` at all, and leaving
+    // it off is what keeps an alignment marker from making a document stop
+    // rendering where the available width is unbounded.
+    final (:lines, :block) = switch (align) {
+      HorizontalAlign.unstated || HorizontalAlign.start => (
+        lines: CrossAxisAlignment.start,
+        block: null,
+      ),
+      HorizontalAlign.center => (
+        lines: CrossAxisAlignment.center,
+        block: Alignment.center,
+      ),
+      HorizontalAlign.end => (
+        lines: CrossAxisAlignment.end,
+        block: AlignmentDirectional.centerEnd,
+      ),
+    };
+
     final column = Column(
-      crossAxisAlignment: align.crossAxis,
+      crossAxisAlignment: lines,
       mainAxisSize: MainAxisSize.min,
       children: children,
     );
-    if (align.isStart) return column;
-    return Align(alignment: align.alignment, child: column);
+    return block == null ? column : Align(alignment: block, child: column);
   }
 }
