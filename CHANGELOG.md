@@ -106,15 +106,15 @@ Initial release.
   builder of your own can delegate back. Naming one that way also keeps
   `NaturalBlockBuilders` comparable: a builder written as a closure literal
   is never equal to another, which costs a redraw but never correctness.
-- Choosing between the fields is `buildLayout` / `buildContent`'s job, and
+- Choosing between the fields is `buildLayouts` / `buildContents`' job, and
   they are the only places the tree says merely that one of several kinds is
   there. Each switches over a sealed set small enough to be exhaustive, so
   the nodes that are never drawn on their own -- the document, a table's
   rows, the runs -- cannot be handed to a builder at all. Where the tree
   already names one kind, as a table's cells do, there is nothing to choose
-  and the field is called directly. `buildLayouts` and `buildContents` do the
-  same for a list, and are how a builder of your own recurses into a node's
-  children while keeping them on the same theme, builders and actions.
+  and the field is called directly. They are also how a builder of your own
+  recurses into a node's children, which keeps those children on the same
+  theme, builders and actions.
 - A builder receives the node and one `NaturalBlockScope`, which carries the
   theme, the builders and the actions. The three travel together the whole
   way down and no level swaps one of them for its children, so they are one
