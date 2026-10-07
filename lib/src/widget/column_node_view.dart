@@ -25,10 +25,8 @@ class ColumnNodeView extends StatelessWidget {
     // it off is what keeps an alignment marker from making a document stop
     // rendering where the available width is unbounded.
     final (:lines, :block) = switch (align) {
-      HorizontalAlign.unstated || HorizontalAlign.start => (
-        lines: CrossAxisAlignment.start,
-        block: null,
-      ),
+      HorizontalAlign.unstated ||
+      HorizontalAlign.start => (lines: CrossAxisAlignment.start, block: null),
       HorizontalAlign.center => (
         lines: CrossAxisAlignment.center,
         block: Alignment.center,

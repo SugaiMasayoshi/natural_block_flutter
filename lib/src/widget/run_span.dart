@@ -3,7 +3,6 @@ import 'package:flutter/widgets.dart';
 import 'package:natural_block/natural_block.dart';
 
 import '../render/natural_block_builders.dart';
-import 'natural_block_theme.dart';
 
 /// A span that owns the recognizer it carries.
 ///
@@ -22,7 +21,7 @@ class ActionSpan extends TextSpan {
   void dispose() => (recognizer! as TapGestureRecognizer).dispose();
 }
 
-/// The span for one run: its decoration turned into a `TextStyle`, or
+/// The span for one run: the style its decoration asks the theme for, or
 /// whatever `actions.buildSpan` returned in its place.
 ///
 /// [rootStyle] is what the line starts from, and the size a `:+` counts from.
@@ -49,14 +48,15 @@ InlineSpan _styled(
   void Function(String text)? onTap,
 ) {
   final theme = scope.theme;
-  final style = _styleFor(run.decoration, theme, rootStyle);
+  final baseSize = rootStyle.fontSize ?? theme.baseFontSize;
+  final style = theme.styleFor(run.decoration, baseSize: baseSize);
 
   if (run.decoration.isAction) {
     final built = scope.actions.buildSpan?.call(
       context,
       run.text,
       // The replacement is given a size to work from, never an unstated one.
-      style.copyWith(fontSize: style.fontSize ?? _baseSize(theme, rootStyle)),
+      style.copyWith(fontSize: style.fontSize ?? baseSize),
       theme,
     );
     if (built != null) return built;
@@ -74,29 +74,4 @@ InlineSpan _styled(
     // Announced to a screen reader only because something answers the tap.
     semanticsLabel: text,
   );
-}
-
-/// What one run's decoration looks like: the tone's style, with emphasis and
-/// actionability laid over it, at the size its `:+` and `:-` ask for.
-TextStyle _styleFor(
-  SpanDecoration decoration,
-  NaturalBlockTheme theme,
-  TextStyle rootStyle,
-) => theme
-    .styleFor(decoration.tone)
-    .merge(decoration.emphasis ? theme.emphasis : null)
-    .merge(decoration.isAction ? theme.action : null)
-    .copyWith(
-      fontSize: decoration.sizeOffset == 0
-          ? null
-          : _sizeAt(decoration.sizeOffset, theme, rootStyle),
-    );
-
-/// The size a run draws at before any `:+` or `:-`.
-double _baseSize(NaturalBlockTheme theme, TextStyle rootStyle) =>
-    rootStyle.fontSize ?? theme.baseFontSize;
-
-double _sizeAt(int sizeOffset, NaturalBlockTheme theme, TextStyle rootStyle) {
-  final scaled = _baseSize(theme, rootStyle) + sizeOffset * theme.fontSizeStep;
-  return scaled < theme.minFontSize ? theme.minFontSize : scaled;
 }

@@ -133,11 +133,33 @@ class NaturalBlockTheme {
     striped: striped,
   );
 
-  TextStyle styleFor(Tone tone) => switch (tone) {
-    Tone.negative => negative,
-    Tone.positive => positive,
-    Tone.none => base,
-  };
+  /// What one run's decoration looks like: the tone's style, with emphasis
+  /// and actionability laid over it, at the size its `:+` and `:-` ask for.
+  ///
+  /// The whole mapping from what the source said to what is drawn, in the one
+  /// place that holds every value it needs. [baseSize] is what the sizes
+  /// count from -- the ambient size, or [baseFontSize] where nothing ambient
+  /// names one -- and is the only thing here that comes from outside.
+  TextStyle styleFor(SpanDecoration decoration, {required double baseSize}) =>
+      switch (decoration.tone) {
+            Tone.negative => negative,
+            Tone.positive => positive,
+            Tone.none => base,
+          }
+          .merge(decoration.emphasis ? emphasis : null)
+          .merge(decoration.isAction ? action : null)
+          .copyWith(
+            // Left unstated when the source asked for no step, so the run
+            // keeps whatever size it would have drawn at anyway.
+            fontSize: decoration.sizeOffset == 0
+                ? null
+                : _sizeAt(decoration.sizeOffset, baseSize),
+          );
+
+  double _sizeAt(int sizeOffset, double baseSize) {
+    final scaled = baseSize + sizeOffset * fontSizeStep;
+    return scaled < minFontSize ? minFontSize : scaled;
+  }
 
   /// This theme with the given fields replaced.
   ///

@@ -125,7 +125,7 @@ Three more fields control what a size step is *worth*, since `natural_block` onl
 * `fontSizeStep` — logical pixels added per `:+` (or removed per `:-`). Defaults to `4`.
 * `minFontSize` — the floor. `:-----` would otherwise be able to drive the size to zero or below, which Flutter asserts on. Defaults to `1`.
 
-`copyWith` returns a modified copy, and `styleFor(Tone)` gives the style for one tone (`Tone.none` returns `base`). Every `copyWith` argument means "leave this alone" when omitted, the way Flutter's own do, and none of them can set a field *to* null -- "none" is written as a value instead (`const TableBorder()`, `const BoxDecoration()`), and a theme without stripes is what `fromColorScheme` gives you unless you ask for them.
+`copyWith` returns a modified copy, and `styleFor(decoration, baseSize: ...)` gives the style one run draws with -- the tone, with emphasis and actionability laid over it, at the size its `:+` and `:-` ask for. That is the whole mapping from what the source said to what is drawn, so a builder of your own can ask for it instead of reproducing the order. Every `copyWith` argument means "leave this alone" when omitted, the way Flutter's own do, and none of them can set a field *to* null -- "none" is written as a value instead (`const TableBorder()`, `const BoxDecoration()`), and a theme without stripes is what `fromColorScheme` gives you unless you ask for them.
 
 ### Raw regions
 

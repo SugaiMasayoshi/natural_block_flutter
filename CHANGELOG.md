@@ -89,7 +89,14 @@ Initial release.
   for "not passed". `tableStripe` stays nullable, because `Color` has no
   "none" of its own and a transparent one is still a fill -- it would put a
   decoration on every other row of every table.
-- `copyWith`, `styleFor`, `==` / `hashCode`.
+- `styleFor(decoration, baseSize: ...)` is the whole mapping from what the
+  source said to what is drawn: the tone, with emphasis and actionability
+  laid over it, at the size its `:+` and `:-` ask for. It lives on the theme
+  because every value it needs is a field of one, and because a builder of
+  your own would otherwise have to reproduce the order. It replaced a
+  `styleFor(Tone)` that exposed only the first step, leaving the rest in the
+  renderer -- and that was redundant with the tone fields anyway.
+- `copyWith`, `==` / `hashCode`.
 
 ### Customization
 

@@ -7,16 +7,52 @@ void main() {
   group('NaturalBlockTheme.styleFor', () {
     const theme = NaturalBlockTheme();
 
-    test('Tone.negative returns negative', () {
-      expect(theme.styleFor(Tone.negative), theme.negative);
+    TextStyle styleOf(SpanDecoration decoration, {double baseSize = 14}) =>
+        theme.styleFor(decoration, baseSize: baseSize);
+
+    test('a tone picks that tone\'s style', () {
+      expect(
+        styleOf(SpanDecoration(tone: Tone.negative)).color,
+        theme.negative.color,
+      );
+      expect(
+        styleOf(SpanDecoration(tone: Tone.positive)).color,
+        theme.positive.color,
+      );
+      expect(styleOf(const SpanDecoration()).color, theme.base.color);
     });
 
-    test('Tone.positive returns positive', () {
-      expect(theme.styleFor(Tone.positive), theme.positive);
+    test('emphasis and actionability lay over the tone', () {
+      final both = styleOf(
+        SpanDecoration(tone: Tone.negative, emphasis: true, isAction: true),
+      );
+
+      expect(both.color, theme.action.color, reason: 'action is laid last');
+      expect(both.fontWeight, theme.emphasis.fontWeight);
+      expect(both.decoration, theme.action.decoration);
     });
 
-    test('Tone.none returns base', () {
-      expect(theme.styleFor(Tone.none), theme.base);
+    test('a size step counts from baseSize', () {
+      expect(
+        styleOf(SpanDecoration(sizeOffset: 2)).fontSize,
+        14 + 2 * theme.fontSizeStep,
+      );
+      expect(
+        styleOf(SpanDecoration(sizeOffset: 1), baseSize: 30).fontSize,
+        30 + theme.fontSizeStep,
+      );
+    });
+
+    test('no step leaves the size unstated', () {
+      // So the run keeps whatever it would have drawn at anyway.
+      expect(styleOf(const SpanDecoration()).fontSize, isNull);
+    });
+
+    test('a step cannot drive the size below minFontSize', () {
+      expect(
+        styleOf(SpanDecoration(sizeOffset: -99)).fontSize,
+        theme.minFontSize,
+      );
     });
   });
 
