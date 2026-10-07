@@ -465,6 +465,47 @@ void main() {
         expect(recognizerOf(tester), same(first));
       });
 
+      testWidgets('an ambient change the spans do not see keeps them', (
+        tester,
+      ) async {
+        // The spans compare what they are made of, and what they are made of
+        // is the *merged* style. An ambient size the theme's `base` overrides
+        // never reaches them, so it is not a reason to replace a recognizer
+        // -- and replacing one mid-gesture loses the tap.
+        const theme = NaturalBlockTheme(base: TextStyle(fontSize: 20));
+
+        await pumpRuns(
+          tester,
+          [action('tap me')],
+          theme: theme,
+          ambient: const TextStyle(fontSize: 14, color: Color(0xFF000000)),
+        );
+        final first = recognizerOf(tester);
+
+        await pumpRuns(
+          tester,
+          [action('tap me')],
+          theme: theme,
+          ambient: const TextStyle(fontSize: 30, color: Color(0xFF000000)),
+        );
+
+        expect(recognizerOf(tester), same(first));
+      });
+
+      testWidgets('rebuilding and then unmounting disposes once', (
+        tester,
+      ) async {
+        // The spans release their recognizers when they are replaced, and
+        // the view releases them again when it goes away. Disposing a
+        // recognizer twice throws, so the second call must find nothing.
+        await pumpRuns(tester, [action('one')]);
+        await pumpRuns(tester, [action('two')]);
+
+        await tester.pumpWidget(const SizedBox.shrink());
+
+        expect(tester.takeException(), isNull);
+      });
+
       testWidgets('a fresh onTap closure is not a reason to rebuild', (
         tester,
       ) async {
