@@ -244,10 +244,7 @@ void main() {
         MaterialApp(
           home: TextNodeView(
             node: node,
-            scope: NaturalBlockScope(
-              theme: theme,
-              actions: NaturalBlockActions(onTap: (_) {}),
-            ),
+            scope: NaturalBlockScope(theme: theme, onTap: (_) {}),
           ),
         ),
       );
@@ -290,10 +287,7 @@ void main() {
         MaterialApp(
           home: TextNodeView(
             node: node,
-            scope: NaturalBlockScope(
-              theme: theme,
-              actions: NaturalBlockActions(onTap: (_) {}),
-            ),
+            scope: NaturalBlockScope(theme: theme, onTap: (_) {}),
           ),
         ),
       );
@@ -320,10 +314,7 @@ void main() {
         MaterialApp(
           home: TextNodeView(
             node: node,
-            scope: NaturalBlockScope(
-              theme: theme,
-              actions: NaturalBlockActions(onTap: tapped.add),
-            ),
+            scope: NaturalBlockScope(theme: theme, onTap: tapped.add),
           ),
         ),
       );
@@ -353,10 +344,7 @@ void main() {
         MaterialApp(
           home: TextNodeView(
             node: node,
-            scope: NaturalBlockScope(
-              theme: theme,
-              actions: NaturalBlockActions(onTap: tapped.add),
-            ),
+            scope: NaturalBlockScope(theme: theme, onTap: tapped.add),
           ),
         ),
       );
@@ -407,10 +395,7 @@ void main() {
         MaterialApp(
           home: TextNodeView(
             node: node,
-            scope: NaturalBlockScope(
-              theme: theme,
-              actions: NaturalBlockActions(onTap: (_) {}),
-            ),
+            scope: NaturalBlockScope(theme: theme, onTap: (_) {}),
           ),
         ),
       );
@@ -439,7 +424,7 @@ void main() {
             theme: theme,
             // A fresh closure each time, the way a caller writing it inline
             // in their own `build` would hand one over.
-            actions: NaturalBlockActions(onTap: onTap ?? (_) {}),
+            onTap: onTap ?? (_) {},
           ),
         );
         return tester.pumpWidget(
@@ -603,7 +588,7 @@ void main() {
                 theme: NaturalBlockTheme(
                   base: TextStyle(letterSpacing: suffix.length * 0.0),
                 ),
-                actions: NaturalBlockActions(onTap: tapped.add),
+                onTap: tapped.add,
               ),
             ),
           ),
@@ -654,10 +639,7 @@ void main() {
         MaterialApp(
           home: TextNodeView(
             node: TextNode(children: spans),
-            scope: NaturalBlockScope(
-              theme: theme,
-              actions: NaturalBlockActions(onTap: (_) {}),
-            ),
+            scope: NaturalBlockScope(theme: theme, onTap: (_) {}),
           ),
         ),
       );

@@ -31,7 +31,7 @@ class _TextNodeViewState extends State<TextNodeView> {
   /// caller writing a fresh `onTap` on every build keeps the spans -- and the
   /// recognizers -- as they are. Whether there is one at all still shows
   /// through, because that decides if a run is tappable.
-  void _handleTap(String text) => widget.scope.actions.onTap?.call(text);
+  void _handleTap(String text) => widget.scope.onTap?.call(text);
 
   @override
   Widget build(BuildContext context) {
@@ -50,8 +50,8 @@ class _TextNodeViewState extends State<TextNodeView> {
       node: widget.node,
       theme: widget.scope.theme,
       rootStyle: rootStyle,
-      buildSpan: widget.scope.actions.buildSpan,
-      onTap: widget.scope.actions.onTap == null ? null : _handleTap,
+      customs: widget.scope.customs,
+      onTap: widget.scope.onTap == null ? null : _handleTap,
     ));
 
     return Text.rich(TextSpan(style: rootStyle, children: _line.spans));

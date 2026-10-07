@@ -37,7 +37,7 @@ class InlineSpans {
   /// owner's own `dispose` finds nothing left to release.
   void dispose() {
     for (final span in spans) {
-      if (span is ActionSpan) span.dispose();
+      if (span is TappableSpan) span.dispose();
     }
     spans = const [];
   }

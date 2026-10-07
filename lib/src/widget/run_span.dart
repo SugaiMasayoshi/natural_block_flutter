@@ -2,7 +2,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/widgets.dart';
 import 'package:natural_block/natural_block.dart';
 
-import '../render/natural_block_actions.dart';
+import '../render/run_handler.dart';
 import 'natural_block_theme.dart';
 
 /// Everything a line's spans are made of.
@@ -11,6 +11,11 @@ import 'natural_block_theme.dart';
 /// decides whether the ones already built still hold. Two values could
 /// disagree -- something could reach the building without reaching the
 /// comparison, and then a change would never redraw.
+///
+/// `customs` is compared as a list, so hand over a stable one: a `const` list
+/// of named handlers compares equal across builds, where one written out
+/// afresh in a `build` never does. Writing it afresh costs a redraw of every
+/// line, and a tap held across that redraw is lost.
 ///
 /// The `BuildContext` is deliberately not in here: it is not something to
 /// compare, and the spans are rebuilt when what it carries changes by way of
@@ -21,21 +26,21 @@ typedef SpanInputs = ({
 
   /// What the line starts from, and the size a `:+` counts from.
   TextStyle rootStyle,
-  ActionSpanBuilder? buildSpan,
+  List<RunHandler> customs,
 
-  /// Null when nothing is wired to a tap, which is also what decides whether
-  /// a run is tappable at all.
-  void Function(String text)? onTap,
+  /// Null when nothing is wired to a tap. Stable across builds, so that a
+  /// caller writing a fresh callback each time does not cost a redraw.
+  OnActionTap? onTap,
 });
 
 /// A span that owns the recognizer it carries.
 ///
-/// The type is the ownership: a span handed back by `SpanInputs.buildSpan`
-/// may carry a recognizer of the caller's own, and disposing that one would
-/// break something this package does not own. Only the spans made here are
-/// this kind, so only these are ever released.
-class ActionSpan extends TextSpan {
-  const ActionSpan({
+/// The type is the ownership. A `SpanRun` handed back by a handler may carry
+/// a recognizer of the app's own, and disposing that one would break
+/// something this package does not own. Only the spans made here are this
+/// kind, so only these are ever released.
+class TappableSpan extends TextSpan {
+  const TappableSpan({
     required String super.text,
     super.style,
     required TapGestureRecognizer super.recognizer,
@@ -45,8 +50,7 @@ class ActionSpan extends TextSpan {
   void dispose() => (recognizer! as TapGestureRecognizer).dispose();
 }
 
-/// The span for one run: the style its decoration asks the theme for, or
-/// whatever `SpanInputs.buildSpan` returned in its place.
+/// The span for one run.
 InlineSpan runSpan(BuildContext context, InlineNode node, SpanInputs from) {
   switch (node) {
     // A raw run is text the parser stopped reading, so the only thing to do
@@ -62,29 +66,62 @@ InlineSpan runSpan(BuildContext context, InlineNode node, SpanInputs from) {
       final text = node.text;
       final baseSize = from.rootStyle.fontSize ?? theme.baseFontSize;
       final style = theme.styleFor(node.decoration, baseSize: baseSize);
-      final plain = TextSpan(text: text, style: style);
 
-      if (!node.decoration.isAction) return plain;
+      // Styled as actionable either way. What the handlers decide is how it
+      // is drawn and whether it answers a tap.
+      if (!node.decoration.isAction) return TextSpan(text: text, style: style);
 
-      final built = from.buildSpan?.call(
+      final onTap = from.onTap;
+      final rendering = _ask(
+        from.customs,
         context,
         text,
-        // The replacement is given a size to work from, never unstated.
+        // Handlers are given a size to work from, never an unstated one.
         style.copyWith(fontSize: style.fontSize ?? baseSize),
         theme,
+        onTap == null ? null : () => onTap(text),
       );
-      if (built != null) return built;
 
-      // Styled as actionable either way, but announced to a screen reader
-      // only when something answers the tap.
-      final onTap = from.onTap;
-      if (onTap == null) return plain;
-
-      return ActionSpan(
-        text: text,
-        style: style,
-        recognizer: TapGestureRecognizer()..onTap = () => onTap(text),
-        semanticsLabel: text,
-      );
+      return switch (rendering) {
+        null => TextSpan(text: text, style: style),
+        SpanRun(:final span) => span,
+        WidgetRun(:final child, :final alignment) => WidgetSpan(
+          alignment: alignment,
+          child: child,
+        ),
+        TextRun(text: final given, style: final asked, :final onTap) =>
+          _textRun(given ?? text, asked ?? style, onTap),
+      };
   }
 }
+
+/// The first answer the handlers give, or null when none of them claims the
+/// run.
+RunRendering? _ask(
+  List<RunHandler> customs,
+  BuildContext context,
+  String text,
+  TextStyle style,
+  NaturalBlockTheme theme,
+  VoidCallback? onTap,
+) {
+  for (final handler in customs) {
+    final rendering = handler(context, text, style, theme, onTap);
+    if (rendering != null) return rendering;
+  }
+  return null;
+}
+
+/// A text run, tappable when something answers it.
+///
+/// Announced to a screen reader only then, because claiming interactivity
+/// that nothing answers is a promise this package cannot keep.
+InlineSpan _textRun(String text, TextStyle style, VoidCallback? onTap) =>
+    onTap == null
+    ? TextSpan(text: text, style: style)
+    : TappableSpan(
+        text: text,
+        style: style,
+        recognizer: TapGestureRecognizer()..onTap = onTap,
+        semanticsLabel: text,
+      );

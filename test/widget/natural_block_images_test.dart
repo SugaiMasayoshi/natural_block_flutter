@@ -1,8 +1,54 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:natural_block_flutter/natural_block_flutter.dart';
 
 import '../rendered_spans.dart';
+
+/// A local-file handler standing in for `NaturalBlockImages.local`, which
+/// this test cannot exercise without a file on disk.
+RunRendering? _localStandIn(
+  BuildContext context,
+  String text,
+  TextStyle style,
+  NaturalBlockTheme theme,
+  VoidCallback? onTap,
+) {
+  final source = NaturalBlockImages.urlOf(text);
+  if (source == null ||
+      NaturalBlockImages.kindOf(source) != ImageSourceKind.file) {
+    return null;
+  }
+  return WidgetRun(Text('local:$source'));
+}
+
+/// A handler of the app's own, which claims `user(...)` and declines the rest.
+RunRendering? _mentions(
+  BuildContext context,
+  String text,
+  TextStyle style,
+  NaturalBlockTheme theme,
+  VoidCallback? onTap,
+) => text.startsWith('user(') && text.endsWith(')')
+    ? TextRun(text: text.substring(5, text.length - 1))
+    : null;
+
+/// Draws any actionable run as a box that answers the tap itself, through a
+/// widget rather than a recognizer this package would have to release.
+RunRendering? _tappableBox(
+  BuildContext context,
+  String text,
+  TextStyle style,
+  NaturalBlockTheme theme,
+  VoidCallback? onTap,
+) => WidgetRun(
+  GestureDetector(
+    // An empty box defers its hit testing to a child it does not have.
+    behavior: HitTestBehavior.opaque,
+    onTap: onTap,
+    child: const SizedBox(width: 20, height: 20),
+  ),
+);
 
 void main() {
   Widget wrap(Widget child) => MaterialApp(
@@ -116,7 +162,7 @@ void main() {
     });
   });
 
-  group('as an ActionSpanBuilder', () {
+  group('as a run handler', () {
     testWidgets('declining leaves the run as ordinary actionable text', (
       tester,
     ) async {
@@ -128,10 +174,8 @@ void main() {
         wrap(
           NaturalBlockView(
             source: ':@#section:@',
-            actions: NaturalBlockActions(
-              buildSpan: NaturalBlockImages.builder,
-              onTap: tapped.add,
-            ),
+            customs: [NaturalBlockImages.network, tappableText],
+            onTap: tapped.add,
           ),
         ),
       );
@@ -152,7 +196,7 @@ void main() {
         wrap(
           const NaturalBlockView(
             source: ':@image(https://example.com/a.png):@',
-            actions: NaturalBlockActions(buildSpan: NaturalBlockImages.builder),
+            customs: [NaturalBlockImages.network, tappableText],
           ),
         ),
       );
@@ -208,7 +252,7 @@ void main() {
         wrap(
           const NaturalBlockView(
             source: ':@image(https://example.com/a.png):@',
-            actions: NaturalBlockActions(buildSpan: NaturalBlockImages.builder),
+            customs: [NaturalBlockImages.network, tappableText],
           ),
         ),
       );
@@ -218,7 +262,7 @@ void main() {
         wrap(
           const NaturalBlockView(
             source: ':++:@image(https://example.com/a.png):@',
-            actions: NaturalBlockActions(buildSpan: NaturalBlockImages.builder),
+            customs: [NaturalBlockImages.network, tappableText],
           ),
         ),
       );
@@ -243,7 +287,7 @@ void main() {
         wrap(
           const NaturalBlockView(
             source: ':@image(https://example.com/a.png):@',
-            actions: NaturalBlockActions(buildSpan: NaturalBlockImages.builder),
+            customs: [NaturalBlockImages.network, tappableText],
           ),
         ),
       );
@@ -271,7 +315,7 @@ void main() {
         wrap(
           const NaturalBlockView(
             source: ':@image(https://example.com/a.png):@',
-            actions: NaturalBlockActions(buildSpan: NaturalBlockImages.builder),
+            customs: [NaturalBlockImages.network, tappableText],
             theme: NaturalBlockTheme(baseFontSize: 28),
           ),
         ),
@@ -291,7 +335,7 @@ void main() {
         wrap(
           const NaturalBlockView(
             source: ':@image(https://example.com/a.png):@',
-            actions: NaturalBlockActions(buildSpan: NaturalBlockImages.builder),
+            customs: [NaturalBlockImages.network, tappableText],
           ),
         ),
       );
@@ -311,7 +355,7 @@ void main() {
         wrap(
           const NaturalBlockView(
             source: r':@image(C:\Users\sugai\a.png):@',
-            actions: NaturalBlockActions(buildSpan: NaturalBlockImages.builder),
+            customs: [NaturalBlockImages.network, tappableText],
           ),
         ),
       );
@@ -330,9 +374,11 @@ void main() {
         wrap(
           const NaturalBlockView(
             source: r':@image(C:\a.png):@',
-            actions: NaturalBlockActions(
-              buildSpan: NaturalBlockImages.withLocalFiles,
-            ),
+            customs: [
+              NaturalBlockImages.local,
+              NaturalBlockImages.network,
+              tappableText,
+            ],
           ),
         ),
       );
@@ -345,9 +391,11 @@ void main() {
         wrap(
           const NaturalBlockView(
             source: ':@image(https://example.com/a.png):@',
-            actions: NaturalBlockActions(
-              buildSpan: NaturalBlockImages.withLocalFiles,
-            ),
+            customs: [
+              NaturalBlockImages.local,
+              NaturalBlockImages.network,
+              tappableText,
+            ],
           ),
         ),
       );
@@ -368,9 +416,11 @@ void main() {
         wrap(
           const NaturalBlockView(
             source: ':@image(file:///a.png?v=1):@',
-            actions: NaturalBlockActions(
-              buildSpan: NaturalBlockImages.withLocalFiles,
-            ),
+            customs: [
+              NaturalBlockImages.local,
+              NaturalBlockImages.network,
+              tappableText,
+            ],
           ),
         ),
       );
@@ -389,9 +439,11 @@ void main() {
         wrap(
           const NaturalBlockView(
             source: ':@image(assets/a.png):@',
-            actions: NaturalBlockActions(
-              buildSpan: NaturalBlockImages.withLocalFiles,
-            ),
+            customs: [
+              NaturalBlockImages.local,
+              NaturalBlockImages.network,
+              tappableText,
+            ],
           ),
         ),
       );
@@ -401,31 +453,14 @@ void main() {
     });
 
     testWidgets('an app can render local paths by composing', (tester) async {
-      // The pattern the README documents. Note the convention is unchanged
-      // -- still `image(...)` -- so supporting local files invents no new
-      // spelling and cannot fork the language.
-      InlineSpan? withLocalFiles(
-        BuildContext context,
-        String text,
-        TextStyle style,
-        NaturalBlockTheme theme,
-      ) {
-        final source = NaturalBlockImages.urlOf(text);
-        if (source != null &&
-            NaturalBlockImages.kindOf(source) == ImageSourceKind.file) {
-          // Standing in for `Image.file`, which this test cannot use without
-          // pulling `dart:io` into a package that deliberately avoids it.
-          return WidgetSpan(child: Text('local:$source'));
-        }
-        return NaturalBlockImages.builder(context, text, style, theme);
-      }
-
+      // Standing in for the real `NaturalBlockImages.local`, which this test
+      // cannot exercise without a file on disk.
       await tester.pumpWidget(
         wrap(
-          NaturalBlockView(
+          const NaturalBlockView(
             source:
                 r':@image(C:\a.png):@ と :@image(https://example.com/b.png):@',
-            actions: NaturalBlockActions(buildSpan: withLocalFiles),
+            customs: [_localStandIn, NaturalBlockImages.network],
           ),
         ),
       );
@@ -434,35 +469,117 @@ void main() {
       expect(find.byType(Image), findsOneWidget);
     });
 
-    testWidgets('a builder of your own can fall back to this one', (
+    testWidgets('handlers are tried in order, and the first one wins', (
       tester,
     ) async {
-      InlineSpan? mine(
-        BuildContext context,
-        String text,
-        TextStyle style,
-        NaturalBlockTheme theme,
-      ) {
-        if (text.startsWith('user(') && text.endsWith(')')) {
-          return TextSpan(
-            text: text.substring(5, text.length - 1),
-            style: style,
-          );
-        }
-        return NaturalBlockImages.builder(context, text, style, theme);
-      }
-
+      // What replaced "falling back": a handler of your own does not call
+      // this package's, it just sits in front of it and declines what is not
+      // its own.
       await tester.pumpWidget(
         wrap(
-          NaturalBlockView(
+          const NaturalBlockView(
             source: ':@user(alice):@ and :@image(https://example.com/a.png):@',
-            actions: NaturalBlockActions(buildSpan: mine),
+            customs: [_mentions, NaturalBlockImages.network],
           ),
         ),
       );
 
       expect(renderedSpans(tester).first.text, 'alice');
       expect(find.byType(Image), findsOneWidget);
+    });
+  });
+
+  group('customs as a chain', () {
+    testWidgets('leaving tappableText out keeps the style and drops the tap', (
+      tester,
+    ) async {
+      // The default is a handler like any other, so an app can take it away.
+      final tapped = <String>[];
+      await tester.pumpWidget(
+        MaterialApp(
+          home: NaturalBlockView(
+            source: ':@リンク:@',
+            customs: const [],
+            onTap: tapped.add,
+          ),
+        ),
+      );
+
+      final span = renderedSpans(tester).single;
+      expect(
+        span.style!.decoration,
+        TextDecoration.underline,
+        reason: 'the document still says the run is actionable',
+      );
+      expect(span.recognizer, isNull);
+      expect(span.semanticsLabel, isNull);
+      expect(tapped, isEmpty);
+    });
+
+    testWidgets(
+      'a widget run answers a tap through Flutter, not a recognizer',
+      (tester) async {
+        // What makes replacement and tappability independent: anything inside a
+        // WidgetRun is Flutter's to manage, so nothing here owns a recognizer.
+        final tapped = <String>[];
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Align(
+              alignment: Alignment.topLeft,
+              child: NaturalBlockView(
+                source: ':@box:@',
+                customs: const [_tappableBox],
+                onTap: tapped.add,
+              ),
+            ),
+          ),
+        );
+
+        await tester.tap(find.byType(GestureDetector));
+        await tester.pump();
+
+        expect(tapped, ['box']);
+        expect(renderedSpans(tester), isEmpty, reason: 'drawn as a widget');
+      },
+    );
+
+    testWidgets('a text run may rewrite what is read', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: NaturalBlockView(
+            source: ':@user(alice):@',
+            customs: const [_mentions],
+          ),
+        ),
+      );
+
+      expect(renderedSpans(tester).single.text, 'alice');
+    });
+
+    testWidgets('a span run is used as given and never disposed here', (
+      tester,
+    ) async {
+      // The escape hatch. Unmounting must not reach into a span this package
+      // did not make.
+      final recognizer = TapGestureRecognizer();
+      addTearDown(recognizer.dispose);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: NaturalBlockView(
+            source: ':@mine:@',
+            customs: [
+              (context, text, style, theme, onTap) =>
+                  SpanRun(TextSpan(text: text, recognizer: recognizer)),
+            ],
+          ),
+        ),
+      );
+      await tester.pumpWidget(const SizedBox.shrink());
+
+      expect(tester.takeException(), isNull);
+      // Still usable, which it would not be had this package disposed it.
+      recognizer.onTap = () {};
     });
   });
 }

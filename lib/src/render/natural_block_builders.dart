@@ -3,7 +3,7 @@ import 'package:natural_block/natural_block.dart';
 
 import '../widget/natural_block_theme.dart';
 import 'default_builders.dart';
-import 'natural_block_actions.dart';
+import 'run_handler.dart';
 
 typedef NodeBuilder<T extends NaturalBlockNode> = Widget Function(
   BuildContext context,
@@ -27,12 +27,17 @@ class NaturalBlockScope {
 
   final NaturalBlockBuilders builders;
 
-  final NaturalBlockActions actions;
+  /// The handlers an actionable run is offered to, in order, and what
+  /// the app wants done when one is tapped.
+  final List<RunHandler> customs;
+
+  final OnActionTap? onTap;
 
   const NaturalBlockScope({
     this.theme = const NaturalBlockTheme(),
     this.builders = NaturalBlockBuilders.defaults,
-    this.actions = NaturalBlockActions.none,
+    this.customs = const [tappableText],
+    this.onTap,
   });
 }
 

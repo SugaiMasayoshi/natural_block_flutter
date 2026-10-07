@@ -5,6 +5,16 @@ import 'package:natural_block_flutter/natural_block_flutter.dart';
 
 import 'rendered_spans.dart';
 
+/// A handler that draws any actionable run as a box, for the selection
+/// tests: a WidgetSpan is what splits a paragraph's selection into
+/// segments.
+RunRendering? _boxed(
+  BuildContext context,
+  String text,
+  TextStyle style,
+  NaturalBlockTheme theme,
+  VoidCallback? onTap,
+) => const WidgetRun(SizedBox(width: 20, height: 10));
 void main() {
   Future<void> pump(
     WidgetTester tester,
@@ -227,12 +237,7 @@ void main() {
           home: SelectionArea(
             child: NaturalBlockView(
               source: 'before :@boxed:@ after',
-              actions: NaturalBlockActions(
-                buildSpan: (context, text, style, theme) => WidgetSpan(
-                  alignment: PlaceholderAlignment.middle,
-                  child: SizedBox(width: 20, height: 10),
-                ),
-              ),
+              customs: const [_boxed],
             ),
           ),
         ),
@@ -533,21 +538,23 @@ void main() {
       // Wrapping gave every line a fresh identity, and a one-line edit
       // rebuilt every line's spans and recognizers.
       var calls = 0;
-      InlineSpan? counting(
+      RunRendering? counting(
         BuildContext context,
         String text,
         TextStyle style,
         NaturalBlockTheme theme,
+        VoidCallback? onTap,
       ) {
         calls++;
         return null;
       }
 
+      // Held outside `view`, the way the docs ask: a list written afresh on
+      // every build never compares equal, and every line would redraw.
+      final customs = <RunHandler>[counting];
+
       Widget view(String source) => MaterialApp(
-        home: NaturalBlockView(
-          source: source,
-          actions: NaturalBlockActions(buildSpan: counting),
-        ),
+        home: NaturalBlockView(source: source, customs: customs),
       );
 
       await tester.pumpWidget(view('one :@a:@|two :@b:@'));

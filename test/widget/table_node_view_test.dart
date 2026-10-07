@@ -348,12 +348,7 @@ void main() {
     ) async {
       final tapped = <String>[];
       await tester.pumpWidget(
-        wrap(
-          NaturalBlockView(
-            source: '~:@tap:@^B|C^D~',
-            actions: NaturalBlockActions(onTap: tapped.add),
-          ),
-        ),
+        wrap(NaturalBlockView(source: '~:@tap:@^B|C^D~', onTap: tapped.add)),
       );
 
       final span = renderedSpans(tester).single;

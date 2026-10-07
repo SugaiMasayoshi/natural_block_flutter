@@ -143,27 +143,37 @@ Initial release.
 
 ### Actionable runs
 
-- `NaturalBlockActions` carries both of these, and `NaturalBlockView` takes
-  it as one `actions` parameter, like `theme` and `builders`. It used to take
-  the two callbacks flat and bundle them internally, which left one thing
-  with two names on the way in.
+- `customs` is the list of handlers an actionable run is offered to, in
+  order, until one claims it. Drawing a run as tappable text is itself a
+  handler (`tappableText`) and the only one in the default list, so an app
+  can take tappability away as easily as it adds an image. Replacing a run
+  and making it tappable are no longer the same switch.
+- A handler answers with a `RunRendering`, and which case it picks says who
+  owns what the drawing needs released: `TextRun` is drawn as text with the
+  span and recognizer staying this package's, `WidgetRun` is drawn as a
+  widget with everything inside it Flutter's (a `GestureDetector` included,
+  which is how a replaced run answers a tap without anything here owning a
+  recognizer), and `SpanRun` is the escape hatch where the span and anything
+  it carries are the app's. Ownership used to be a convention to remember;
+  it is now the case you pick.
 - `onTap` reports a tap with the run's own text. Nothing here ever
   interprets that text — no URL is opened, and there is no `url_launcher`
-  dependency.
-- `buildSpan` replaces a run's rendering entirely; returning `null` for
-  a payload leaves it to the default, so an unrecognized one still reads as
-  text.
-- `NaturalBlockImages.builder` is the reference rendering for the
-  conventional `image(<url>)` payload, off until passed: drawing a remote
+  dependency. A handler is handed it already bound to its run, so even a
+  widget run can answer it.
+- `NaturalBlockImages.network` is the reference rendering for the
+  conventional `image(<url>)` payload, off until included: drawing a remote
   image is a network request to a third party made by displaying a
   document, which is a disclosure decision belonging to the app.
   `NaturalBlockImages.kindOf` classifies a payload as network, file, or
   relative without needing `dart:io`.
-- `NaturalBlockImages.withLocalFiles` draws local files as well. A second
-  entry point rather than a setting on the first, because the two are
-  different decisions: a remote image tells a third party the document was
-  opened, a local one puts the reader's own file on screen under someone
-  else's text. A note synced between your own machines wants it; a document
-  written by someone else may not. `dart:io` stays off the web through a
+- `NaturalBlockImages.local` draws local files, and is a handler of its own
+  rather than a setting on the first, because the two are different
+  decisions: a remote image tells a third party the document was opened, a
+  local one puts the reader's own file on screen under someone else's text.
+  Separate handlers also make local-without-network expressible, which a
+  superset entry point could not. `dart:io` stays off the web through a
   conditional import, so a local path there declines as it always did.
 - A run is announced to a screen reader only when something is wired to it.
+- Keep a `customs` list stable -- `const`, or held in your state. One written
+  afresh on every build never compares equal to the last, which redraws every
+  line and loses a tap held across the redraw.

@@ -97,7 +97,8 @@ class Example extends StatelessWidget {
 * `source` (required) -- the markup text to parse and render.
 * `theme` -- a [`NaturalBlockTheme`](#naturalblocktheme) controlling how tones, emphasis, and base text look. Defaults to `null`, meaning `NaturalBlockTheme.fromContext(context)`: the tones come from the surrounding `ColorScheme`, so a document reads correctly in a light theme and a dark one without being told which it is in.
 * `builders` -- a [`NaturalBlockBuilders`](#naturalblockbuilders) controlling which widget renders each kind of node. Defaults to `NaturalBlockBuilders.defaults`.
-* `actions` -- a `NaturalBlockActions` holding what to do with an [actionable span](#actionable-text): `onTap`, called with the span's own text when it is tapped, and `buildSpan`, which renders the span as something other than styled text (an image, a chip). Defaults to `NaturalBlockActions.none`, which leaves actionable spans styled but not tappable.
+* `customs` -- the [handlers](#actionable-text) an actionable run is offered to, in order, until one claims it. Defaults to `const [tappableText]`, which draws them as tappable text. Images are handlers too, so an app includes the ones it means: `const [NaturalBlockImages.network, tappableText]`.
+* `onTap` -- called with an actionable run's own text when it is tapped. Defaults to `null`, which leaves those runs styled but inert.
 
 ### `NaturalBlockTheme`
 
@@ -150,7 +151,7 @@ A region also works inside a table cell, which a `|`-based marker could never ha
 
 ### Semantics
 
-Actionable runs are announced to a screen reader only when something is actually wired to them: the action *style* follows the document, which said the run is actionable, but claiming interactivity when neither `actions.onTap` nor `actions.buildSpan` is supplied would be a promise nothing keeps. `NaturalBlockImages.builder` gives every image a `semanticLabel` taken from its payload.
+Actionable runs are announced to a screen reader only when something is actually wired to them: the action *style* follows the document, which said the run is actionable, but claiming interactivity when nothing is wired to them would be a promise nothing keeps. `NaturalBlockImages.network` gives every image a `semanticLabel` taken from its payload.
 
 Tables carry no row/column semantics yet — a screen reader reads their cells as an undifferentiated stream, losing the structure the `~` declaration exists to express.
 
@@ -166,15 +167,15 @@ const builders = NaturalBlockBuilders(
 NaturalBlockView(source: source, builders: builders);
 ```
 
-**Which of the two extension points to reach for.** `builders` changes how a *kind of node* is drawn, everywhere it appears. `actions.buildSpan` replaces one *actionable run* with something that is not styled text — an image, a chip — and declines the rest by returning null. An actionable run is not a node: `:@` is a decoration a run carries, like a tone or emphasis, so there is nothing for a builder to key on.
+**Which of the two extension points to reach for.** `builders` changes how a *kind of node* is drawn, everywhere it appears. `customs` decides how one *actionable run* is drawn, and declines the rest by returning null. An actionable run is not a node: `:@` is a decoration a run carries, like a tone or emphasis, so there is nothing for a builder to key on.
 
-A builder receives the node — already typed as the kind it was registered for, so there is no cast — and a `NaturalBlockScope`: the theme, the builders and a `NaturalBlockActions`, which travel together the whole way down. Recurse into a node's own children with `buildLayouts(context, node.children, scope)` for the blocks and rows a document holds, or `buildContents(context, node.children, scope)` for the lines, raw blocks and tables a block or a table cell holds. Either keeps every child on the same theme, builders and actions. Where the tree already names one kind -- a row's cells, a table's rows -- reach for that field directly (`scope.builders.column(context, cell, scope)`), since there is nothing to choose.
+A builder receives the node — already typed as the kind it was registered for, so there is no cast — and a `NaturalBlockScope`: the theme, the builders, the customs and the `onTap`, which travel together the whole way down. Recurse into a node's own children with `buildLayouts(context, node.children, scope)` for the blocks and rows a document holds, or `buildContents(context, node.children, scope)` for the lines, raw blocks and tables a block or a table cell holds. Either keeps every child on the same theme, builders and handlers. Where the tree already names one kind -- a row's cells, a table's rows -- reach for that field directly (`scope.builders.column(context, cell, scope)`), since there is nothing to choose.
 
 Every field defaults to the builder that draws that kind the usual way, so a set of builders names only what it changes. Those defaults (`buildRowNode`, `buildColumnNode`, `buildTableNode`, `buildTableCellNode`, `buildTextNode`, `buildRawNode`) are exported, so a builder of your own can delegate back to one.
 
 **The node types are sealed**, so this set is the whole set: a field per kind rather than a map keyed by type, which is what keeps each builder's node type exact and makes a builder written for the wrong kind a compile error. The two entry points are narrowed the same way: `buildLayouts` takes only `LayoutNode`s and `buildContents` only `ContentNode`s, so `DocumentNode`, `TableRowNode` and the two run types — which are never drawn on their own, the view and the table and the line drawing them instead — cannot be handed to the builders at all. A table's cells skip the dispatch entirely, since `TableCellNode` is the only kind a cell can be.
 
-The widgets the default builders use are exported as well (`TextNodeView`, `ColumnNodeView`, `RowNodeView`, `TableNodeView`), so a custom builder can wrap or reuse one rather than reimplementing it. So are the types a builder signature needs: `NodeBuilder`, `NaturalBlockScope`, `NaturalBlockActions`, `OnActionTap`, `ActionSpanBuilder`, and `ImageSourceKind`.
+The widgets the default builders use are exported as well (`TextNodeView`, `ColumnNodeView`, `RowNodeView`, `TableNodeView`), so a custom builder can wrap or reuse one rather than reimplementing it. So are the types a builder signature needs: `NodeBuilder`, `NaturalBlockScope`, `RunHandler`, `RunRendering` (`TextRun`, `WidgetRun`, `SpanRun`), `OnActionTap`, and `ImageSourceKind`.
 
 ### Selectable text
 
@@ -196,42 +197,53 @@ const source = ':@https://example.com:@ 参照';
 
 This package deliberately does not call it a "link". `natural_block` only records that a run of text is tappable; the run's own `text` is the payload, and what tapping it *means* -- opening a URL, jumping to a section, resolving a mention, running a command -- is entirely the consuming app's decision. Neither the parser nor this package ever opens a URL, validates one, or otherwise interprets the text; there is no `url_launcher` dependency here and never will be.
 
-Give `NaturalBlockView` an `actions` with an `onTap` callback to find out when an actionable span is tapped:
+Give `NaturalBlockView` an `onTap` to find out when an actionable run is tapped:
 
 ```dart
 NaturalBlockView(
   source: source,
-  actions: NaturalBlockActions(
-    onTap: (text) {
-      // `text` is exactly the actionable span's own text -- see the
-      // convention table below for the shapes it commonly takes.
-      if (text.startsWith('https://') || text.startsWith('http://')) {
-        // openUrl(text); -- e.g. via url_launcher, in your own app code.
-      } else {
-        // Any other shape is app-defined; ignore what you don't handle.
-      }
-    },
-  ),
+  onTap: (text) {
+    // `text` is exactly the actionable run's own text -- see the
+    // convention table below for the shapes it commonly takes.
+    if (text.startsWith('https://') || text.startsWith('http://')) {
+      // openUrl(text); -- e.g. via url_launcher, in your own app code.
+    } else {
+      // Any other shape is app-defined; ignore what you don't handle.
+    }
+  },
 );
 ```
 
-Leaving `onTap` unset (the default) still renders actionable spans with `NaturalBlockTheme.action`'s style, but they get no tap recognizer at all -- they read as tappable but aren't.
+Leaving `onTap` unset (the default) still renders actionable runs with `NaturalBlockTheme.action`'s style, but they get no tap recognizer at all -- they read as tappable but aren't.
 
-#### Rendering an actionable span yourself
+#### Drawing an actionable run yourself
 
-`buildSpan` replaces an actionable span's rendering entirely — text, style and gestures. It is consulted for every actionable span, and returning `null` for one leaves it to the default styled text, so a builder never has to understand every payload it might meet:
+An actionable run is offered to each handler in `customs` until one claims it, and a handler declines by returning `null` -- so it never has to understand every payload it might meet. Drawing a run as tappable text is itself a handler (`tappableText`), which is why it is in the default list and why leaving it out takes tappability away.
+
+What a handler returns says **who owns what the drawing needs released**, which is the one thing easy to get wrong:
+
+| Returned | Drawn as | Owned by |
+|---|---|---|
+| `TextRun(text:, style:, onTap:)` | text in the line | this package, recognizer included |
+| `WidgetRun(child)` | a widget in the line | Flutter, a `GestureDetector` inside it included |
+| `SpanRun(span)` | the span you made | you, including any recognizer it carries |
 
 ```dart
+RunRendering? mentions(context, text, style, theme, onTap) =>
+    text.startsWith('@')
+        ? TextRun(text: text.substring(1), onTap: onTap)
+        : null; // not mine -- offer it to the next handler
+
 NaturalBlockView(
   source: source,
-  actions: NaturalBlockActions(
-    buildSpan: (context, text, style, theme) {
-      if (text.startsWith('@')) return TextSpan(text: text.substring(1), style: style);
-      return null; // not mine -- render it as usual
-    },
-  ),
+  customs: const [mentions, NaturalBlockImages.network, tappableText],
+  onTap: openUrl,
 );
 ```
+
+Prefer `TextRun` when text is what you want: the span and its recognizer stay this package's to release, which is what keeps a tap alive when the document redraws under your finger. Reach for `SpanRun` only when neither of the others fits, and dispose what it carries yourself.
+
+**Keep the list stable.** A `const` list of named handlers compares equal across builds; one written out afresh inside a `build` never does, which redraws every line and loses a tap held across the redraw.
 
 The `style` you receive is what the span *would* have been drawn with, including everything the surrounding markup asked for, and with its `fontSize` always resolved to a concrete value -- reading it is what lets `:++` / `:--` reach content that is not text at all. `theme` comes along so you can work out what that size means relative to an unmarked run (`theme.baseFontSize`, `theme.fontSizeStep`) rather than hardcoding a reference.
 
@@ -243,44 +255,50 @@ There is no image syntax, and there is not going to be one. An image is written 
 
 The word is spelled out, and `img` is deliberately **not** accepted as an alias. What the reader sees when nothing renders the payload is the whole point of the convention, and `img` is borrowed HTML jargon rather than a word; there is also no scarcity here to buy the two characters back, unlike the single-character markers. Two accepted spellings would be exactly the dialect this convention exists to prevent — so if the payload convention grows (`video(...)`, `user(...)`), the rule is simply to use the word.
 
-`NaturalBlockImages.builder` is the reference rendering for that convention:
+`NaturalBlockImages.network` is the reference rendering for that convention:
 
 ```dart
 NaturalBlockView(
   source: ':@image(https://example.com/a.png):@',
-  actions: NaturalBlockActions(buildSpan: NaturalBlockImages.builder),
+  customs: const [NaturalBlockImages.network, tappableText],
 );
 ```
 
 **It is off until you pass it, deliberately.** Rendering a remote image is a network request to a third party, made simply by displaying a document. A URL carrying a per-recipient marker turns that into a read receipt; the identical request is a tracking pixel when the reader was not told. This package cannot tell those apart — it never interprets the URL — so the disclosure decision belongs to your app. It is the same reason mail clients block remote images by default.
 
-Shipping the reference implementation anyway is the point: declining to interpret would not prevent dialects, it would guarantee them, with every app inventing its own spelling. `NaturalBlockImages.urlOf` exposes the convention so your own builder can reuse it and fall back to `NaturalBlockImages.builder` for the rest.
+Shipping the reference implementation anyway is the point: declining to interpret would not prevent dialects, it would guarantee them, with every app inventing its own spelling. `NaturalBlockImages.urlOf` exposes the convention so a handler of your own can reuse it and sit in front of this one, which then takes whatever yours declined.
 
 ##### Local files
 
-`NaturalBlockImages.builder` renders network URLs and declines everything else. `NaturalBlockImages.withLocalFiles` renders both:
+`NaturalBlockImages.network` draws network URLs and declines everything else; `NaturalBlockImages.local` draws local files and declines everything else. Include the ones you mean:
 
 ```dart
-actions: NaturalBlockActions(buildSpan: NaturalBlockImages.withLocalFiles),
+customs: const [
+  NaturalBlockImages.local,
+  NaturalBlockImages.network,
+  tappableText,
+],
 ```
 
-**Two entry points rather than one setting, because they are two decisions.** Fetching a remote image discloses to a third party that the document was opened; drawing a local one puts a file from the reader's own machine on screen under whatever text the document's author wrote. For a note synced between your own machines that is the whole point; for a document someone else wrote it is a way to show the reader their own files, and to learn which paths exist from whether they draw. Only the app knows which kind of document it renders.
+**Two handlers rather than one setting, because they are two decisions.** Fetching a remote image discloses to a third party that the document was opened; drawing a local one puts a file from the reader's own machine on screen under whatever text the document's author wrote. For a note synced between your own machines that is the whole point; for a document someone else wrote it is a way to show the reader their own files, and to learn which paths exist from whether they draw. Only the app knows which kind of document it renders.
 
 Drawing a file needs `Image.file`, and so `dart:io`, which the web does not have. A conditional import settles that at build time: the web compiles a stub, so a local path declines there exactly as it does for an app that never asked for local files, and the package keeps its web support either way.
 
 The convention does not fork — it is still `image(...)`, and only the *resolution* differs — so local file support cannot split the language.
 
-A relative payload (`image(assets/a.png)`) is declined by both, since resolving one needs an asset bundle or a base that only the app has. Compose your own builder for those, falling back for the rest:
+A relative payload (`image(assets/a.png)`) is declined by both, since resolving one needs an asset bundle or a base that only the app has. Write a handler for those and put it in front; the ones behind take whatever it declines:
 
 ```dart
-buildSpan: (context, text, style, theme) {
+RunRendering? assets(context, text, style, theme, onTap) {
   final source = NaturalBlockImages.urlOf(text);
-  if (source != null &&
-      NaturalBlockImages.kindOf(source) == ImageSourceKind.relative) {
-    return WidgetSpan(child: Image.asset(source));
+  if (source == null ||
+      NaturalBlockImages.kindOf(source) != ImageSourceKind.relative) {
+    return null;
   }
-  return NaturalBlockImages.withLocalFiles(context, text, style, theme);
-},
+  return WidgetRun(Image.asset(source));
+}
+
+customs: const [assets, NaturalBlockImages.network, tappableText],
 ```
 
 `NaturalBlockImages.kindOf` is provided because the classification has a trap in it: `Uri.parse` reads `C:\Users\a.png` as a URI **whose scheme is `c`**, so the obvious "does it have a scheme, then it's a URL" test mistakes every Windows path for one. It reads the string only — no `dart:io`, works on every platform.
@@ -302,7 +320,7 @@ Note also that letting documents name local files lets them probe for one: a pat
 | `image(<url>)` | an image -- see [Images](#images) |
 | anything else | app-defined |
 
-Whichever shapes you use, **keep the payload human-readable**. That is what makes actions a safe place to extend the language at all: an implementation that does not recognise a payload still renders it as text, so `image(https://example.com/a.png)` degrades into something a person can read and act on, while an opaque identifier would degrade into nothing useful. Note that a span you replace via `buildSpan` gives up that safety net *within your own app* too -- a `WidgetSpan` copies as `￼`, not as the text that named it.
+Whichever shapes you use, **keep the payload human-readable**. That is what makes actions a safe place to extend the language at all: an implementation that does not recognise a payload still renders it as text, so `image(https://example.com/a.png)` degrades into something a person can read and act on, while an opaque identifier would degrade into nothing useful. Note that a run drawn as a `WidgetRun` gives up that safety net *within your own app* too -- it copies as `￼`, not as the text that named it.
 
 Resolving any of this -- looking up `#name`, deciding what `@name` refers to, or anything else -- is entirely the app's responsibility; `natural_block` and `natural_block_flutter` only carry the text through.
 

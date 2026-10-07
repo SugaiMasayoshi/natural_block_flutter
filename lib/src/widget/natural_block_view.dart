@@ -1,9 +1,9 @@
 import 'package:flutter/widgets.dart';
 import 'package:natural_block/natural_block.dart';
 
-import '../render/natural_block_actions.dart';
 import '../render/natural_block_builders.dart';
 import '../render/natural_block_render.dart';
+import '../render/run_handler.dart';
 import 'column_node_view.dart';
 import 'natural_block_theme.dart';
 
@@ -19,14 +19,29 @@ class NaturalBlockView extends StatefulWidget {
 
   final NaturalBlockBuilders builders;
 
-  final NaturalBlockActions actions;
+  /// The handlers an actionable run is offered to, in order, until one claims
+  /// it.
+  ///
+  /// Drawing an actionable run as tappable text is itself a handler, so a
+  /// list that leaves [tappableText] out draws those runs styled but inert.
+  /// Images are handlers too, one per kind of source, so an app includes the
+  /// ones it means: `const [NaturalBlockImages.network, tappableText]`.
+  ///
+  /// Keep the list stable -- `const`, or held in your state. One written out
+  /// afresh on every build never compares equal to the last, which redraws
+  /// every line and loses a tap held across the redraw.
+  final List<RunHandler> customs;
+
+  /// What tapping an actionable run means. Null leaves them inert.
+  final OnActionTap? onTap;
 
   const NaturalBlockView({
     super.key,
     required this.source,
     this.theme,
     this.builders = NaturalBlockBuilders.defaults,
-    this.actions = NaturalBlockActions.none,
+    this.customs = const [tappableText],
+    this.onTap,
   });
 
   @override
@@ -72,28 +87,15 @@ class _NaturalBlockViewState extends State<NaturalBlockView> {
   Widget? _cached;
   _DrawnFrom? _drawnFrom;
 
-  /// The actions handed to the tree: a stand-in that reads the current widget
-  /// when it fires.
+  /// What the tree is handed in place of the caller's `onTap`: a method of
+  /// this state, which compares equal across builds.
   ///
-  /// This is what keeps `onTap` out of the comparison below. A caller writes
-  /// it as a closure in their own `build`, and two closures are never equal in
-  /// Dart, so comparing it would miss every single time. Reading it at tap
-  /// time instead means a cached tree still calls the newest callback.
-  ///
-  /// Null is passed through, because whether a run is tappable at all -- and
-  /// so whether it is announced to a screen reader -- depends on it.
-  ///
-  /// `buildSpan` is handed over as it came. It *makes* the span, and a span
-  /// already made is kept, so a different one has to redraw -- which is why
-  /// it is compared below. Wrapping it would give the lines a fresh identity
-  /// on every rebuild, and every line would redraw its spans even when only
-  /// one of them changed.
-  NaturalBlockActions _liveActions() => NaturalBlockActions(
-    onTap: widget.actions.onTap == null
-        ? null
-        : (text) => widget.actions.onTap!(text),
-    buildSpan: widget.actions.buildSpan,
-  );
+  /// A caller writes `onTap` as a closure in their own `build`, and two
+  /// closures are never equal in Dart, so comparing it would miss every
+  /// time. Reading it at tap time instead means a kept tree still calls the
+  /// newest callback. Whether there is one at all does reach the comparison,
+  /// because that decides if a run is tappable.
+  void _handleTap(String text) => widget.onTap?.call(text);
 
   @override
   Widget build(BuildContext context) {
@@ -103,8 +105,8 @@ class _NaturalBlockViewState extends State<NaturalBlockView> {
       document: _document,
       theme: theme,
       builders: widget.builders,
-      buildSpan: widget.actions.buildSpan,
-      tappable: widget.actions.onTap != null,
+      customs: widget.customs,
+      tappable: widget.onTap != null,
     );
 
     if (_cached == null || from != _drawnFrom) {
@@ -112,7 +114,8 @@ class _NaturalBlockViewState extends State<NaturalBlockView> {
       final scope = NaturalBlockScope(
         theme: theme,
         builders: widget.builders,
-        actions: _liveActions(),
+        customs: widget.customs,
+        onTap: widget.onTap == null ? null : _handleTap,
       );
       _cached = ColumnNodeView(
         children: buildLayouts(context, _document.children, scope),
@@ -129,6 +132,6 @@ typedef _DrawnFrom = ({
   DocumentNode document,
   NaturalBlockTheme theme,
   NaturalBlockBuilders builders,
-  ActionSpanBuilder? buildSpan,
+  List<RunHandler> customs,
   bool tappable,
 });
