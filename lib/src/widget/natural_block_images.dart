@@ -49,21 +49,24 @@ abstract final class NaturalBlockImages {
     if (kind == ImageSourceKind.relative) return null;
     if (kind == ImageSourceKind.file && !localFiles) return null;
 
-    final size = style.fontSize ?? theme.baseFontSize;
-    final scale = theme.baseFontSize / size;
+    final runSize = style.fontSize ?? theme.baseFontSize;
+    // `Image.scale` says how many of the image's own pixels go in a logical
+    // one, so it divides: pass less than 1 and the image is drawn larger.
+    final drawnWithTheRun = theme.baseFontSize / runSize;
     Widget asText(BuildContext context, Object error, StackTrace? stack) =>
         Text(text, style: style);
 
     final image = kind == ImageSourceKind.network
         ? Image.network(
             url,
-            scale: scale,
+            scale: drawnWithTheRun,
             semanticLabel: url,
             errorBuilder: asText,
-            loadingBuilder: (context, child, progress) =>
-                progress == null ? child : SizedBox(height: size, width: size),
+            loadingBuilder: (context, child, progress) => progress == null
+                ? child
+                : SizedBox(height: runSize, width: runSize),
           )
-        : localFileImage(url, scale: scale, errorBuilder: asText);
+        : localFileImage(url, scale: drawnWithTheRun, errorBuilder: asText);
     if (image == null) return null;
 
     return WidgetSpan(alignment: PlaceholderAlignment.middle, child: image);
