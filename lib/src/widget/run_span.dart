@@ -59,31 +59,31 @@ InlineSpan runSpan(BuildContext context, InlineNode node, SpanInputs from) {
 
     case TextSpanNode():
       final theme = from.theme;
+      final text = node.text;
       final baseSize = from.rootStyle.fontSize ?? theme.baseFontSize;
       final style = theme.styleFor(node.decoration, baseSize: baseSize);
+      final plain = TextSpan(text: text, style: style);
 
-      if (node.decoration.isAction) {
-        final built = from.buildSpan?.call(
-          context,
-          node.text,
-          // The replacement is given a size to work from, never unstated.
-          style.copyWith(fontSize: style.fontSize ?? baseSize),
-          theme,
-        );
-        if (built != null) return built;
-      }
+      if (!node.decoration.isAction) return plain;
 
+      final built = from.buildSpan?.call(
+        context,
+        text,
+        // The replacement is given a size to work from, never unstated.
+        style.copyWith(fontSize: style.fontSize ?? baseSize),
+        theme,
+      );
+      if (built != null) return built;
+
+      // Styled as actionable either way, but announced to a screen reader
+      // only when something answers the tap.
       final onTap = from.onTap;
-      if (!node.decoration.isAction || onTap == null) {
-        return TextSpan(text: node.text, style: style);
-      }
+      if (onTap == null) return plain;
 
-      final text = node.text;
       return ActionSpan(
         text: text,
         style: style,
         recognizer: TapGestureRecognizer()..onTap = () => onTap(text),
-        // Announced to a screen reader only because something answers it.
         semanticsLabel: text,
       );
   }
