@@ -49,12 +49,17 @@ class ActionSpan extends TextSpan {
 /// whatever `SpanInputs.buildSpan` returned in its place.
 InlineSpan runSpan(BuildContext context, InlineNode node, SpanInputs from) =>
     switch (node) {
-      RawSpanNode() => TextSpan(
-        text: node.text,
-        style: DefaultTextStyle.of(context).style.merge(from.theme.raw),
-      ),
+      RawSpanNode() => _raw(context, node, from),
       TextSpanNode() => _styled(context, node, from),
     };
+
+/// A raw run is text the parser stopped reading, so the only thing to do is
+/// not undo that: the ambient style, made monospaced.
+InlineSpan _raw(BuildContext context, RawSpanNode run, SpanInputs from) =>
+    TextSpan(
+      text: run.text,
+      style: DefaultTextStyle.of(context).style.merge(from.theme.raw),
+    );
 
 InlineSpan _styled(BuildContext context, TextSpanNode run, SpanInputs from) {
   final theme = from.theme;
