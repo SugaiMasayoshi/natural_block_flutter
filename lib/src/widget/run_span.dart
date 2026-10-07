@@ -47,47 +47,44 @@ class ActionSpan extends TextSpan {
 
 /// The span for one run: the style its decoration asks the theme for, or
 /// whatever `SpanInputs.buildSpan` returned in its place.
-InlineSpan runSpan(BuildContext context, InlineNode node, SpanInputs from) =>
-    switch (node) {
-      RawSpanNode() => _raw(context, node, from),
-      TextSpanNode() => _styled(context, node, from),
-    };
+InlineSpan runSpan(BuildContext context, InlineNode node, SpanInputs from) {
+  switch (node) {
+    // A raw run is text the parser stopped reading, so the only thing to do
+    // is not undo that: the ambient style, made monospaced.
+    case RawSpanNode():
+      return TextSpan(
+        text: node.text,
+        style: DefaultTextStyle.of(context).style.merge(from.theme.raw),
+      );
 
-/// A raw run is text the parser stopped reading, so the only thing to do is
-/// not undo that: the ambient style, made monospaced.
-InlineSpan _raw(BuildContext context, RawSpanNode run, SpanInputs from) =>
-    TextSpan(
-      text: run.text,
-      style: DefaultTextStyle.of(context).style.merge(from.theme.raw),
-    );
+    case TextSpanNode():
+      final theme = from.theme;
+      final baseSize = from.rootStyle.fontSize ?? theme.baseFontSize;
+      final style = theme.styleFor(node.decoration, baseSize: baseSize);
 
-InlineSpan _styled(BuildContext context, TextSpanNode run, SpanInputs from) {
-  final theme = from.theme;
-  final baseSize = from.rootStyle.fontSize ?? theme.baseFontSize;
-  final style = theme.styleFor(run.decoration, baseSize: baseSize);
+      if (node.decoration.isAction) {
+        final built = from.buildSpan?.call(
+          context,
+          node.text,
+          // The replacement is given a size to work from, never unstated.
+          style.copyWith(fontSize: style.fontSize ?? baseSize),
+          theme,
+        );
+        if (built != null) return built;
+      }
 
-  if (run.decoration.isAction) {
-    final built = from.buildSpan?.call(
-      context,
-      run.text,
-      // The replacement is given a size to work from, never an unstated one.
-      style.copyWith(fontSize: style.fontSize ?? baseSize),
-      theme,
-    );
-    if (built != null) return built;
+      final onTap = from.onTap;
+      if (!node.decoration.isAction || onTap == null) {
+        return TextSpan(text: node.text, style: style);
+      }
+
+      final text = node.text;
+      return ActionSpan(
+        text: text,
+        style: style,
+        recognizer: TapGestureRecognizer()..onTap = () => onTap(text),
+        // Announced to a screen reader only because something answers it.
+        semanticsLabel: text,
+      );
   }
-
-  final onTap = from.onTap;
-  if (!run.decoration.isAction || onTap == null) {
-    return TextSpan(text: run.text, style: style);
-  }
-
-  final text = run.text;
-  return ActionSpan(
-    text: text,
-    style: style,
-    recognizer: TapGestureRecognizer()..onTap = () => onTap(text),
-    // Announced to a screen reader only because something answers the tap.
-    semanticsLabel: text,
-  );
 }
