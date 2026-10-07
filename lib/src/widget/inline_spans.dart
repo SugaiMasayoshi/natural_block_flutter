@@ -33,11 +33,16 @@ class InlineSpans {
 
   /// Releases the recognizers the current spans carry.
   ///
+  /// Every span here was made by `runSpan`, so every recognizer in one is
+  /// this package's: there is nothing to tell apart, only something to
+  /// release. A `WidgetRun`'s span carries none -- what answers a tap there
+  /// is a widget, and Flutter owns it.
+  ///
   /// Safe to call twice: the list is emptied, so a later call from the
   /// owner's own `dispose` finds nothing left to release.
   void dispose() {
     for (final span in spans) {
-      if (span is TappableSpan) span.dispose();
+      if (span is TextSpan) span.recognizer?.dispose();
     }
     spans = const [];
   }

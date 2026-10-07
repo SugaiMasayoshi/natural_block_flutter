@@ -153,9 +153,10 @@ Initial release.
   span and recognizer staying this package's, `WidgetRun` is drawn as a
   widget with everything inside it Flutter's (a `GestureDetector` included,
   which is how a replaced run answers a tap without anything here owning a
-  recognizer), and `SpanRun` is the escape hatch where the span and anything
-  it carries are the app's. Ownership used to be a convention to remember;
-  it is now the case you pick.
+  recognizer). There is no case that takes a span of the app's own, so every
+  span in a line is one this package made: a recognizer found in one can be
+  released without first asking whose it is. Ownership used to be a
+  convention to remember; now there is nothing to remember.
 - `onTap` reports a tap with the run's own text. Nothing here ever
   interprets that text — no URL is opened, and there is no `url_launcher`
   dependency. A handler is handed it already bound to its run, so even a

@@ -50,17 +50,6 @@ final class WidgetRun extends RunRendering {
   const WidgetRun(this.child, {this.alignment = PlaceholderAlignment.middle});
 }
 
-/// Drawn as the span you made, used exactly as given.
-///
-/// The escape hatch, and the one case where this package releases nothing:
-/// a recognizer your span carries is yours to dispose. Prefer [TextRun] when
-/// text is what you want, since that leaves the owning here.
-final class SpanRun extends RunRendering {
-  final InlineSpan span;
-
-  const SpanRun(this.span);
-}
-
 /// Answers how one actionable run is drawn, or null to leave it to the next
 /// handler.
 ///

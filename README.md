@@ -175,7 +175,7 @@ Every field defaults to the builder that draws that kind the usual way, so a set
 
 **The node types are sealed**, so this set is the whole set: a field per kind rather than a map keyed by type, which is what keeps each builder's node type exact and makes a builder written for the wrong kind a compile error. The two entry points are narrowed the same way: `buildLayouts` takes only `LayoutNode`s and `buildContents` only `ContentNode`s, so `DocumentNode`, `TableRowNode` and the two run types — which are never drawn on their own, the view and the table and the line drawing them instead — cannot be handed to the builders at all. A table's cells skip the dispatch entirely, since `TableCellNode` is the only kind a cell can be.
 
-The widgets the default builders use are exported as well (`TextNodeView`, `ColumnNodeView`, `RowNodeView`, `TableNodeView`), so a custom builder can wrap or reuse one rather than reimplementing it. So are the types a builder signature needs: `NodeBuilder`, `NaturalBlockScope`, `RunHandler`, `RunRendering` (`TextRun`, `WidgetRun`, `SpanRun`), `OnActionTap`, and `ImageSourceKind`.
+The widgets the default builders use are exported as well (`TextNodeView`, `ColumnNodeView`, `RowNodeView`, `TableNodeView`), so a custom builder can wrap or reuse one rather than reimplementing it. So are the types a builder signature needs: `NodeBuilder`, `NaturalBlockScope`, `RunHandler`, `RunRendering` (`TextRun`, `WidgetRun`), `OnActionTap`, and `ImageSourceKind`.
 
 ### Selectable text
 
@@ -226,7 +226,6 @@ What a handler returns says **who owns what the drawing needs released**, which 
 |---|---|---|
 | `TextRun(text:, style:, onTap:)` | text in the line | this package, recognizer included |
 | `WidgetRun(child)` | a widget in the line | Flutter, a `GestureDetector` inside it included |
-| `SpanRun(span)` | the span you made | you, including any recognizer it carries |
 
 ```dart
 RunRendering? mentions(context, text, style, theme, onTap) =>
@@ -241,7 +240,7 @@ NaturalBlockView(
 );
 ```
 
-Prefer `TextRun` when text is what you want: the span and its recognizer stay this package's to release, which is what keeps a tap alive when the document redraws under your finger. Reach for `SpanRun` only when neither of the others fits, and dispose what it carries yourself.
+There is no third case that hands over a span of your own, so every span in a line is one this package made -- which is how a recognizer can be released without first asking whose it is. The two cases cover what a run can be: text that reads and selects with the sentence around it, or a widget. What falls between them -- text built from several styled pieces that must still select, or a gesture other than a tap on text -- is not expressible today; say so if you need it.
 
 **Keep the list stable.** A `const` list of named handlers compares equal across builds; one written out afresh inside a `build` never does, which redraws every line and loses a tap held across the redraw.
 

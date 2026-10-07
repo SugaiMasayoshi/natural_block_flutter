@@ -1,4 +1,3 @@
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:natural_block_flutter/natural_block_flutter.dart';
@@ -556,30 +555,41 @@ void main() {
       expect(renderedSpans(tester).single.text, 'alice');
     });
 
-    testWidgets('a span run is used as given and never disposed here', (
+    testWidgets('a widget run brings no recognizer for this package to hold', (
       tester,
     ) async {
-      // The escape hatch. Unmounting must not reach into a span this package
-      // did not make.
-      final recognizer = TapGestureRecognizer();
-      addTearDown(recognizer.dispose);
-
+      // What a handler returns can only be a span this package made, so every
+      // recognizer in one is its own to release. A widget run carries none:
+      // whatever answers a tap there is a widget, and Flutter owns it.
       await tester.pumpWidget(
         MaterialApp(
-          home: NaturalBlockView(
-            source: ':@mine:@',
-            customs: [
-              (context, text, style, theme, onTap) =>
-                  SpanRun(TextSpan(text: text, recognizer: recognizer)),
-            ],
+          home: Align(
+            alignment: Alignment.topLeft,
+            child: NaturalBlockView(
+              source: ':@box:@',
+              customs: const [_tappableBox],
+              onTap: (_) {},
+            ),
           ),
         ),
       );
-      await tester.pumpWidget(const SizedBox.shrink());
 
+      final recognizers = <Object>[];
+      void walk(InlineSpan span) {
+        if (span is TextSpan && span.recognizer != null) {
+          recognizers.add(span.recognizer!);
+        }
+        span.visitChildren((child) {
+          if (!identical(child, span)) walk(child);
+          return true;
+        });
+      }
+
+      walk(tester.widget<RichText>(find.byType(RichText)).text);
+      expect(recognizers, isEmpty);
+
+      await tester.pumpWidget(const SizedBox.shrink());
       expect(tester.takeException(), isNull);
-      // Still usable, which it would not be had this package disposed it.
-      recognizer.onTap = () {};
     });
   });
 }

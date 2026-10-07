@@ -33,23 +33,6 @@ typedef SpanInputs = ({
   OnActionTap? onTap,
 });
 
-/// A span that owns the recognizer it carries.
-///
-/// The type is the ownership. A `SpanRun` handed back by a handler may carry
-/// a recognizer of the app's own, and disposing that one would break
-/// something this package does not own. Only the spans made here are this
-/// kind, so only these are ever released.
-class TappableSpan extends TextSpan {
-  const TappableSpan({
-    required String super.text,
-    super.style,
-    required TapGestureRecognizer super.recognizer,
-    super.semanticsLabel,
-  });
-
-  void dispose() => (recognizer! as TapGestureRecognizer).dispose();
-}
-
 /// The span for one run.
 InlineSpan runSpan(BuildContext context, InlineNode node, SpanInputs from) {
   switch (node) {
@@ -84,7 +67,6 @@ InlineSpan runSpan(BuildContext context, InlineNode node, SpanInputs from) {
 
       return switch (rendering) {
         null => TextSpan(text: text, style: style),
-        SpanRun(:final span) => span,
         WidgetRun(:final child, :final alignment) => WidgetSpan(
           alignment: alignment,
           child: child,
@@ -119,7 +101,7 @@ RunRendering? _ask(
 InlineSpan _textRun(String text, TextStyle style, VoidCallback? onTap) =>
     onTap == null
     ? TextSpan(text: text, style: style)
-    : TappableSpan(
+    : TextSpan(
         text: text,
         style: style,
         recognizer: TapGestureRecognizer()..onTap = onTap,
