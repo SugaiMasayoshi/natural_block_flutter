@@ -8,9 +8,31 @@ Initial release.
   It parses once per source, not once per build: the tree owes nothing to the
   `BuildContext`, so an ancestor rebuilding -- a theme change, an animating
   parent, a scroll -- reuses it, and only a new `source` re-parses.
+- It keeps the drawn tree too, and hands back the very same widget object
+  when nothing it was drawn from has changed. That is the one thing Flutter
+  watches for: `updateChild` stops at a child whose widget has not changed,
+  so the whole document is skipped rather than rebuilt. `const` is the
+  framework's own version of this and cannot apply here, since a parsed
+  document is not a compile-time value. The comparison deliberately leaves
+  `onTap` out and reads it at tap time instead: a caller writes it as a
+  closure in their own `build`, and Dart never considers two closures equal,
+  so comparing it would miss every time. Measured on a debug build, an
+  ancestor rebuild of a 50-paragraph document went from 12.2ms to 7.0ms.
 - `TextNodeView` draws a line's styled runs, built with `Text.rich` so the
   result takes part in text selection: wrap a view in a `SelectionArea` and
   the text is selectable and copyable across cell and row boundaries.
+- A line's spans and the recognizers they carry are one object, built once
+  and kept until what they are made of changes. This is a correctness
+  measure, not a speed one -- it does not make a rebuild faster. A
+  recognizer that has taken a pointer down owns an entry in the gesture
+  arena, and replacing it mid-gesture throws that entry away: the tap then
+  vanishes with no error anywhere, and a test that calls `onTap` directly
+  cannot see it, because that bypasses the arena. Flutter's own
+  `TextSpan.recognizer` sample holds its recognizer in `State` for the same
+  reason and never rebuilds it. Ambient changes that do not reach the spans
+  -- a `DefaultTextStyle` size the theme's `base` overrides -- are not a
+  reason to replace one either, so both `didChangeDependencies` and
+  `didUpdateWidget` ask the same question in the same place.
 - `ColumnNodeView` stacks blocks and honours `HorizontalAlign`. Unstated and
   `HorizontalAlign.start` both draw at the start, but are kept apart so a theme
   can style unaligned blocks without overriding one that asked. A non-start
@@ -52,28 +74,54 @@ Initial release.
   brightness, with `striped: true` banding a table's rows instead of ruling
   them. Striping lives there rather than on the default constructor because
   a band must be darker than the surface in a light theme and lighter in a
-  dark one, so no single constant can serve both.
+  dark one, so no single constant can serve both. The raw block's box is
+  derived there for the same reason: a fixed translucent black moves a light
+  surface by about ten steps per channel and a dark one by one, which is
+  invisible.
+- A view given no theme uses `fromContext`, so a document reads correctly in
+  a light theme and a dark one without being told which it is in. Passing a
+  theme is opting out of that.
+- "None" is written as a value, not as null: `const TableBorder()` has
+  `BorderSide.none` on every side and measures the same as no border at all,
+  and a `const BoxDecoration()` names no colour, border or shadow. That is
+  what lets `copyWith` mean "leave this alone" for every omitted argument,
+  the way Flutter's own `copyWith` methods do, with no sentinel standing in
+  for "not passed". `tableStripe` stays nullable, because `Color` has no
+  "none" of its own and a transparent one is still a fill -- it would put a
+  decoration on every other row of every table.
 - `copyWith`, `styleFor`, `==` / `hashCode`.
 
 ### Customization
 
 - `NaturalBlockBuilders` holds one builder per kind of node -- `row`,
-  `column`, `table`, `tableCell`, `text`, `raw` -- each `null` for "draw it
-  the usual way". The node types are sealed, so the set is closed and can be
-  named: the builder's node type stays exact, nothing is cast on the way in,
-  and a builder written for the wrong kind does not compile. It replaced a
+  `column`, `table`, `tableCell`, `text`, `raw` -- each defaulting to the one
+  that draws that kind the usual way, so a value names only what it changes.
+  The node types are sealed, so the set is closed and can be named: the
+  builder's node type stays exact, nothing is cast on the way in, and a
+  builder written for the wrong kind does not compile. It replaced a
   `Type`-keyed map, which modelled an openness the AST does not have and
   needed a fallback for types that cannot occur.
 - Default builders (`buildRowNode`, `buildColumnNode`, `buildTableNode`,
   `buildTableCellNode`, `buildTextNode`, `buildRawNode`) are exported so a
-  builder of your own can delegate back.
+  builder of your own can delegate back. Naming one that way also keeps
+  `NaturalBlockBuilders` comparable: a builder written as a closure literal
+  is never equal to another, which costs a redraw but never correctness.
+- Choosing between the fields is `buildLayout` / `buildContent`'s job, and
+  they are the only places the tree says merely that one of several kinds is
+  there. Each switches over a sealed set small enough to be exhaustive, so
+  the nodes that are never drawn on their own -- the document, a table's
+  rows, the runs -- cannot be handed to a builder at all. Where the tree
+  already names one kind, as a table's cells do, there is nothing to choose
+  and the field is called directly. `buildLayouts` and `buildContents` do the
+  same for a list, and are how a builder of your own recurses into a node's
+  children while keeping them on the same theme, builders and actions.
 - A builder receives the node and one `NaturalBlockScope`, which carries the
   theme, the builders and the actions. The three travel together the whole
   way down and no level swaps one of them for its children, so they are one
-  value rather than three parameters repeated at every level. `buildAll`
-  lives on the scope for the same reason. The `BuildContext` stays outside
-  it: it is the one thing that really does differ per level, and keeping it
-  out is what lets the default builder map stay `const`.
+  value rather than three parameters repeated at every level. The
+  `BuildContext` stays outside it: it is the one thing that really does
+  differ per level, and keeping it out is what lets the default builders stay
+  `const`.
 
 ### Raw regions
 
