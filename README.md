@@ -175,7 +175,7 @@ Every field defaults to the builder that draws that kind the usual way, so a set
 
 **The node types are sealed**, so this set is the whole set: a field per kind rather than a map keyed by type, which is what keeps each builder's node type exact and makes a builder written for the wrong kind a compile error. The two entry points are narrowed the same way: `buildLayouts` takes only `LayoutNode`s and `buildContents` only `ContentNode`s, so `DocumentNode`, `TableRowNode` and the two run types — which are never drawn on their own, the view and the table and the line drawing them instead — cannot be handed to the builders at all. A table's cells skip the dispatch entirely, since `TableCellNode` is the only kind a cell can be.
 
-The widgets the default builders use are exported as well (`TextNodeView`, `ColumnNodeView`, `RowNodeView`, `TableNodeView`), so a custom builder can wrap or reuse one rather than reimplementing it. So are the types a builder signature needs: `NodeBuilder`, `NaturalBlockScope`, `RunHandler`, `RunRendering` (`TextRun`, `WidgetRun`), `OnActionTap`, and `ImageSourceKind`.
+The widgets the default builders use are exported as well (`TextNodeView`, `ColumnNodeView`, `RowNodeView`, `TableNodeView`), so a custom builder can wrap or reuse one rather than reimplementing it. So are the types a builder signature needs: `NodeBuilder`, `NaturalBlockScope`, `RunHandler`, `RunRendering`, `OnActionTap`, and `ImageSourceKind`.
 
 ### Selectable text
 
@@ -220,18 +220,22 @@ Leaving `onTap` unset (the default) still renders actionable runs with `NaturalB
 
 An actionable run is offered to each handler in `customs` until one claims it, and a handler declines by returning `null` -- so it never has to understand every payload it might meet. Drawing a run as tappable text is itself a handler (`tappableText`), which is why it is in the default list and why leaving it out takes tappability away.
 
-What a handler returns says **who owns what the drawing needs released**, which is the one thing easy to get wrong:
-
-| Returned | Drawn as | Owned by |
-|---|---|---|
-| `TextRun(text:, style:, onTap:)` | text in the line | this package, recognizer included |
-| `WidgetRun(child)` | a widget in the line | Flutter, a `GestureDetector` inside it included |
+A handler answers with a span to put in the line and a `dispose` to release whatever that span carries:
 
 ```dart
-RunRendering? mentions(context, text, style, theme, onTap) =>
-    text.startsWith('@')
-        ? TextRun(text: text.substring(1), onTap: onTap)
-        : null; // not mine -- offer it to the next handler
+RunRendering? mentions(context, text, style, theme, onTap) {
+  if (!text.startsWith('@')) return null; // not mine -- offer it to the next
+
+  final recognizer = TapGestureRecognizer()..onTap = onTap;
+  return (
+    span: TextSpan(
+      text: text.substring(1),
+      style: style,
+      recognizer: recognizer,
+    ),
+    dispose: recognizer.dispose,
+  );
+}
 
 NaturalBlockView(
   source: source,
@@ -240,7 +244,9 @@ NaturalBlockView(
 );
 ```
 
-There is no third case that hands over a span of your own, so every span in a line is one this package made -- which is how a recognizer can be released without first asking whose it is. The two cases cover what a run can be: text that reads and selects with the sentence around it, or a widget. What falls between them -- text built from several styled pieces that must still select, or a gesture other than a tap on text -- is not expressible today; say so if you need it.
+**`dispose` is required, including when there is nothing to release.** Write `dispose: () {}` and mean it -- an image inside a `WidgetSpan` gets the ordinary widget lifecycle, so Flutter disposes it and you have nothing to do. Making it required is the only guard here: a recognizer you create is yours, and the `dispose` you hand back is the only thing that will ever release it. Nothing looks inside your span to check, so forgetting leaks silently. This is the same contract Flutter hands you with `TextSpan.recognizer` -- it has no widget for inline links either ([flutter#91600](https://github.com/flutter/flutter/issues/91600) is still open) -- with a named slot that asks the question. `tappableText` is the shape to copy.
+
+Returning a `TextSpan` rather than a widget is what keeps a long run wrapping: a `WidgetSpan` is one unbreakable box in the paragraph. Both are available, and so is anything else -- a `TextSpan` with `children:` for text built from several styled pieces that must still select as one, or a recognizer other than `TapGestureRecognizer` for a gesture other than a tap.
 
 **Keep the list stable.** A `const` list of named handlers compares equal across builds; one written out afresh inside a `build` never does, which redraws every line and loses a tap held across the redraw.
 
@@ -294,7 +300,13 @@ RunRendering? assets(context, text, style, theme, onTap) {
       NaturalBlockImages.kindOf(source) != ImageSourceKind.relative) {
     return null;
   }
-  return WidgetRun(Image.asset(source));
+  return (
+    span: WidgetSpan(
+      alignment: PlaceholderAlignment.middle,
+      child: Image.asset(source),
+    ),
+    dispose: () {}, // Flutter disposes everything inside a WidgetSpan
+  );
 }
 
 customs: const [assets, NaturalBlockImages.network, tappableText],
@@ -319,7 +331,7 @@ Note also that letting documents name local files lets them probe for one: a pat
 | `image(<url>)` | an image -- see [Images](#images) |
 | anything else | app-defined |
 
-Whichever shapes you use, **keep the payload human-readable**. That is what makes actions a safe place to extend the language at all: an implementation that does not recognise a payload still renders it as text, so `image(https://example.com/a.png)` degrades into something a person can read and act on, while an opaque identifier would degrade into nothing useful. Note that a run drawn as a `WidgetRun` gives up that safety net *within your own app* too -- it copies as `￼`, not as the text that named it.
+Whichever shapes you use, **keep the payload human-readable**. That is what makes actions a safe place to extend the language at all: an implementation that does not recognise a payload still renders it as text, so `image(https://example.com/a.png)` degrades into something a person can read and act on, while an opaque identifier would degrade into nothing useful. Note that a run you draw as a `WidgetSpan` gives up part of that safety net *within your own app* too: it occupies one `￼` in the paragraph's own text, so an image copies as nothing that names it. (A `WidgetSpan` wrapping a `Text` does copy its text -- `SelectionArea` reaches into it -- so this is about widgets that hold no text, not about `WidgetSpan` itself.)
 
 Resolving any of this -- looking up `#name`, deciding what `@name` refers to, or anything else -- is entirely the app's responsibility; `natural_block` and `natural_block_flutter` only carry the text through.
 

@@ -13,6 +13,8 @@ import 'run_span.dart';
 class InlineSpans {
   List<InlineSpan> spans = const [];
 
+  List<VoidCallback> _release = const [];
+
   SpanInputs? _from;
 
   /// Rebuilds the spans if [from] differs from what the current ones were
@@ -28,22 +30,26 @@ class InlineSpans {
     _from = from;
 
     dispose();
-    spans = [for (final run in from.node.children) runSpan(context, run, from)];
+    final runs = [
+      for (final run in from.node.children) runSpan(context, run, from),
+    ];
+    spans = [for (final run in runs) run.span];
+    _release = [for (final run in runs) run.dispose];
   }
 
-  /// Releases the recognizers the current spans carry.
+  /// Releases whatever the current spans needed released, by calling what the
+  /// handler that made each one handed back.
   ///
-  /// Every span here was made by `runSpan`, so every recognizer in one is
-  /// this package's: there is nothing to tell apart, only something to
-  /// release. A `WidgetRun`'s span carries none -- what answers a tap there
-  /// is a widget, and Flutter owns it.
+  /// Nothing here looks inside a span to decide: a run that made a recognizer
+  /// said how to let go of it, and one that made nothing said so too.
   ///
-  /// Safe to call twice: the list is emptied, so a later call from the
+  /// Safe to call twice: the lists are emptied, so a later call from the
   /// owner's own `dispose` finds nothing left to release.
   void dispose() {
-    for (final span in spans) {
-      if (span is TextSpan) span.recognizer?.dispose();
+    for (final release in _release) {
+      release();
     }
+    _release = const [];
     spans = const [];
   }
 }

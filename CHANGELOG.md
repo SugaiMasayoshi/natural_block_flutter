@@ -148,15 +148,27 @@ Initial release.
   handler (`tappableText`) and the only one in the default list, so an app
   can take tappability away as easily as it adds an image. Replacing a run
   and making it tappable are no longer the same switch.
-- A handler answers with a `RunRendering`, and which case it picks says who
-  owns what the drawing needs released: `TextRun` is drawn as text with the
-  span and recognizer staying this package's, `WidgetRun` is drawn as a
-  widget with everything inside it Flutter's (a `GestureDetector` included,
-  which is how a replaced run answers a tap without anything here owning a
-  recognizer). There is no case that takes a span of the app's own, so every
-  span in a line is one this package made: a recognizer found in one can be
-  released without first asking whose it is. Ownership used to be a
-  convention to remember; now there is nothing to remember.
+- A handler answers with a `RunRendering`: the `InlineSpan` to put in the
+  line, and the `dispose` that releases whatever that span carries. Returning
+  a span rather than a description of one is what makes the extension point
+  reach as far as Flutter does -- a `TextSpan` so a long run still wraps, a
+  `TextSpan` with `children:` for text built from several styled pieces that
+  must select as one, a `WidgetSpan` for a widget, a recognizer other than
+  `TapGestureRecognizer` for a gesture other than a tap. It replaced a sealed
+  pair (`TextRun` / `WidgetRun`) whose two cases bought the invariant "every
+  span here is ours" by refusing everything in between.
+- `dispose` is a required field rather than an omittable one, so a handler
+  with nothing to release writes `() {}` and says so. That is the whole
+  guard: nothing inspects a returned span, so a recognizer made without a
+  `dispose` to match leaks in silence. Required-and-trivially-satisfied was
+  chosen over a debug-only check that sweeps the span for a recognizer,
+  because the check cannot see anything that is not a recognizer -- a stream
+  subscription, a controller -- and the slot can. This is the contract
+  `TextSpan.recognizer` already hands a caller; Flutter has no inline-link
+  widget of its own (flutter#91600 is open), so the package is not standing
+  in front of something better.
+- `tappableText` is now written through that public API, recognizer and
+  `dispose` included, so the default is also the worked example.
 - `onTap` reports a tap with the run's own text. Nothing here ever
   interprets that text — no URL is opened, and there is no `url_launcher`
   dependency. A handler is handed it already bound to its run, so even a

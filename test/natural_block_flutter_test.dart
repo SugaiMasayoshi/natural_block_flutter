@@ -14,7 +14,11 @@ RunRendering? _boxed(
   TextStyle style,
   NaturalBlockTheme theme,
   VoidCallback? onTap,
-) => const WidgetRun(SizedBox(width: 20, height: 10));
+) => (
+  span: const WidgetSpan(child: SizedBox(width: 20, height: 10)),
+  dispose: () {},
+);
+
 void main() {
   Future<void> pump(
     WidgetTester tester,

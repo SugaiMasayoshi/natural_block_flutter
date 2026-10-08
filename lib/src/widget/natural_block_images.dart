@@ -27,7 +27,7 @@ abstract final class NaturalBlockImages {
     final url = urlOf(text);
     if (url == null || kindOf(url) != ImageSourceKind.network) return null;
 
-    return WidgetRun(
+    return _inTheLine(
       Image.network(
         url,
         scale: _drawnWithTheRun(style, theme),
@@ -61,8 +61,16 @@ abstract final class NaturalBlockImages {
       scale: _drawnWithTheRun(style, theme),
       errorBuilder: _asText(text, style),
     );
-    return image == null ? null : WidgetRun(image);
+    return image == null ? null : _inTheLine(image);
   }
+
+  /// An image drawn where the run was, centred on the text beside it, with
+  /// nothing to release: everything inside a `WidgetSpan` gets the ordinary
+  /// widget lifecycle, so Flutter disposes it.
+  static RunRendering _inTheLine(Widget image) => (
+    span: WidgetSpan(alignment: PlaceholderAlignment.middle, child: image),
+    dispose: () {},
+  );
 
   static double _runSize(TextStyle style, NaturalBlockTheme theme) =>
       style.fontSize ?? theme.baseFontSize;

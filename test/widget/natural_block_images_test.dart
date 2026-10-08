@@ -18,7 +18,7 @@ RunRendering? _localStandIn(
       NaturalBlockImages.kindOf(source) != ImageSourceKind.file) {
     return null;
   }
-  return WidgetRun(Text('local:$source'));
+  return (span: WidgetSpan(child: Text('local:$source')), dispose: () {});
 }
 
 /// A handler of the app's own, which claims `user(...)` and declines the rest.
@@ -29,7 +29,10 @@ RunRendering? _mentions(
   NaturalBlockTheme theme,
   VoidCallback? onTap,
 ) => text.startsWith('user(') && text.endsWith(')')
-    ? TextRun(text: text.substring(5, text.length - 1))
+    ? (
+        span: TextSpan(text: text.substring(5, text.length - 1), style: style),
+        dispose: () {},
+      )
     : null;
 
 /// Draws any actionable run as a box that answers the tap itself, through a
@@ -40,13 +43,16 @@ RunRendering? _tappableBox(
   TextStyle style,
   NaturalBlockTheme theme,
   VoidCallback? onTap,
-) => WidgetRun(
-  GestureDetector(
-    // An empty box defers its hit testing to a child it does not have.
-    behavior: HitTestBehavior.opaque,
-    onTap: onTap,
-    child: const SizedBox(width: 20, height: 20),
+) => (
+  span: WidgetSpan(
+    child: GestureDetector(
+      // An empty box defers its hit testing to a child it does not have.
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      child: const SizedBox(width: 20, height: 20),
+    ),
   ),
+  dispose: () {},
 );
 
 void main() {
@@ -518,8 +524,9 @@ void main() {
     testWidgets(
       'a widget run answers a tap through Flutter, not a recognizer',
       (tester) async {
-        // What makes replacement and tappability independent: anything inside a
-        // WidgetRun is Flutter's to manage, so nothing here owns a recognizer.
+        // What makes replacement and tappability independent: anything inside
+        // a WidgetSpan is Flutter's to manage, so this handler releases
+        // nothing.
         final tapped = <String>[];
         await tester.pumpWidget(
           MaterialApp(

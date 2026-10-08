@@ -1,4 +1,3 @@
-import 'package:flutter/gestures.dart';
 import 'package:flutter/widgets.dart';
 import 'package:natural_block/natural_block.dart';
 
@@ -33,15 +32,17 @@ typedef SpanInputs = ({
   OnActionTap? onTap,
 });
 
-/// The span for one run.
-InlineSpan runSpan(BuildContext context, InlineNode node, SpanInputs from) {
+/// The span for one run, and what releasing it takes.
+RunRendering runSpan(BuildContext context, InlineNode node, SpanInputs from) {
   switch (node) {
     // A raw run is text the parser stopped reading, so the only thing to do
     // is not undo that: the ambient style, made monospaced.
     case RawSpanNode():
-      return TextSpan(
-        text: node.text,
-        style: DefaultTextStyle.of(context).style.merge(from.theme.raw),
+      return _plain(
+        TextSpan(
+          text: node.text,
+          style: DefaultTextStyle.of(context).style.merge(from.theme.raw),
+        ),
       );
 
     case TextSpanNode():
@@ -49,61 +50,27 @@ InlineSpan runSpan(BuildContext context, InlineNode node, SpanInputs from) {
       final text = node.text;
       final baseSize = from.rootStyle.fontSize ?? theme.baseFontSize;
       final style = theme.styleFor(node.decoration, baseSize: baseSize);
+      final plain = _plain(TextSpan(text: text, style: style));
 
       // Styled as actionable either way. What the handlers decide is how it
       // is drawn and whether it answers a tap.
-      if (!node.decoration.isAction) return TextSpan(text: text, style: style);
+      if (!node.decoration.isAction) return plain;
 
       final onTap = from.onTap;
-      final rendering = _ask(
-        from.customs,
-        context,
-        text,
-        // Handlers are given a size to work from, never an unstated one.
-        style.copyWith(fontSize: style.fontSize ?? baseSize),
-        theme,
-        onTap == null ? null : () => onTap(text),
-      );
-
-      return switch (rendering) {
-        null => TextSpan(text: text, style: style),
-        WidgetRun(:final child, :final alignment) => WidgetSpan(
-          alignment: alignment,
-          child: child,
-        ),
-        TextRun(text: final given, style: final asked, :final onTap) =>
-          _textRun(given ?? text, asked ?? style, onTap),
-      };
+      for (final handler in from.customs) {
+        final rendering = handler(
+          context,
+          text,
+          // Handlers are given a size to work from, never an unstated one.
+          style.copyWith(fontSize: style.fontSize ?? baseSize),
+          theme,
+          onTap == null ? null : () => onTap(text),
+        );
+        if (rendering != null) return rendering;
+      }
+      return plain;
   }
 }
 
-/// The first answer the handlers give, or null when none of them claims the
-/// run.
-RunRendering? _ask(
-  List<RunHandler> customs,
-  BuildContext context,
-  String text,
-  TextStyle style,
-  NaturalBlockTheme theme,
-  VoidCallback? onTap,
-) {
-  for (final handler in customs) {
-    final rendering = handler(context, text, style, theme, onTap);
-    if (rendering != null) return rendering;
-  }
-  return null;
-}
-
-/// A text run, tappable when something answers it.
-///
-/// Announced to a screen reader only then, because claiming interactivity
-/// that nothing answers is a promise this package cannot keep.
-InlineSpan _textRun(String text, TextStyle style, VoidCallback? onTap) =>
-    onTap == null
-    ? TextSpan(text: text, style: style)
-    : TextSpan(
-        text: text,
-        style: style,
-        recognizer: TapGestureRecognizer()..onTap = onTap,
-        semanticsLabel: text,
-      );
+/// A span with nothing to release.
+RunRendering _plain(InlineSpan span) => (span: span, dispose: () {});
