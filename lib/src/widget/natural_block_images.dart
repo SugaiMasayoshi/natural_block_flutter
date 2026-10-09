@@ -32,10 +32,12 @@ abstract final class NaturalBlockImages {
         url,
         scale: _drawnWithTheRun(style, theme),
         semanticLabel: url,
-        errorBuilder: _asText(text, style),
+        // An image that cannot be drawn falls back to its own payload as
+        // text, the way an unrecognised one does.
+        errorBuilder: (_, _, _) => Text(text, style: style),
         loadingBuilder: (context, child, progress) => progress == null
             ? child
-            : SizedBox.square(dimension: _runSize(style, theme)),
+            : SizedBox.square(dimension: style.fontSize ?? theme.baseFontSize),
       ),
     );
   }
@@ -59,7 +61,7 @@ abstract final class NaturalBlockImages {
     final image = localFileImage(
       url,
       scale: _drawnWithTheRun(style, theme),
-      errorBuilder: _asText(text, style),
+      errorBuilder: (_, _, _) => Text(text, style: style),
     );
     return image == null ? null : _inTheLine(image);
   }
@@ -72,18 +74,10 @@ abstract final class NaturalBlockImages {
     dispose: () {},
   );
 
-  static double _runSize(TextStyle style, NaturalBlockTheme theme) =>
-      style.fontSize ?? theme.baseFontSize;
-
   /// `Image.scale` says how many of the image's own pixels go in a logical
   /// one, so it divides: pass less than 1 and the image is drawn larger.
   static double _drawnWithTheRun(TextStyle style, NaturalBlockTheme theme) =>
-      theme.baseFontSize / _runSize(style, theme);
-
-  /// An image that cannot be drawn falls back to its own payload, the way an
-  /// unrecognised one does.
-  static ImageErrorWidgetBuilder _asText(String text, TextStyle style) =>
-      (context, error, stackTrace) => Text(text, style: style);
+      theme.baseFontSize / (style.fontSize ?? theme.baseFontSize);
 
   static const String _opening = 'image(';
 

@@ -1,3 +1,5 @@
+import 'dart:math' show max;
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:natural_block/natural_block.dart';
@@ -152,15 +154,14 @@ class NaturalBlockTheme {
           .copyWith(
             // Left unstated when the source asked for no step, so the run
             // keeps whatever size it would have drawn at anyway.
+            // Clamped, so no number of `:-` can reach zero or go negative.
             fontSize: decoration.sizeOffset == 0
                 ? null
-                : _sizeAt(decoration.sizeOffset, baseSize),
+                : max(
+                    minFontSize,
+                    baseSize + decoration.sizeOffset * fontSizeStep,
+                  ),
           );
-
-  double _sizeAt(int sizeOffset, double baseSize) {
-    final scaled = baseSize + sizeOffset * fontSizeStep;
-    return scaled < minFontSize ? minFontSize : scaled;
-  }
 
   /// This theme with the given fields replaced.
   ///
