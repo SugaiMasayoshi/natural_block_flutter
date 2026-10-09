@@ -63,6 +63,17 @@ void main() {
     ),
   );
 
+  /// Pumps [source] with the handlers an app that wants remote images would
+  /// include, under a known ambient size so the sizes below are exact.
+  Future<void> pumpImages(
+    WidgetTester tester,
+    String source, {
+    NaturalBlockTheme theme = const NaturalBlockTheme(),
+    List<RunHandler> customs = const [NaturalBlockImages.network, tappableText],
+  }) => tester.pumpWidget(
+    wrap(NaturalBlockView(source: source, theme: theme, customs: customs)),
+  );
+
   group('the image(...) convention', () {
     test('a payload that names an image yields its URL', () {
       expect(
@@ -197,14 +208,7 @@ void main() {
     testWidgets('an image payload becomes a WidgetSpan, not text', (
       tester,
     ) async {
-      await tester.pumpWidget(
-        wrap(
-          const NaturalBlockView(
-            source: ':@image(https://example.com/a.png):@',
-            customs: [NaturalBlockImages.network, tappableText],
-          ),
-        ),
-      );
+      await pumpImages(tester, ':@image(https://example.com/a.png):@');
 
       final richText = tester.widget<RichText>(find.byType(RichText));
       final child = (richText.text as TextSpan).children!.single as TextSpan;
@@ -253,24 +257,10 @@ void main() {
         return (line.children!.single as WidgetSpan).child as Image;
       }
 
-      await tester.pumpWidget(
-        wrap(
-          const NaturalBlockView(
-            source: ':@image(https://example.com/a.png):@',
-            customs: [NaturalBlockImages.network, tappableText],
-          ),
-        ),
-      );
+      await pumpImages(tester, ':@image(https://example.com/a.png):@');
       final plain = currentImage();
 
-      await tester.pumpWidget(
-        wrap(
-          const NaturalBlockView(
-            source: ':++:@image(https://example.com/a.png):@',
-            customs: [NaturalBlockImages.network, tappableText],
-          ),
-        ),
-      );
+      await pumpImages(tester, ':++:@image(https://example.com/a.png):@');
       final bigger = currentImage();
 
       // `scale` divides, so asking for bigger text has to lower it.
@@ -288,14 +278,7 @@ void main() {
       // box that reserved nothing in the ordinary case, which is exactly
       // the case the placeholder exists for. The theme's base size is what
       // an unmarked run actually renders at.
-      await tester.pumpWidget(
-        wrap(
-          const NaturalBlockView(
-            source: ':@image(https://example.com/a.png):@',
-            customs: [NaturalBlockImages.network, tappableText],
-          ),
-        ),
-      );
+      await pumpImages(tester, ':@image(https://example.com/a.png):@');
 
       final image = tester.widget<Image>(find.byType(Image));
       final placeholder = image.loadingBuilder!(
@@ -316,14 +299,10 @@ void main() {
     ) async {
       // The builder used to compare against a literal 14.0, duplicating the
       // theme's default and drifting the moment anyone changed it.
-      await tester.pumpWidget(
-        wrap(
-          const NaturalBlockView(
-            source: ':@image(https://example.com/a.png):@',
-            customs: [NaturalBlockImages.network, tappableText],
-            theme: NaturalBlockTheme(baseFontSize: 28),
-          ),
-        ),
+      await pumpImages(
+        tester,
+        ':@image(https://example.com/a.png):@',
+        theme: const NaturalBlockTheme(baseFontSize: 28),
       );
 
       final image = tester.widget<Image>(find.byType(Image).first);
@@ -336,14 +315,7 @@ void main() {
     testWidgets('an image carries a semantic label', (tester) async {
       // Without one a screen reader announces nothing at all where a
       // sighted reader sees a picture.
-      await tester.pumpWidget(
-        wrap(
-          const NaturalBlockView(
-            source: ':@image(https://example.com/a.png):@',
-            customs: [NaturalBlockImages.network, tappableText],
-          ),
-        ),
-      );
+      await pumpImages(tester, ':@image(https://example.com/a.png):@');
 
       expect(
         tester.widget<Image>(find.byType(Image)).semanticLabel,
@@ -356,14 +328,7 @@ void main() {
       // that on would cost this package its web support. Declining leaves a
       // clean handoff to an app that wants it, and wastes no request in the
       // meantime.
-      await tester.pumpWidget(
-        wrap(
-          const NaturalBlockView(
-            source: r':@image(C:\Users\sugai\a.png):@',
-            customs: [NaturalBlockImages.network, tappableText],
-          ),
-        ),
-      );
+      await pumpImages(tester, r':@image(C:\Users\sugai\a.png):@');
 
       expect(find.byType(Image), findsNothing);
       expect(renderedSpans(tester).single.text, r'image(C:\Users\sugai\a.png)');

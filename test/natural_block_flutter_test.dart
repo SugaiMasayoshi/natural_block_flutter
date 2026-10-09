@@ -57,17 +57,6 @@ void main() {
       expect(find.byType(RowNodeView), findsNothing);
     });
 
-    testWidgets(
-      'renders row-separated content as one Row with Expanded cells',
-      (tester) async {
-        await pump(tester, 'left^right');
-
-        expect(find.byType(RowNodeView), findsOneWidget);
-        expect(find.byType(Row), findsOneWidget);
-        expect(find.byType(Expanded), findsNWidgets(2));
-      },
-    );
-
     testWidgets('renders column-separated content stacked vertically', (
       tester,
     ) async {

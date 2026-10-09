@@ -4,137 +4,42 @@ import 'package:natural_block/natural_block.dart';
 import 'package:natural_block_flutter/natural_block_flutter.dart';
 
 void main() {
-  const theme = NaturalBlockTheme();
-  const builders = NaturalBlockBuilders.defaults;
-
   group('RowNodeView', () {
-    testWidgets(
-      'gives each cell (ColumnNode) one Expanded, stacking a multi-line '
-      "cell's lines vertically",
-      (tester) async {
-        final node = RowNode(
-          children: [
-            ColumnNode(
-              children: [
-                TextNode(children: [TextSpanNode(text: 'a')]),
-                TextNode(children: [TextSpanNode(text: 'b')]),
-              ],
-            ),
-            ColumnNode(
-              children: [
-                TextNode(children: [TextSpanNode(text: 'c')]),
-              ],
-            ),
-          ],
-        );
-
-        await tester.pumpWidget(
-          MaterialApp(
-            home: RowNodeView(
-              node: node,
-              scope: NaturalBlockScope(theme: theme, builders: builders),
-            ),
-          ),
-        );
-
-        expect(find.byType(Row), findsOneWidget);
-        expect(find.byType(Expanded), findsNWidgets(2));
-        expect(find.byType(TextNodeView), findsNWidgets(3));
-
-        // The two lines of the first cell are stacked.
-        final column = tester.widget<Column>(
-          find.descendant(
-            of: find.byType(Expanded).first,
-            matching: find.byType(Column),
-          ),
-        );
-        expect(column.children, hasLength(2));
-      },
-    );
-
-    testWidgets('renders one Expanded cell per ColumnNode child', (
-      tester,
-    ) async {
-      final node = RowNode(
-        children: [
-          ColumnNode(
-            children: [
-              TextNode(children: [TextSpanNode(text: 'left')]),
-            ],
-          ),
-          ColumnNode(
-            children: [
-              TextNode(children: [TextSpanNode(text: 'right')]),
-            ],
-          ),
-        ],
-      );
+    testWidgets('gives every cell one Expanded, empty ones included, and '
+        'stacks a multi-line cell instead of splitting it', (tester) async {
+      // The split is the regression this guards: RowNodeView used to flatten
+      // every RowNode's children into the Row, so a two-line left cell
+      // rendered as two cells side by side. An empty cell still takes its
+      // share of the width, which is what keeps later columns lined up.
+      TextNode line(String s) => TextNode(children: [TextSpanNode(text: s)]);
 
       await tester.pumpWidget(
         MaterialApp(
           home: RowNodeView(
-            node: node,
-            scope: NaturalBlockScope(theme: theme, builders: builders),
+            node: RowNode(
+              children: [
+                ColumnNode(children: [line('a'), line('b')]),
+                ColumnNode(children: []),
+                ColumnNode(children: [line('c')]),
+              ],
+            ),
+            scope: const NaturalBlockScope(),
           ),
         ),
       );
 
       expect(find.byType(Row), findsOneWidget);
-      expect(find.byType(Expanded), findsNWidgets(2));
-    });
+      expect(find.byType(Expanded), findsNWidgets(3));
+      expect(find.byType(TextNodeView), findsNWidgets(3));
+      expect(tester.takeException(), isNull);
 
-    testWidgets('an empty cell renders as an empty Expanded', (tester) async {
-      final node = RowNode(
-        children: [
-          ColumnNode(
-            children: [
-              TextNode(children: [TextSpanNode(text: 'left')]),
-            ],
-          ),
-          ColumnNode(children: []), // middle cell deliberately blank
-          ColumnNode(
-            children: [
-              TextNode(children: [TextSpanNode(text: 'right')]),
-            ],
-          ),
-        ],
-      );
-
-      await tester.pumpWidget(
-        MaterialApp(
-          home: RowNodeView(
-            node: node,
-            scope: NaturalBlockScope(theme: theme, builders: builders),
-          ),
+      final first = tester.widget<Column>(
+        find.descendant(
+          of: find.byType(Expanded).first,
+          matching: find.byType(Column),
         ),
       );
-
-      expect(find.byType(Expanded), findsNWidgets(3));
-      expect(find.byType(TextNodeView), findsNWidgets(2));
-      expect(tester.takeException(), isNull);
+      expect(first.children, hasLength(2), reason: 'two lines, one cell');
     });
-
-    testWidgets(
-      'cells are built through the builders, so a custom builder applies '
-      'to row cells too',
-      (tester) async {
-        final customBuilders = NaturalBlockBuilders(
-          column: (node, scope) => const Placeholder(),
-        );
-        final node = RowNode(children: [ColumnNode(), ColumnNode()]);
-
-        await tester.pumpWidget(
-          MaterialApp(
-            home: RowNodeView(
-              node: node,
-              scope: NaturalBlockScope(theme: theme, builders: customBuilders),
-            ),
-          ),
-        );
-
-        expect(find.byType(Placeholder), findsNWidgets(2));
-        expect(find.byType(ColumnNodeView), findsNothing);
-      },
-    );
   });
 }

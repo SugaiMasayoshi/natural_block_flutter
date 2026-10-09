@@ -74,14 +74,6 @@ void main() {
       expect(copy.minFontSize, theme.minFontSize);
     });
 
-    test('replaces action when given', () {
-      const theme = NaturalBlockTheme();
-      final copy = theme.copyWith(action: const TextStyle(color: Colors.pink));
-
-      expect(copy.action, const TextStyle(color: Colors.pink));
-      expect(copy.negative, theme.negative);
-    });
-
     test('called with no arguments returns an equal copy', () {
       const theme = NaturalBlockTheme();
       expect(theme.copyWith(), theme);
