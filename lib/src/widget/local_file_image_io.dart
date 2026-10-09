@@ -12,12 +12,15 @@ Widget? localFileImage(
   required double scale,
   required ImageErrorWidgetBuilder errorBuilder,
 }) {
+  final uri = Uri.tryParse(source);
+  if (uri == null) return null;
+
   final String path;
-  if (!source.startsWith('file:')) {
+  if (uri.scheme != 'file') {
+    // A plain path, drive letter and all: `uri.path` would have dropped the
+    // drive, and `NaturalBlockImages.kindOf` already said this is local.
     path = source;
   } else {
-    final uri = Uri.tryParse(source);
-    if (uri == null) return null;
     try {
       path = uri.toFilePath(windows: Platform.isWindows);
     } on UnsupportedError {

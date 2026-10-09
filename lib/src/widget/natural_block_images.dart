@@ -85,27 +85,36 @@ abstract final class NaturalBlockImages {
   static ImageErrorWidgetBuilder _asText(String text, TextStyle style) =>
       (context, error, stackTrace) => Text(text, style: style);
 
-  static final RegExp _pattern = RegExp(r'^image\((.+)\)$', dotAll: true);
+  static const String _opening = 'image(';
 
-  static String? urlOf(String text) =>
-      _pattern.firstMatch(text.trim())?.group(1)?.trim();
+  /// The source an `image(...)` payload names, or null when [text] names
+  /// none -- an empty `image()` included.
+  static String? urlOf(String text) {
+    final trimmed = text.trim();
+    if (!trimmed.startsWith(_opening) || !trimmed.endsWith(')')) return null;
 
-  static final RegExp _driveLetter = RegExp(r'^[A-Za-z]:');
+    final source = trimmed
+        .substring(_opening.length, trimmed.length - 1)
+        .trim();
+    return source.isEmpty ? null : source;
+  }
 
+  /// Where a payload points, read off one `Uri`.
   static ImageSourceKind kindOf(String source) {
-    final trimmed = source.trim();
-    if (trimmed.isEmpty) return ImageSourceKind.relative;
+    final uri = Uri.tryParse(source.trim());
+    if (uri == null) return ImageSourceKind.relative;
 
-    if (trimmed.startsWith(r'\\')) return ImageSourceKind.file;
-    if (_driveLetter.hasMatch(trimmed)) return ImageSourceKind.file;
-    if (trimmed.startsWith('/')) return ImageSourceKind.file;
-
-    final uri = Uri.tryParse(trimmed);
-    if (uri != null && uri.hasScheme) {
-      return uri.scheme == 'file'
-          ? ImageSourceKind.file
-          : ImageSourceKind.network;
+    // `Uri` reads `C:/Users/a.png` as scheme `c`, and no registered scheme
+    // is one letter, so a one-letter scheme is a drive.
+    if (uri.scheme.length == 1 || uri.scheme == 'file') {
+      return ImageSourceKind.file;
     }
-    return ImageSourceKind.relative;
+    if (uri.hasScheme) return ImageSourceKind.network;
+
+    // Rooted with no scheme is this machine's, by absolute path or by UNC.
+    // Unrooted needs a base that only the app has.
+    return uri.hasAbsolutePath
+        ? ImageSourceKind.file
+        : ImageSourceKind.relative;
   }
 }
