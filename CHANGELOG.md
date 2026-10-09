@@ -183,6 +183,13 @@ Initial release.
   in front of something better.
 - `tappableText` is now written through that public API, recognizer and
   `dispose` included, so the default is also the worked example.
+- `widgetRun(child)` is the other answer written down: a run drawn as a
+  widget, centred on the text beside it, with the `dispose` that is correct
+  for one. It was a private helper in `NaturalBlockImages` while the same
+  three lines were being written by hand everywhere else -- the README's
+  example, four test handlers, both image handlers -- each needing the same
+  sentence about why an empty `dispose` is right. The `WidgetSpan` lifecycle
+  is not an image's business, so it moved to where handlers are defined.
 - `onTap` reports a tap with the run's own text. Nothing here ever
   interprets that text — no URL is opened, and there is no `url_launcher`
   dependency. A handler is handed it already bound to its run, so even a

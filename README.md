@@ -185,7 +185,7 @@ Every field defaults to the builder that draws that kind the usual way, so a set
 
 **The node types are sealed**, so this set is the whole set: a field per kind rather than a map keyed by type, which is what keeps each builder's node type exact and makes a builder written for the wrong kind a compile error. The two entry points are narrowed the same way: `buildLayouts` takes only `LayoutNode`s and `buildContents` only `ContentNode`s, so `DocumentNode`, `TableRowNode` and the two run types — which are never drawn on their own, the view and the table and the line drawing them instead — cannot be handed to the builders at all. A table's cells skip the dispatch entirely, since `TableCellNode` is the only kind a cell can be.
 
-The widgets the default builders use are exported as well (`TextNodeView`, `ColumnNodeView`, `RowNodeView`, `TableNodeView`), so a custom builder can wrap or reuse one rather than reimplementing it. So are the types a builder signature needs: `NodeBuilder`, `NaturalBlockScope`, `RunHandler`, `RunRendering`, `OnActionTap`, and `ImageSourceKind`.
+The widgets the default builders use are exported as well (`TextNodeView`, `ColumnNodeView`, `RowNodeView`, `TableNodeView`), so a custom builder can wrap or reuse one rather than reimplementing it. So are the types a builder signature needs: `NodeBuilder`, `NaturalBlockScope`, `RunHandler`, `RunRendering`, `widgetRun`, `OnActionTap`, and `ImageSourceKind`.
 
 ### Selectable text
 
@@ -254,7 +254,9 @@ NaturalBlockView(
 );
 ```
 
-**`dispose` is required, including when there is nothing to release.** Write `dispose: () {}` and mean it -- an image inside a `WidgetSpan` gets the ordinary widget lifecycle, so Flutter disposes it and you have nothing to do. Making it required is the only guard here: a recognizer you create is yours, and the `dispose` you hand back is the only thing that will ever release it. Nothing looks inside your span to check, so forgetting leaks silently. This is the same contract Flutter hands you with `TextSpan.recognizer` -- it has no widget for inline links either ([flutter#91600](https://github.com/flutter/flutter/issues/91600) is still open) -- with a named slot that asks the question. `tappableText` is the shape to copy.
+**`dispose` is required, including when there is nothing to release.** It is the only guard here: a recognizer you create is yours, and the `dispose` you hand back is the only thing that will ever release it. Nothing looks inside your span to check, so forgetting leaks silently. This is the same contract Flutter hands you with `TextSpan.recognizer` -- it has no widget for inline links either ([flutter#91600](https://github.com/flutter/flutter/issues/91600) is still open) -- with a named slot that asks the question. `tappableText` is the shape to copy.
+
+**Drawing a widget needs no `dispose` of its own**, and `widgetRun(child)` is that answer written down: everything inside a `WidgetSpan` gets the ordinary widget lifecycle, so Flutter disposes it. A `GestureDetector` in there answers a tap with no recognizer for anyone to own.
 
 Returning a `TextSpan` rather than a widget is what keeps a long run wrapping: a `WidgetSpan` is one unbreakable box in the paragraph. Both are available, and so is anything else -- a `TextSpan` with `children:` for text built from several styled pieces that must still select as one, or a recognizer other than `TapGestureRecognizer` for a gesture other than a tap.
 
@@ -310,13 +312,7 @@ RunRendering? assets(context, text, style, theme, onTap) {
       NaturalBlockImages.kindOf(source) != ImageSourceKind.relative) {
     return null;
   }
-  return (
-    span: WidgetSpan(
-      alignment: PlaceholderAlignment.middle,
-      child: Image.asset(source),
-    ),
-    dispose: () {}, // Flutter disposes everything inside a WidgetSpan
-  );
+  return widgetRun(Image.asset(source));
 }
 
 customs: const [assets, NaturalBlockImages.network, tappableText],

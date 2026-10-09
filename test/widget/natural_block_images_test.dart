@@ -18,7 +18,7 @@ RunRendering? _localStandIn(
       NaturalBlockImages.kindOf(source) != ImageSourceKind.file) {
     return null;
   }
-  return (span: WidgetSpan(child: Text('local:$source')), dispose: () {});
+  return widgetRun(Text('local:$source'));
 }
 
 /// A handler of the app's own, which claims `user(...)` and declines the rest.
@@ -43,16 +43,13 @@ RunRendering? _tappableBox(
   TextStyle style,
   NaturalBlockTheme theme,
   VoidCallback? onTap,
-) => (
-  span: WidgetSpan(
-    child: GestureDetector(
-      // An empty box defers its hit testing to a child it does not have.
-      behavior: HitTestBehavior.opaque,
-      onTap: onTap,
-      child: const SizedBox(width: 20, height: 20),
-    ),
+) => widgetRun(
+  GestureDetector(
+    // An empty box defers its hit testing to a child it does not have.
+    behavior: HitTestBehavior.opaque,
+    onTap: onTap,
+    child: const SizedBox(width: 20, height: 20),
   ),
-  dispose: () {},
 );
 
 void main() {

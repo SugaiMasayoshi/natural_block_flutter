@@ -19,6 +19,20 @@ typedef OnActionTap = void Function(String text);
 /// instead of being indistinguishable from having forgotten.
 typedef RunRendering = ({InlineSpan span, VoidCallback dispose});
 
+/// A run drawn as [child] rather than as text, centred on the text beside it.
+///
+/// There is nothing to release, so this is the answer with no `dispose` to
+/// get wrong: everything inside a `WidgetSpan` gets the ordinary widget
+/// lifecycle, and Flutter disposes it. A `GestureDetector` in there answers
+/// a tap the same way, with no recognizer for anyone to own.
+///
+/// [child] takes part in line breaking as one unbreakable box, so a long one
+/// will not wrap. Return a `TextSpan` of your own for anything that should.
+RunRendering widgetRun(
+  Widget child, {
+  PlaceholderAlignment alignment = PlaceholderAlignment.middle,
+}) => (span: WidgetSpan(alignment: alignment, child: child), dispose: () {});
+
 /// Answers how one actionable run is drawn, or null to leave it to the next
 /// handler.
 ///
