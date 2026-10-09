@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:natural_block/natural_block.dart';
 
@@ -84,18 +85,13 @@ class NaturalBlockBuilders {
   /// changed every time -- which costs a rebuild, never correctness. Naming
   /// the builders (a top-level function, or a method on your state) makes
   /// this hold.
-  @override
-  bool operator ==(Object other) {
-    if (identical(this, other)) return true;
-    return other is NaturalBlockBuilders &&
-        row == other.row &&
-        column == other.column &&
-        table == other.table &&
-        tableCell == other.tableCell &&
-        text == other.text &&
-        raw == other.raw;
-  }
+  List<Object?> get _fields => [row, column, table, tableCell, text, raw];
 
   @override
-  int get hashCode => Object.hash(row, column, table, tableCell, text, raw);
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is NaturalBlockBuilders && listEquals(_fields, other._fields);
+
+  @override
+  int get hashCode => Object.hashAll(_fields);
 }

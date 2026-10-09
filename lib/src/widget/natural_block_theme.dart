@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:natural_block/natural_block.dart';
 
@@ -203,29 +204,10 @@ class NaturalBlockTheme {
         rawScrollsHorizontally ?? this.rawScrollsHorizontally,
   );
 
-  @override
-  bool operator ==(Object other) {
-    if (identical(this, other)) return true;
-    return other is NaturalBlockTheme &&
-        base == other.base &&
-        negative == other.negative &&
-        positive == other.positive &&
-        emphasis == other.emphasis &&
-        action == other.action &&
-        baseFontSize == other.baseFontSize &&
-        fontSizeStep == other.fontSizeStep &&
-        minFontSize == other.minFontSize &&
-        tableCellPadding == other.tableCellPadding &&
-        tableBorder == other.tableBorder &&
-        tableStripe == other.tableStripe &&
-        raw == other.raw &&
-        rawPadding == other.rawPadding &&
-        rawDecoration == other.rawDecoration &&
-        rawScrollsHorizontally == other.rawScrollsHorizontally;
-  }
-
-  @override
-  int get hashCode => Object.hash(
+  /// Every field, in one list, so equality and the hash cannot disagree about
+  /// what this theme is made of. Listing them twice let a field reach one and
+  /// not the other, which makes two unequal themes hash alike.
+  List<Object?> get _fields => [
     base,
     negative,
     positive,
@@ -241,5 +223,13 @@ class NaturalBlockTheme {
     rawPadding,
     rawDecoration,
     rawScrollsHorizontally,
-  );
+  ];
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is NaturalBlockTheme && listEquals(_fields, other._fields);
+
+  @override
+  int get hashCode => Object.hashAll(_fields);
 }

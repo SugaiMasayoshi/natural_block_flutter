@@ -96,7 +96,13 @@ Initial release.
   your own would otherwise have to reproduce the order. It replaced a
   `styleFor(Tone)` that exposed only the first step, leaving the rest in the
   renderer -- and that was redundant with the tone fields anyway.
-- `copyWith`, `==` / `hashCode`.
+- `copyWith`, `==` / `hashCode`. The last two read one private list of the
+  fields rather than naming each field twice, so they cannot come to disagree
+  about what a theme is made of -- a field that reached `==` but not
+  `hashCode` made two unequal themes hash alike, and the view compares themes
+  to decide whether the tree it drew still holds. `NaturalBlockBuilders` is
+  written the same way. The cost is a list per comparison where naming the
+  fields allocated nothing, which is one or two per build of a document.
 
 ### Customization
 
