@@ -14,8 +14,10 @@ import 'run_handler.dart';
 /// on every ambient change, because it could never know whether this one
 /// cared. Return a `Builder` to read one, and the dependency is Flutter's to
 /// track, where it belongs.
-typedef NodeBuilder<T extends NaturalBlockNode> =
-    Widget Function(T node, NaturalBlockScope scope);
+typedef NodeBuilder<T extends NaturalBlockNode> = Widget Function(
+  T node,
+  NaturalBlockScope scope,
+);
 
 /// Everything a node needs to draw itself that is not the node.
 ///

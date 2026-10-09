@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:natural_block/natural_block.dart';
 import 'package:natural_block_flutter/natural_block_flutter.dart';
 
 import 'rendered_spans.dart';
@@ -137,47 +138,57 @@ void main() {
   });
 
   group('decoration rendering (end-to-end)', () {
-    // This is the package's whole purpose: verifying that decoration markup
-    // in a `source` string actually reaches the screen as styled text,
-    // through the full parse -> builders -> widget pipeline.
-
-    testWidgets(':! toggles negative (red) color on and off', (tester) async {
-      await pump(tester, ':!negative:!plain');
-
-      final spans = renderedSpans(tester);
-
-      expect(spans[0].text, 'negative');
-      expect(spans[0].style!.color, Colors.red);
-      expect(spans[1].text, 'plain');
-      expect(spans[1].style!.color, isNot(Colors.red));
-    });
-
-    testWidgets(':* toggles bold emphasis on and off', (tester) async {
-      await pump(tester, ':*bold:*');
-
-      final span = renderedSpans(tester).first;
-
-      expect(span.text, 'bold');
-      expect(span.style!.fontWeight, FontWeight.bold);
-    });
-
-    testWidgets(':+ increases the rendered font size', (tester) async {
+    testWidgets('markup in the source reaches the screen as style', (
+      tester,
+    ) async {
+      // The package's whole purpose, as one assertion: a cluster in a
+      // `source` comes out the far end of parse -> builders -> widget as the
+      // style the theme says it means. What any cluster means is the theme's
+      // own test; that each run gets its own is `TextNodeView`'s.
+      //
+      // Repeating the cluster shows the asymmetry between the markers, which
+      // only drawn text makes visible: `:!` and `:*` toggle off, `:+` is a
+      // step and stacks.
       const theme = NaturalBlockTheme();
-      const ambientFontSize = 20.0;
+      const ambientSize = 20.0;
 
       await tester.pumpWidget(
         MaterialApp(
           home: DefaultTextStyle(
-            style: const TextStyle(fontSize: ambientFontSize),
-            child: NaturalBlockView(source: ':+big', theme: theme),
+            style: const TextStyle(fontSize: ambientSize),
+            child: const NaturalBlockView(
+              source: ':!*+marked:!*+plain',
+              theme: theme,
+            ),
           ),
         ),
       );
 
-      final span = renderedSpans(tester).first;
+      final spans = renderedSpans(tester);
 
-      expect(span.text, 'big');
-      expect(span.style!.fontSize, ambientFontSize + theme.fontSizeStep);
+      expect(spans[0].text, 'marked');
+      expect(
+        spans[0].style,
+        theme.styleFor(
+          const SpanDecoration(
+            tone: Tone.negative,
+            emphasis: true,
+            sizeOffset: 1,
+          ),
+          baseSize: ambientSize,
+        ),
+      );
+
+      expect(spans[1].text, 'plain');
+      expect(
+        spans[1].style,
+        theme.styleFor(
+          const SpanDecoration(sizeOffset: 2),
+          baseSize: ambientSize,
+        ),
+        reason:
+            'the toggles came off, and the second step stacked on the first',
+      );
     });
   });
 

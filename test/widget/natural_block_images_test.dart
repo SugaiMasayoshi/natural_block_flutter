@@ -369,7 +369,7 @@ void main() {
       expect(renderedSpans(tester).single.text, r'image(C:\Users\sugai\a.png)');
     });
 
-    testWidgets('withLocalFiles draws a local path from a file', (
+    testWidgets('NaturalBlockImages.local draws a local path from a file', (
       tester,
     ) async {
       // The second entry point, for an app that knows its documents name
@@ -391,7 +391,9 @@ void main() {
       expect(tester.widget<Image>(find.byType(Image)).image, isA<FileImage>());
     });
 
-    testWidgets('withLocalFiles still draws a network image', (tester) async {
+    testWidgets('NaturalBlockImages.local still draws a network image', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         wrap(
           const NaturalBlockView(
@@ -411,31 +413,34 @@ void main() {
       );
     });
 
-    testWidgets('withLocalFiles declines a file URI it cannot turn into a '
-        'path, rather than throwing', (tester) async {
-      // `Uri.toFilePath` throws for a query, a fragment, or an authority off
-      // Windows. A document is outside input, so one of those has to read as
-      // text like any other payload the builder does not handle -- throwing
-      // would break the line it sits on.
-      await tester.pumpWidget(
-        wrap(
-          const NaturalBlockView(
-            source: ':@image(file:///a.png?v=1):@',
-            customs: [
-              NaturalBlockImages.local,
-              NaturalBlockImages.network,
-              tappableText,
-            ],
+    testWidgets(
+      'NaturalBlockImages.local declines a file URI it cannot turn into a '
+      'path, rather than throwing',
+      (tester) async {
+        // `Uri.toFilePath` throws for a query, a fragment, or an authority off
+        // Windows. A document is outside input, so one of those has to read as
+        // text like any other payload the builder does not handle -- throwing
+        // would break the line it sits on.
+        await tester.pumpWidget(
+          wrap(
+            const NaturalBlockView(
+              source: ':@image(file:///a.png?v=1):@',
+              customs: [
+                NaturalBlockImages.local,
+                NaturalBlockImages.network,
+                tappableText,
+              ],
+            ),
           ),
-        ),
-      );
+        );
 
-      expect(tester.takeException(), isNull);
-      expect(find.byType(Image), findsNothing);
-      expect(renderedSpans(tester).single.text, 'image(file:///a.png?v=1)');
-    });
+        expect(tester.takeException(), isNull);
+        expect(find.byType(Image), findsNothing);
+        expect(renderedSpans(tester).single.text, 'image(file:///a.png?v=1)');
+      },
+    );
 
-    testWidgets('withLocalFiles leaves a relative path to the app', (
+    testWidgets('NaturalBlockImages.local leaves a relative path to the app', (
       tester,
     ) async {
       // Resolving `assets/a.png` needs something only the app has: an asset
@@ -562,40 +567,42 @@ void main() {
       expect(renderedSpans(tester).single.text, 'alice');
     });
 
-    testWidgets('a widget run brings no recognizer for this package to hold', (
+    testWidgets('the dispose a handler hands back is called, once', (
       tester,
     ) async {
-      // What a handler returns can only be a span this package made, so every
-      // recognizer in one is its own to release. A widget run carries none:
-      // whatever answers a tap there is a widget, and Flutter owns it.
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Align(
-            alignment: Alignment.topLeft,
-            child: NaturalBlockView(
-              source: ':@box:@',
-              customs: const [_tappableBox],
-              onTap: (_) {},
-            ),
-          ),
-        ),
+      // The whole of the contract: whatever a handler makes, the `dispose` it
+      // returns is the only thing that releases it. Called when the line's
+      // spans are replaced, and when the line leaves the tree -- and not
+      // twice for the same span.
+      var released = 0;
+      RunRendering? counting(
+        BuildContext context,
+        String text,
+        TextStyle style,
+        NaturalBlockTheme theme,
+        VoidCallback? onTap,
+      ) =>
+          (span: TextSpan(text: text, style: style), dispose: () => released++);
+
+      // Held outside `view`, the way the docs ask: a list written afresh on
+      // every build never compares equal, and the spans would be replaced on
+      // every frame.
+      final customs = <RunHandler>[counting];
+      Widget view(String source) => MaterialApp(
+        home: NaturalBlockView(source: source, customs: customs),
       );
 
-      final recognizers = <Object>[];
-      void walk(InlineSpan span) {
-        if (span is TextSpan && span.recognizer != null) {
-          recognizers.add(span.recognizer!);
-        }
-        span.visitChildren((child) {
-          if (!identical(child, span)) walk(child);
-          return true;
-        });
-      }
+      await tester.pumpWidget(view('one :@x:@'));
+      expect(released, 0);
 
-      walk(tester.widget<RichText>(find.byType(RichText)).text);
-      expect(recognizers, isEmpty);
+      await tester.pumpWidget(view('one :@x:@'));
+      expect(released, 0, reason: 'nothing it was built from changed');
+
+      await tester.pumpWidget(view('two :@x:@'));
+      expect(released, 1, reason: 'the line was rebuilt, so the span went');
 
       await tester.pumpWidget(const SizedBox.shrink());
+      expect(released, 2, reason: 'the line left the tree');
       expect(tester.takeException(), isNull);
     });
   });

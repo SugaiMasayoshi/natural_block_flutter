@@ -8,92 +8,56 @@ import 'package:natural_block_flutter/natural_block_flutter.dart';
 import '../rendered_spans.dart';
 
 void main() {
-  group('color and emphasis', () {
-    testWidgets('renders each TextSpanNode with its semantic style', (
+  group('styles', () {
+    testWidgets('every run is drawn with styleFor on its own decoration', (
       tester,
     ) async {
-      final node = TextNode(
-        children: [
-          TextSpanNode(
-            text: 'negative',
-            decoration: SpanDecoration(tone: Tone.negative),
-          ),
-          TextSpanNode(text: 'plain'),
-        ],
-      );
+      // All this layer owes: each run's decoration goes to the theme and the
+      // answer lands on that run's span, in that run's place. What any one
+      // decoration is worth -- how tones, emphasis, actionability and the
+      // size steps compose -- is `styleFor`'s own business, tested there
+      // without pumping anything.
       const theme = NaturalBlockTheme();
-
-      await tester.pumpWidget(
-        MaterialApp(
-          home: TextNodeView(
-            node: node,
-            scope: NaturalBlockScope(theme: theme),
-          ),
-        ),
-      );
-
-      final spans = renderedSpans(tester);
-
-      expect(spans[0].text, 'negative');
-      expect(spans[0].style!.color, theme.negative.color);
-      expect(spans[1].text, 'plain');
-    });
-
-    testWidgets('combines color and emphasis on the same span', (tester) async {
-      final node = TextNode(
-        children: [
-          TextSpanNode(
-            text: 'urgent',
-            decoration: SpanDecoration(tone: Tone.negative, emphasis: true),
-          ),
-        ],
-      );
-      const theme = NaturalBlockTheme();
-
-      await tester.pumpWidget(
-        MaterialApp(
-          home: TextNodeView(
-            node: node,
-            scope: NaturalBlockScope(theme: theme),
-          ),
-        ),
-      );
-
-      final span = renderedSpans(tester).first;
-
-      expect(span.style!.color, theme.negative.color);
-      expect(span.style!.fontWeight, theme.emphasis.fontWeight);
-    });
-  });
-
-  group('font size scaling', () {
-    testWidgets('applies sizeOffset relative to the ambient font size', (
-      tester,
-    ) async {
-      final node = TextNode(
-        children: [
-          TextSpanNode(text: 'big', decoration: SpanDecoration(sizeOffset: 2)),
-        ],
-      );
-      const theme = NaturalBlockTheme();
+      const ambientSize = 14.0;
+      const decorations = [
+        SpanDecoration(),
+        SpanDecoration(tone: Tone.negative),
+        SpanDecoration(tone: Tone.negative, emphasis: true, isAction: true),
+        SpanDecoration(sizeOffset: 2),
+        SpanDecoration(sizeOffset: -99),
+      ];
 
       await tester.pumpWidget(
         MaterialApp(
           home: DefaultTextStyle(
-            style: const TextStyle(fontSize: 14),
+            style: const TextStyle(fontSize: ambientSize),
             child: TextNodeView(
-              node: node,
+              node: TextNode(
+                children: [
+                  for (var i = 0; i < decorations.length; i++)
+                    TextSpanNode(text: 'run $i', decoration: decorations[i]),
+                ],
+              ),
               scope: NaturalBlockScope(theme: theme),
             ),
           ),
         ),
       );
 
-      final span = renderedSpans(tester).first;
+      expect(tester.takeException(), isNull);
 
-      expect(span.style!.fontSize, 14 + 2 * theme.fontSizeStep);
+      final spans = renderedSpans(tester);
+      for (var i = 0; i < decorations.length; i++) {
+        expect(spans[i].text, 'run $i');
+        expect(
+          spans[i].style,
+          theme.styleFor(decorations[i], baseSize: ambientSize),
+        );
+      }
     });
+  });
 
+  group('font size scaling', () {
     testWidgets('a size step counts from the size the theme actually draws, '
         'not from the ambient one', (tester) async {
       // The README's first theme example is `base: TextStyle(fontSize: 16)`,
@@ -137,96 +101,9 @@ void main() {
         reason: 'an enlarging marker must not shrink the text',
       );
     });
-
-    testWidgets('clamps a large negative sizeOffset to minFontSize instead of '
-        'producing a zero or negative font size', (tester) async {
-      final node = TextNode(
-        children: [
-          TextSpanNode(
-            text: 'tiny',
-            decoration: SpanDecoration(sizeOffset: -5),
-          ),
-        ],
-      );
-      const theme = NaturalBlockTheme();
-
-      await tester.pumpWidget(
-        MaterialApp(
-          home: DefaultTextStyle(
-            style: const TextStyle(fontSize: 14),
-            child: TextNodeView(
-              node: node,
-              scope: NaturalBlockScope(theme: theme),
-            ),
-          ),
-        ),
-      );
-
-      expect(tester.takeException(), isNull);
-
-      final span = renderedSpans(tester).first;
-
-      expect(span.style!.fontSize, theme.minFontSize);
-      expect(span.style!.fontSize, greaterThan(0));
-    });
   });
 
   group('actionable spans', () {
-    testWidgets('applies the action style to an actionable span', (
-      tester,
-    ) async {
-      final node = TextNode(
-        children: [
-          TextSpanNode(
-            text: 'tap me',
-            decoration: SpanDecoration(isAction: true),
-          ),
-        ],
-      );
-      const theme = NaturalBlockTheme();
-
-      await tester.pumpWidget(
-        MaterialApp(
-          home: TextNodeView(
-            node: node,
-            scope: NaturalBlockScope(theme: theme),
-          ),
-        ),
-      );
-
-      final span = renderedSpans(tester).first;
-      expect(span.style!.color, theme.action.color);
-      expect(span.style!.decoration, theme.action.decoration);
-    });
-
-    testWidgets('combines action and emphasis styles on the same span', (
-      tester,
-    ) async {
-      final node = TextNode(
-        children: [
-          TextSpanNode(
-            text: 'tap me',
-            decoration: SpanDecoration(isAction: true, emphasis: true),
-          ),
-        ],
-      );
-      const theme = NaturalBlockTheme();
-
-      await tester.pumpWidget(
-        MaterialApp(
-          home: TextNodeView(
-            node: node,
-            scope: NaturalBlockScope(theme: theme),
-          ),
-        ),
-      );
-
-      final span = renderedSpans(tester).first;
-      expect(span.style!.color, theme.action.color);
-      expect(span.style!.decoration, theme.action.decoration);
-      expect(span.style!.fontWeight, theme.emphasis.fontWeight);
-    });
-
     testWidgets('an actionable span gets a recognizer when onTap is given', (
       tester,
     ) async {
