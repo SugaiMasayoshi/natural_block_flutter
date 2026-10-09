@@ -7,8 +7,6 @@ import 'package:natural_block_flutter/natural_block_flutter.dart';
 import '../rendered_spans.dart';
 
 void main() {
-  const theme = NaturalBlockTheme();
-
   /// A single-line cell, the shape the parser produces.
   TableCellNode cell(String text) => TableCellNode(
     children: [
@@ -24,6 +22,15 @@ void main() {
       child: child,
     ),
   );
+
+  Future<void> pump(
+    WidgetTester tester,
+    String source, {
+    NaturalBlockTheme theme = const NaturalBlockTheme(),
+  }) => tester.pumpWidget(wrap(NaturalBlockView(source: source, theme: theme)));
+
+  Table tableOf(WidgetTester tester) =>
+      tester.widget<Table>(find.byType(Table));
 
   double leftOf(WidgetTester tester, String text) => tester
       .getRect(
@@ -43,9 +50,7 @@ void main() {
       // TableNode holds every row, so its columns can be sized to their
       // content and still line up. A RowNodeView cannot do this -- it
       // renders one row and cannot see its siblings.
-      await tester.pumpWidget(
-        wrap(const NaturalBlockView(source: '~Item^Price|Apple^200|Banana^1~')),
-      );
+      await pump(tester, '~Item^Price|Apple^200|Banana^1~');
 
       expect(find.byType(Table), findsOneWidget);
 
@@ -79,9 +84,7 @@ void main() {
         // Guards the pair of policies against being accidentally unified:
         // plain rows must keep dividing the available width, because that
         // is what makes `LEFT^^RIGHT` push RIGHT to the far edge.
-        await tester.pumpWidget(
-          wrap(const NaturalBlockView(source: 'Item^Price|Apple^200|')),
-        );
+        await pump(tester, 'Item^Price|Apple^200|');
 
         expect(find.byType(Table), findsNothing);
         expect(
@@ -99,7 +102,7 @@ void main() {
       // else in the block. Meaningful only because the table is sized to its
       // content: a width-filling table would have nothing to be centered
       // within.
-      await tester.pumpWidget(wrap(const NaturalBlockView(source: '|=~A^B~')));
+      await pump(tester, '|=~A^B~');
 
       // Its own centre against the surface's, rather than "far enough from
       // the left edge" -- that would pass for `|>` just as well.
@@ -139,9 +142,7 @@ void main() {
       const padded = NaturalBlockTheme(
         tableCellPadding: EdgeInsets.symmetric(horizontal: 40),
       );
-      await tester.pumpWidget(
-        wrap(const NaturalBlockView(source: '~A^B|C^D~', theme: padded)),
-      );
+      await pump(tester, '~A^B|C^D~', theme: padded);
 
       expect(leftOf(tester, 'A'), 40);
     });
@@ -149,10 +150,8 @@ void main() {
     testWidgets('the border comes from the theme and can be removed', (
       tester,
     ) async {
-      await tester.pumpWidget(
-        wrap(const NaturalBlockView(source: '~A^B|C^D~')),
-      );
-      final border = tester.widget<Table>(find.byType(Table)).border!;
+      await pump(tester, '~A^B|C^D~');
+      final border = tableOf(tester).border!;
       // A frame on every edge, not just rules between cells: a table is the
       // one construct with a declared beginning and end, so an outer box
       // states something the source actually says.
@@ -167,16 +166,13 @@ void main() {
         expect(side.style, BorderStyle.solid);
       }
 
-      await tester.pumpWidget(
-        wrap(
-          const NaturalBlockView(
-            source: '~A^B|C^D~',
-            theme: NaturalBlockTheme(tableBorder: TableBorder()),
-          ),
-        ),
+      await pump(
+        tester,
+        '~A^B|C^D~',
+        theme: const NaturalBlockTheme(tableBorder: TableBorder()),
       );
       // None is a value, not null: every side draws nothing.
-      final unruled = tester.widget<Table>(find.byType(Table)).border!;
+      final unruled = tableOf(tester).border!;
       expect(unruled.horizontalInside.style, BorderStyle.none);
       expect(unruled.verticalInside.style, BorderStyle.none);
       expect(unruled.top.style, BorderStyle.none);
@@ -185,26 +181,18 @@ void main() {
     testWidgets('striping is off by default and paints odd rows when set', (
       tester,
     ) async {
-      await tester.pumpWidget(
-        wrap(const NaturalBlockView(source: '~A^B|C^D~')),
-      );
+      await pump(tester, '~A^B|C^D~');
       expect(
-        tester
-            .widget<Table>(find.byType(Table))
-            .children
-            .every((r) => r.decoration == null),
+        tableOf(tester).children.every((r) => r.decoration == null),
         isTrue,
       );
 
-      await tester.pumpWidget(
-        wrap(
-          const NaturalBlockView(
-            source: '~A^B|C^D~',
-            theme: NaturalBlockTheme(tableStripe: Color(0xFFEEEEEE)),
-          ),
-        ),
+      await pump(
+        tester,
+        '~A^B|C^D~',
+        theme: const NaturalBlockTheme(tableStripe: Color(0xFFEEEEEE)),
       );
-      final rows = tester.widget<Table>(find.byType(Table)).children;
+      final rows = tableOf(tester).children;
       expect(rows[0].decoration, isNull, reason: 'the first row is unpainted');
       expect(rows[1].decoration, isNotNull);
     });
@@ -214,28 +202,21 @@ void main() {
     // The parser guarantees every row has the same cell count, but
     // TableNodeView is exported, so a hand-built node can violate that.
     // These pin what happens rather than leaving it to be discovered.
-    testWidgets('a one-row table renders and is never striped', (tester) async {
-      await tester.pumpWidget(
-        wrap(
-          const NaturalBlockView(
-            source: '~only^row~',
-            theme: NaturalBlockTheme(tableStripe: Color(0xFFEEEEEE)),
-          ),
-        ),
+    testWidgets('a table of one row, or one column, still renders', (
+      tester,
+    ) async {
+      // One row is reachable from markup; one column is not -- a block with
+      // no `^` never becomes a row -- but both are constructible, so neither
+      // should fall over. Striping is on so the one row also shows that
+      // banding starts at the second: there is nothing to band here.
+      await pump(
+        tester,
+        '~only^row~',
+        theme: const NaturalBlockTheme(tableStripe: Color(0xFFEEEEEE)),
       );
 
-      final table = tester.widget<Table>(find.byType(Table));
-      expect(table.children, hasLength(1));
-      expect(
-        table.children.single.decoration,
-        isNull,
-        reason: 'banding starts at the second row, so one row is unpainted',
-      );
-    });
+      expect(tableOf(tester).children.single.decoration, isNull);
 
-    testWidgets('a one-column table renders', (tester) async {
-      // Not reachable from markup -- a block with no `^` never becomes a row
-      // -- but constructible, so it should not fall over.
       await tester.pumpWidget(
         wrap(
           TableNodeView(
@@ -244,16 +225,13 @@ void main() {
                 TableRowNode(children: [cell('only')]),
               ],
             ),
-            scope: NaturalBlockScope(
-              theme: theme,
-              builders: NaturalBlockBuilders.defaults,
-            ),
+            scope: const NaturalBlockScope(),
           ),
         ),
       );
 
       expect(tester.takeException(), isNull);
-      expect(find.byType(Table), findsOneWidget);
+      expect(tableOf(tester).children.single.children, hasLength(1));
     });
 
     testWidgets('a ragged row is squared off to the table width', (
@@ -271,16 +249,13 @@ void main() {
                 TableRowNode(children: [cell('c')]),
               ],
             ),
-            scope: NaturalBlockScope(
-              theme: theme,
-              builders: NaturalBlockBuilders.defaults,
-            ),
+            scope: const NaturalBlockScope(),
           ),
         ),
       );
 
       expect(tester.takeException(), isNull);
-      final rows = tester.widget<Table>(find.byType(Table)).children;
+      final rows = tableOf(tester).children;
       expect([for (final r in rows) r.children.length], [2, 2]);
     });
 
@@ -303,7 +278,7 @@ void main() {
         reason: 'the source wrote no marker on that cell',
       );
 
-      await tester.pumpWidget(wrap(const NaturalBlockView(source: source)));
+      await pump(tester, source);
 
       final aligned = tester.widgetList<ColumnNodeView>(
         find.byType(ColumnNodeView),
@@ -335,7 +310,7 @@ void main() {
                 ),
               ],
             ),
-            scope: NaturalBlockScope(theme: theme, builders: builders),
+            scope: NaturalBlockScope(builders: builders),
           ),
         ),
       );

@@ -8,6 +8,34 @@ import 'package:natural_block_flutter/natural_block_flutter.dart';
 import '../rendered_spans.dart';
 
 void main() {
+  TextSpanNode action(String text) =>
+      TextSpanNode(text: text, decoration: SpanDecoration(isAction: true));
+
+  /// Draws [runs] as one line. A null [onTap] is an app that wired nothing,
+  /// which is the difference between an actionable run and a tappable one.
+  Future<void> pumpRuns(
+    WidgetTester tester,
+    List<InlineNode> runs, {
+    NaturalBlockTheme theme = const NaturalBlockTheme(),
+    OnActionTap? onTap,
+    TextStyle? ambient,
+  }) {
+    final view = TextNodeView(
+      node: TextNode(children: runs),
+      scope: NaturalBlockScope(theme: theme, onTap: onTap),
+    );
+    return tester.pumpWidget(
+      MaterialApp(
+        home: ambient == null
+            ? view
+            : DefaultTextStyle(style: ambient, child: view),
+      ),
+    );
+  }
+
+  GestureRecognizer? recognizerOf(WidgetTester tester, [int index = 0]) =>
+      renderedSpans(tester)[index].recognizer;
+
   group('styles', () {
     testWidgets('every run is drawn with styleFor on its own decoration', (
       tester,
@@ -27,21 +55,14 @@ void main() {
         SpanDecoration(sizeOffset: -99),
       ];
 
-      await tester.pumpWidget(
-        MaterialApp(
-          home: DefaultTextStyle(
-            style: const TextStyle(fontSize: ambientSize),
-            child: TextNodeView(
-              node: TextNode(
-                children: [
-                  for (var i = 0; i < decorations.length; i++)
-                    TextSpanNode(text: 'run $i', decoration: decorations[i]),
-                ],
-              ),
-              scope: NaturalBlockScope(theme: theme),
-            ),
-          ),
-        ),
+      await pumpRuns(
+        tester,
+        [
+          for (var i = 0; i < decorations.length; i++)
+            TextSpanNode(text: 'run $i', decoration: decorations[i]),
+        ],
+        theme: theme,
+        ambient: const TextStyle(fontSize: ambientSize),
       );
 
       expect(tester.takeException(), isNull);
@@ -55,9 +76,7 @@ void main() {
         );
       }
     });
-  });
 
-  group('font size scaling', () {
     testWidgets('a size step counts from the size the theme actually draws, '
         'not from the ambient one', (tester) async {
       // The README's first theme example is `base: TextStyle(fontSize: 16)`,
@@ -65,26 +84,18 @@ void main() {
       // root span. A sized run has to count from the same place, or `:+`
       // renders *smaller* than the text beside it.
       const theme = NaturalBlockTheme(base: TextStyle(fontSize: 24));
-      final node = TextNode(
-        children: [
+
+      await pumpRuns(
+        tester,
+        [
           TextSpanNode(text: 'plain'),
           TextSpanNode(
             text: 'bigger',
             decoration: SpanDecoration(sizeOffset: 1),
           ),
         ],
-      );
-
-      await tester.pumpWidget(
-        MaterialApp(
-          home: DefaultTextStyle(
-            style: const TextStyle(fontSize: 14),
-            child: TextNodeView(
-              node: node,
-              scope: NaturalBlockScope(theme: theme),
-            ),
-          ),
-        ),
+        theme: theme,
+        ambient: const TextStyle(fontSize: 14),
       );
 
       final spans = renderedSpans(tester);
@@ -104,127 +115,40 @@ void main() {
   });
 
   group('actionable spans', () {
-    testWidgets('an actionable span gets a recognizer when onTap is given', (
+    testWidgets('a recognizer appears for an actionable run, and only when '
+        'something is wired to it', (tester) async {
+      await pumpRuns(tester, [action('tap me')], onTap: (_) {});
+      expect(recognizerOf(tester), isA<TapGestureRecognizer>());
+
+      await pumpRuns(tester, [action('tap me')]);
+      expect(recognizerOf(tester), isNull, reason: 'nothing wired');
+
+      await pumpRuns(tester, [TextSpanNode(text: 'plain')], onTap: (_) {});
+      expect(recognizerOf(tester), isNull, reason: 'not actionable');
+    });
+
+    testWidgets("a tap calls onTap with exactly that run's text", (
       tester,
     ) async {
-      final node = TextNode(
-        children: [
-          TextSpanNode(
-            text: 'tap me',
-            decoration: SpanDecoration(isAction: true),
-          ),
-        ],
-      );
-      const theme = NaturalBlockTheme();
-
-      await tester.pumpWidget(
-        MaterialApp(
-          home: TextNodeView(
-            node: node,
-            scope: NaturalBlockScope(theme: theme, onTap: (_) {}),
-          ),
-        ),
-      );
-
-      final span = renderedSpans(tester).first;
-      expect(span.recognizer, isA<TapGestureRecognizer>());
-    });
-
-    testWidgets('an actionable span gets no recognizer when onTap is null', (
-      tester,
-    ) async {
-      final node = TextNode(
-        children: [
-          TextSpanNode(
-            text: 'tap me',
-            decoration: SpanDecoration(isAction: true),
-          ),
-        ],
-      );
-      const theme = NaturalBlockTheme();
-
-      await tester.pumpWidget(
-        MaterialApp(
-          home: TextNodeView(
-            node: node,
-            scope: NaturalBlockScope(theme: theme),
-          ),
-        ),
-      );
-
-      final span = renderedSpans(tester).first;
-      expect(span.recognizer, isNull);
-    });
-
-    testWidgets('a non-actionable span gets no recognizer', (tester) async {
-      final node = TextNode(children: [TextSpanNode(text: 'plain')]);
-      const theme = NaturalBlockTheme();
-
-      await tester.pumpWidget(
-        MaterialApp(
-          home: TextNodeView(
-            node: node,
-            scope: NaturalBlockScope(theme: theme, onTap: (_) {}),
-          ),
-        ),
-      );
-
-      final span = renderedSpans(tester).first;
-      expect(span.recognizer, isNull);
-    });
-
-    testWidgets('tapping an actionable span calls onTap with exactly that '
-        "span's text", (tester) async {
       final tapped = <String>[];
-      final node = TextNode(
-        children: [
-          TextSpanNode(
-            text: 'actionable',
-            decoration: SpanDecoration(isAction: true),
-          ),
-          TextSpanNode(text: ' plain'),
-        ],
-      );
-      const theme = NaturalBlockTheme();
+      await pumpRuns(tester, [
+        action('actionable'),
+        TextSpanNode(text: ' plain'),
+      ], onTap: tapped.add);
 
-      await tester.pumpWidget(
-        MaterialApp(
-          home: TextNodeView(
-            node: node,
-            scope: NaturalBlockScope(theme: theme, onTap: tapped.add),
-          ),
-        ),
-      );
-
-      final span = renderedSpans(tester).first;
-      (span.recognizer as TapGestureRecognizer).onTap!();
+      (recognizerOf(tester)! as TapGestureRecognizer).onTap!();
 
       expect(tapped, ['actionable']);
     });
 
-    testWidgets('tapping a non-actionable span does not fire onTap', (
+    testWidgets('tapping a non-actionable run does not fire onTap', (
       tester,
     ) async {
       final tapped = <String>[];
-      final node = TextNode(
-        children: [
-          TextSpanNode(
-            text: 'actionable',
-            decoration: SpanDecoration(isAction: true),
-          ),
-          TextSpanNode(text: ' plain'),
-        ],
-      );
-      const theme = NaturalBlockTheme();
-
-      await tester.pumpWidget(
-        MaterialApp(
-          home: TextNodeView(
-            node: node,
-            scope: NaturalBlockScope(theme: theme, onTap: tapped.add),
-          ),
-        ),
-      );
+      await pumpRuns(tester, [
+        action('actionable'),
+        TextSpanNode(text: ' plain'),
+      ], onTap: tapped.add);
 
       // Actually tapped, on the plain half of a line whose other half is
       // actionable. Asserting only that the span carries no recognizer
@@ -242,24 +166,9 @@ void main() {
       // renders as such either way. Semantics follow what will actually
       // happen: telling a screen reader a run is interactive when no
       // handler is wired is a promise nothing keeps.
-      final node = TextNode(
-        children: [
-          TextSpanNode(
-            text: 'tap me',
-            decoration: SpanDecoration(isAction: true),
-          ),
-        ],
-      );
       const theme = NaturalBlockTheme();
 
-      await tester.pumpWidget(
-        MaterialApp(
-          home: TextNodeView(
-            node: node,
-            scope: NaturalBlockScope(theme: theme),
-          ),
-        ),
-      );
+      await pumpRuns(tester, [action('tap me')]);
       final inert = renderedSpans(tester).single;
       expect(inert.style!.decoration, theme.action.decoration);
       expect(
@@ -268,14 +177,7 @@ void main() {
         reason: 'no handler, so nothing is announced as interactive',
       );
 
-      await tester.pumpWidget(
-        MaterialApp(
-          home: TextNodeView(
-            node: node,
-            scope: NaturalBlockScope(theme: theme, onTap: (_) {}),
-          ),
-        ),
-      );
+      await pumpRuns(tester, [action('tap me')], onTap: (_) {});
       expect(renderedSpans(tester).single.semanticsLabel, 'tap me');
     });
 
@@ -285,44 +187,17 @@ void main() {
       // mid-gesture throws that entry away. The spans are built outside
       // `build` so that the recognizers survive a rebuild -- see the
       // interrupted-tap test below.
-      TextSpanNode action(String text) =>
-          TextSpanNode(text: text, decoration: SpanDecoration(isAction: true));
-
-      Future<void> pumpRuns(
-        WidgetTester tester,
-        List<InlineNode> runs, {
-        NaturalBlockTheme theme = const NaturalBlockTheme(),
-        OnActionTap? onTap,
-        TextStyle? ambient,
-      }) {
-        final view = TextNodeView(
-          node: TextNode(children: runs),
-          scope: NaturalBlockScope(
-            theme: theme,
-            // A fresh closure each time, the way a caller writing it inline
-            // in their own `build` would hand one over.
-            onTap: onTap ?? (_) {},
-          ),
-        );
-        return tester.pumpWidget(
-          MaterialApp(
-            home: ambient == null
-                ? view
-                : DefaultTextStyle(style: ambient, child: view),
-          ),
-        );
-      }
-
-      GestureRecognizer? recognizerOf(WidgetTester tester, [int index = 0]) =>
-          renderedSpans(tester)[index].recognizer;
-
+      //
+      // Every `onTap` below is written at the call site, so each is a fresh
+      // closure -- the way a caller writing one inline in their own `build`
+      // hands one over.
       testWidgets('a rebuild with the same runs keeps the recognizer', (
         tester,
       ) async {
-        await pumpRuns(tester, [action('tap me')]);
+        await pumpRuns(tester, [action('tap me')], onTap: (_) {});
         final first = recognizerOf(tester);
 
-        await pumpRuns(tester, [action('tap me')]);
+        await pumpRuns(tester, [action('tap me')], onTap: (_) {});
 
         expect(recognizerOf(tester), same(first));
       });
@@ -340,6 +215,7 @@ void main() {
           tester,
           [action('tap me')],
           theme: theme,
+          onTap: (_) {},
           ambient: const TextStyle(fontSize: 14, color: Color(0xFF000000)),
         );
         final first = recognizerOf(tester);
@@ -348,24 +224,11 @@ void main() {
           tester,
           [action('tap me')],
           theme: theme,
+          onTap: (_) {},
           ambient: const TextStyle(fontSize: 30, color: Color(0xFF000000)),
         );
 
         expect(recognizerOf(tester), same(first));
-      });
-
-      testWidgets('rebuilding and then unmounting disposes once', (
-        tester,
-      ) async {
-        // The spans release their recognizers when they are replaced, and
-        // the view releases them again when it goes away. Disposing a
-        // recognizer twice throws, so the second call must find nothing.
-        await pumpRuns(tester, [action('one')]);
-        await pumpRuns(tester, [action('two')]);
-
-        await tester.pumpWidget(const SizedBox.shrink());
-
-        expect(tester.takeException(), isNull);
       });
 
       testWidgets('a fresh onTap closure is not a reason to rebuild', (
@@ -397,21 +260,24 @@ void main() {
 
       testWidgets('changed runs rebuild the spans', (tester) async {
         // The accepted cost: a tap held across an edit to this line is lost.
-        await pumpRuns(tester, [action('tap me')]);
+        await pumpRuns(tester, [action('tap me')], onTap: (_) {});
         final first = recognizerOf(tester);
 
-        await pumpRuns(tester, [action('tap again')]);
+        await pumpRuns(tester, [action('tap again')], onTap: (_) {});
 
         expect(recognizerOf(tester), isNot(same(first)));
       });
 
       testWidgets('a changed theme rebuilds the spans', (tester) async {
-        await pumpRuns(tester, [action('tap me')]);
+        await pumpRuns(tester, [action('tap me')], onTap: (_) {});
         final first = recognizerOf(tester);
 
-        await pumpRuns(tester, [
-          action('tap me'),
-        ], theme: const NaturalBlockTheme(fontSizeStep: 9));
+        await pumpRuns(
+          tester,
+          [action('tap me')],
+          theme: const NaturalBlockTheme(fontSizeStep: 9),
+          onTap: (_) {},
+        );
 
         expect(recognizerOf(tester), isNot(same(first)));
       });
@@ -422,16 +288,56 @@ void main() {
         // Reached through didChangeDependencies rather than didUpdateWidget:
         // `DefaultTextStyle` decides what every run starts from and can
         // change without any of this widget's own fields changing.
-        await pumpRuns(tester, [
-          action('tap me'),
-        ], ambient: const TextStyle(fontSize: 14));
+        await pumpRuns(
+          tester,
+          [action('tap me')],
+          onTap: (_) {},
+          ambient: const TextStyle(fontSize: 14),
+        );
         final first = recognizerOf(tester);
 
-        await pumpRuns(tester, [
-          action('tap me'),
-        ], ambient: const TextStyle(fontSize: 22));
+        await pumpRuns(
+          tester,
+          [action('tap me')],
+          onTap: (_) {},
+          ambient: const TextStyle(fontSize: 22),
+        );
 
         expect(recognizerOf(tester), isNot(same(first)));
+      });
+
+      testWidgets('shrinking a line and then unmounting it does not throw', (
+        tester,
+      ) async {
+        // Disposal itself stays unobservable: GestureRecognizer.dispose only
+        // reports to the opt-in leak tracker, and addPointer has no
+        // used-after-dispose check, so a widget test cannot distinguish a
+        // disposed recognizer from a live one. (The leak tracker was tried --
+        // it reports a non-disposed object only once it is garbage collected,
+        // which a test cannot force, so it stayed green with disposal
+        // removed: a test proving nothing, which is worse than none.)
+        //
+        // What is checkable is that releasing recognizers raises nothing, in
+        // both of the places it happens -- replacing the spans, and
+        // unmounting the view. Disposing one twice throws, so the second
+        // must find nothing left.
+        await pumpRuns(tester, [
+          action('one'),
+          action('two'),
+          action('three'),
+        ], onTap: (_) {});
+        expect(tester.takeException(), isNull);
+
+        // Fewer actionable runs than before: the surplus recognizers are
+        // released here rather than at unmount.
+        await pumpRuns(tester, [action('one')], onTap: (_) {});
+        expect(tester.takeException(), isNull);
+
+        await pumpRuns(tester, [TextSpanNode(text: 'plain')], onTap: (_) {});
+        expect(tester.takeException(), isNull);
+
+        await tester.pumpWidget(const SizedBox.shrink());
+        expect(tester.takeException(), isNull);
       });
     });
 
@@ -446,30 +352,16 @@ void main() {
       // holding the down was disposed and the tap vanished silently.
       final tapped = <String>[];
 
-      Future<void> pump(String suffix) => tester.pumpWidget(
-        MaterialApp(
-          home: DefaultTextStyle(
-            style: const TextStyle(fontSize: 14, color: Color(0xFF000000)),
-            child: TextNodeView(
-              node: TextNode(
-                children: [
-                  TextSpanNode(
-                    text: 'press',
-                    decoration: SpanDecoration(isAction: true),
-                  ),
-                ],
-              ),
-              // A different theme instance each time, so the rebuild is
-              // real work rather than an identical widget Flutter can skip.
-              scope: NaturalBlockScope(
-                theme: NaturalBlockTheme(
-                  base: TextStyle(letterSpacing: suffix.length * 0.0),
-                ),
-                onTap: tapped.add,
-              ),
-            ),
-          ),
+      // A different theme instance each time, so the rebuild is real work
+      // rather than an identical widget Flutter can skip.
+      Future<void> pump(String suffix) => pumpRuns(
+        tester,
+        [action('press')],
+        theme: NaturalBlockTheme(
+          base: TextStyle(letterSpacing: suffix.length * 0.0),
         ),
+        onTap: tapped.add,
+        ambient: const TextStyle(fontSize: 14, color: Color(0xFF000000)),
       );
 
       await pump('a');
@@ -494,52 +386,6 @@ void main() {
       expect(tapped, [
         'press',
       ], reason: 'the tap must survive a rebuild between down and up');
-    });
-
-    testWidgets('unmounting a line of actionable spans does not throw', (
-      tester,
-    ) async {
-      // Disposal itself stays unobservable: GestureRecognizer.dispose only
-      // reports to the opt-in leak tracker, and addPointer has no
-      // used-after-dispose check, so a widget test cannot distinguish a
-      // disposed recognizer from a live one. (The leak tracker was tried --
-      // it reports a non-disposed object only once it is garbage collected,
-      // which a test cannot force, so it stayed green with disposal removed:
-      // a test proving nothing, which is worse than none.)
-      //
-      // What is checkable is that shrinking the line and then unmounting it
-      // raises nothing -- the visible symptom of a double dispose or a use
-      // after one.
-      const theme = NaturalBlockTheme();
-
-      Future<void> pumpWith(List<TextSpanNode> spans) => tester.pumpWidget(
-        MaterialApp(
-          home: TextNodeView(
-            node: TextNode(children: spans),
-            scope: NaturalBlockScope(theme: theme, onTap: (_) {}),
-          ),
-        ),
-      );
-
-      await pumpWith([
-        TextSpanNode(text: 'one', decoration: SpanDecoration(isAction: true)),
-        TextSpanNode(text: 'two', decoration: SpanDecoration(isAction: true)),
-        TextSpanNode(text: 'three', decoration: SpanDecoration(isAction: true)),
-      ]);
-      expect(tester.takeException(), isNull);
-
-      // Fewer actionable spans than before: the surplus recognizers are
-      // released here rather than at unmount.
-      await pumpWith([
-        TextSpanNode(text: 'one', decoration: SpanDecoration(isAction: true)),
-      ]);
-      expect(tester.takeException(), isNull);
-
-      await pumpWith([TextSpanNode(text: 'plain')]);
-      expect(tester.takeException(), isNull);
-
-      await tester.pumpWidget(const SizedBox.shrink());
-      expect(tester.takeException(), isNull);
     });
   });
 }
