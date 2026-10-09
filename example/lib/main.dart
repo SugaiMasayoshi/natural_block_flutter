@@ -269,7 +269,7 @@ class _BuildersDemo extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final builders = NaturalBlockBuilders(
-      text: (context, node, scope) => Padding(
+      text: (node, scope) => Padding(
         padding: const EdgeInsets.symmetric(vertical: 2),
         child: Chip(
           label: TextNodeView(node: node, scope: scope),

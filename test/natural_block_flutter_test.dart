@@ -197,7 +197,7 @@ void main() {
       tester,
     ) async {
       final builders = NaturalBlockBuilders(
-        text: (context, node, scope) => const Placeholder(),
+        text: (node, scope) => const Placeholder(),
       );
 
       await pump(tester, 'Hello world', builders: builders);
@@ -502,7 +502,7 @@ void main() {
       return (
         builds: builds,
         builders: NaturalBlockBuilders(
-          text: (context, node, scope) {
+          text: (node, scope) {
             builds.add(1);
             return const SizedBox.shrink();
           },
@@ -513,11 +513,15 @@ void main() {
     testWidgets('a builder reading an inherited widget sees it change', (
       tester,
     ) async {
-      // The drawn tree cannot say what a caller's builder read through the
-      // context it was handed, so a dependency changing has to drop it.
+      // A builder is handed no context, so reading one goes through a
+      // `Builder` -- which puts the dependency in an element of its own, for
+      // Flutter to notify. The drawn tree is kept across the change and the
+      // text still updates, which is the whole point of doing it this way.
       final builders = NaturalBlockBuilders(
-        text: (context, node, scope) =>
-            Text('${MediaQuery.sizeOf(context).width.round()}'),
+        text: (node, scope) => Builder(
+          builder: (context) =>
+              Text('${MediaQuery.sizeOf(context).width.round()}'),
+        ),
       );
 
       Widget view(double width) => MediaQuery(

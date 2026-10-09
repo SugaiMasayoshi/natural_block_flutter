@@ -16,7 +16,7 @@ class RowNodeView extends StatelessWidget {
     // to choose: the column builder is called straight from the builders.
     final cells = [
       for (final cell in node.children)
-        scope.builders.column(context, cell, scope),
+        scope.builders.column(cell, scope),
     ];
 
     return LayoutBuilder(

@@ -319,7 +319,7 @@ void main() {
   group('builders', () {
     testWidgets('cells are built through the builders', (tester) async {
       final builders = NaturalBlockBuilders(
-        tableCell: (context, node, scope) => const Placeholder(),
+        tableCell: (node, scope) => const Placeholder(),
       );
 
       await tester.pumpWidget(

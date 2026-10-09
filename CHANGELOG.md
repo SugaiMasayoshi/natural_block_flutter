@@ -125,10 +125,18 @@ Initial release.
 - A builder receives the node and one `NaturalBlockScope`, which carries the
   theme, the builders and the actions. The three travel together the whole
   way down and no level swaps one of them for its children, so they are one
-  value rather than three parameters repeated at every level. The
-  `BuildContext` stays outside it: it is the one thing that really does
-  differ per level, and keeping it out is what lets the default builders stay
-  `const`.
+  value rather than three parameters repeated at every level.
+- A builder gets no `BuildContext`, and neither do `buildLayouts` and
+  `buildContents`. It was threaded through the whole layer and read by
+  nothing in it -- every default builder only passed it on -- and existed so
+  a builder of the caller's own could read an inherited widget. That
+  possibility is what forced the view to drop its drawn tree from
+  `didChangeDependencies`: a builder could have read anything, the tree
+  cannot say what, so the only safe answer was to redraw the document on
+  every ambient change. Returning a `Builder` reads one instead, which puts
+  the dependency in an element of its own for Flutter to notify, so the
+  document is kept and only that line redraws. The invalidation rule, the
+  parameter and the test harness that existed to supply it all went with it.
 
 ### Raw regions
 

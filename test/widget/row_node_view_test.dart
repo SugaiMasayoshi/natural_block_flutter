@@ -119,7 +119,7 @@ void main() {
       'to row cells too',
       (tester) async {
         final customBuilders = NaturalBlockBuilders(
-          column: (context, node, scope) => const Placeholder(),
+          column: (node, scope) => const Placeholder(),
         );
         final node = RowNode(children: [ColumnNode(), ColumnNode()]);
 

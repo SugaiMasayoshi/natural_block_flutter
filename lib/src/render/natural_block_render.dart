@@ -14,29 +14,22 @@ import 'natural_block_builders.dart';
 /// reaches for that field directly.
 
 /// A widget for each of [nodes]: the blocks and rows a document holds.
-List<Widget> buildLayouts(
-  BuildContext context,
-  List<LayoutNode> nodes,
-  NaturalBlockScope scope,
-) => [
+List<Widget> buildLayouts(List<LayoutNode> nodes, NaturalBlockScope scope) => [
   for (final node in nodes)
     switch (node) {
-      RowNode() => scope.builders.row(context, node, scope),
-      ColumnNode() => scope.builders.column(context, node, scope),
+      RowNode() => scope.builders.row(node, scope),
+      ColumnNode() => scope.builders.column(node, scope),
     },
 ];
 
 /// A widget for each of [nodes]: the lines, raw blocks and tables a block or
 /// a table cell holds.
-List<Widget> buildContents(
-  BuildContext context,
-  List<ContentNode> nodes,
-  NaturalBlockScope scope,
-) => [
-  for (final node in nodes)
-    switch (node) {
-      TableNode() => scope.builders.table(context, node, scope),
-      TextNode() => scope.builders.text(context, node, scope),
-      RawNode() => scope.builders.raw(context, node, scope),
-    },
-];
+List<Widget> buildContents(List<ContentNode> nodes, NaturalBlockScope scope) =>
+    [
+      for (final node in nodes)
+        switch (node) {
+          TableNode() => scope.builders.table(node, scope),
+          TextNode() => scope.builders.text(node, scope),
+          RawNode() => scope.builders.raw(node, scope),
+        },
+    ];

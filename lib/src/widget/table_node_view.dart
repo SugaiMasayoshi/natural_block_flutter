@@ -55,7 +55,7 @@ class TableNodeView extends StatelessWidget {
               for (final cell in _squared(node.children[i]))
                 Padding(
                   padding: scope.theme.tableCellPadding,
-                  child: scope.builders.tableCell(context, cell, scope),
+                  child: scope.builders.tableCell(cell, scope),
                 ),
             ],
           ),

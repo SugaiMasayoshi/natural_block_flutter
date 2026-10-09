@@ -6,25 +6,17 @@ import 'package:natural_block_flutter/natural_block_flutter.dart';
 void main() {
   const theme = NaturalBlockTheme();
 
+  /// Builds with [build], then pumps the result so the views can be found.
+  ///
+  /// Building needs no `BuildContext`, so it happens here rather than from
+  /// inside a pumped `Builder`.
   Future<List<Widget>> buildWith(
     WidgetTester tester,
     NaturalBlockBuilders builders,
-    List<Widget> Function(BuildContext context, NaturalBlockScope scope) build,
+    List<Widget> Function(NaturalBlockScope scope) build,
   ) async {
-    late List<Widget> built;
-    await tester.pumpWidget(
-      MaterialApp(
-        home: Builder(
-          builder: (context) {
-            built = build(
-              context,
-              NaturalBlockScope(theme: theme, builders: builders),
-            );
-            return Column(children: built);
-          },
-        ),
-      ),
-    );
+    final built = build(NaturalBlockScope(theme: theme, builders: builders));
+    await tester.pumpWidget(MaterialApp(home: Column(children: built)));
     return built;
   }
 
@@ -33,15 +25,14 @@ void main() {
     WidgetTester tester,
     NaturalBlockBuilders builders,
     List<LayoutNode> nodes,
-  ) => buildWith(tester, builders, (c, scope) => buildLayouts(c, nodes, scope));
+  ) => buildWith(tester, builders, (scope) => buildLayouts(nodes, scope));
 
   /// The lines, raw blocks and tables a block holds.
   Future<List<Widget>> pumpContents(
     WidgetTester tester,
     NaturalBlockBuilders builders,
     List<ContentNode> nodes,
-  ) =>
-      buildWith(tester, builders, (c, scope) => buildContents(c, nodes, scope));
+  ) => buildWith(tester, builders, (scope) => buildContents(nodes, scope));
 
   TextNode text(String s) => TextNode(children: [TextSpanNode(text: s)]);
 
@@ -121,7 +112,7 @@ void main() {
       tester,
     ) async {
       final builders = NaturalBlockBuilders(
-        text: (context, node, scope) => const Placeholder(),
+        text: (node, scope) => const Placeholder(),
       );
 
       await pumpContents(tester, builders, [text('a')]);
@@ -135,7 +126,7 @@ void main() {
       'built through the builders',
       (tester) async {
         final builders = NaturalBlockBuilders(
-          column: (context, node, scope) => const Placeholder(),
+          column: (node, scope) => const Placeholder(),
         );
 
         await pumpLayouts(tester, builders, [
@@ -154,7 +145,7 @@ void main() {
 
     testWidgets('the kinds left out keep their default', (tester) async {
       final builders = NaturalBlockBuilders(
-        text: (context, node, scope) => const Placeholder(),
+        text: (node, scope) => const Placeholder(),
       );
 
       await pumpLayouts(tester, builders, [

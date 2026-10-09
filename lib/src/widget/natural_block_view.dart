@@ -57,18 +57,6 @@ class _NaturalBlockViewState extends State<NaturalBlockView> {
   /// parent. Parsing there charged the whole document to each of those.
   late DocumentNode _document = NaturalBlockParser.parse(widget.source);
 
-  /// Drops the drawn tree when an inherited widget changes.
-  ///
-  /// A builder of the caller's own is handed this context and may read one --
-  /// a `MediaQuery`, their own theme -- and bake what it read into the
-  /// widget. The tree cannot say what was read, so the only safe answer is
-  /// to draw again.
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    _cached = null;
-  }
-
   @override
   void didUpdateWidget(NaturalBlockView oldWidget) {
     super.didUpdateWidget(oldWidget);
@@ -118,7 +106,7 @@ class _NaturalBlockViewState extends State<NaturalBlockView> {
         onTap: widget.onTap == null ? null : _handleTap,
       );
       _cached = ColumnNodeView(
-        children: buildLayouts(context, _document.children, scope),
+        children: buildLayouts(_document.children, scope),
       );
     }
 

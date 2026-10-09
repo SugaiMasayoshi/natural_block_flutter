@@ -161,7 +161,7 @@ Holds one builder per kind of node: `row`, `column`, `table`, `tableCell`, `text
 
 ```dart
 const builders = NaturalBlockBuilders(
-  text: myTextBuilder, // (context, TextNode node, scope) => Widget
+  text: myTextBuilder, // (TextNode node, scope) => Widget
 );
 
 NaturalBlockView(source: source, builders: builders);
@@ -169,7 +169,17 @@ NaturalBlockView(source: source, builders: builders);
 
 **Which of the two extension points to reach for.** `builders` changes how a *kind of node* is drawn, everywhere it appears. `customs` decides how one *actionable run* is drawn, and declines the rest by returning null. An actionable run is not a node: `:@` is a decoration a run carries, like a tone or emphasis, so there is nothing for a builder to key on.
 
-A builder receives the node — already typed as the kind it was registered for, so there is no cast — and a `NaturalBlockScope`: the theme, the builders, the customs and the `onTap`, which travel together the whole way down. Recurse into a node's own children with `buildLayouts(context, node.children, scope)` for the blocks and rows a document holds, or `buildContents(context, node.children, scope)` for the lines, raw blocks and tables a block or a table cell holds. Either keeps every child on the same theme, builders and handlers. Where the tree already names one kind -- a row's cells, a table's rows -- reach for that field directly (`scope.builders.column(context, cell, scope)`), since there is nothing to choose.
+A builder receives the node — already typed as the kind it was registered for, so there is no cast — and a `NaturalBlockScope`: the theme, the builders, the customs and the `onTap`, which travel together the whole way down. Recurse into a node's own children with `buildLayouts(node.children, scope)` for the blocks and rows a document holds, or `buildContents(node.children, scope)` for the lines, raw blocks and tables a block or a table cell holds. Either keeps every child on the same theme, builders and handlers. Where the tree already names one kind -- a row's cells, a table's rows -- reach for that field directly (`scope.builders.column(cell, scope)`), since there is nothing to choose.
+
+**A builder gets no `BuildContext`.** It is called while its parent builds, so reading an inherited widget there would bake what it read into a tree that cannot say what that was -- and the view, unable to know whether this document cared, would have to redraw all of it on every ambient change. To read one, return a `Builder`:
+
+```dart
+text: (node, scope) => Builder(
+  builder: (context) => MyLine(node, scope, MediaQuery.sizeOf(context)),
+),
+```
+
+That puts the dependency in an element of its own for Flutter to track, so the document is kept and only your line redraws.
 
 Every field defaults to the builder that draws that kind the usual way, so a set of builders names only what it changes. Those defaults (`buildRowNode`, `buildColumnNode`, `buildTableNode`, `buildTableCellNode`, `buildTextNode`, `buildRawNode`) are exported, so a builder of your own can delegate back to one.
 
