@@ -190,12 +190,12 @@ Initial release.
   avoid. Through `widgetRun(Builder(...))` the dependency sits in an element
   of its own and Flutter tracks it.
 - The span building reads no context either, which fixed a second showing of
-  same fault: a raw run took its style from the ambient one directly while
-  the line compared `rootStyle`. A theme whose `base` names a size makes
-  `rootStyle` identical across an ambient size change, so the spans were
-  kept and the raw run went on showing the old size. Every run of a line now
-  starts from `rootStyle`, so `base` reaches a raw run as it reaches its
-  neighbours and the one value the line compares covers all of them.
+  the same fault: a raw run took its style from the ambient one directly
+  while the line compared `rootStyle`. A theme whose `base` names a size
+  makes `rootStyle` identical across an ambient size change, so the spans
+  were kept and the raw run went on showing the old size. Every run of a
+  line now starts from `rootStyle`, so `base` reaches a raw run as it
+  reaches its neighbours, and the one value the line compares covers all.
   `RawNodeView` starts a raw block from `base` too, for the same reason.
 
 ### Raw regions
