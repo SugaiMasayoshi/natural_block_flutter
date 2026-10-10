@@ -82,7 +82,7 @@ class _TextNodeViewState extends State<TextNodeView> {
       _runs = runSpans(from);
       _paragraph = TextSpan(
         style: rootStyle,
-        children: [for (final run in _runs) run.span],
+        children: List.generate(_runs.length, (i) => _runs[i].span),
       );
     }
 

@@ -15,6 +15,14 @@ Initial release.
   framework's own version of this and cannot apply here, since a parsed
   document is not a compile-time value. Measured on a debug build, an
   ancestor rebuild of a 50-paragraph document went from 12.2ms to 7.0ms.
+- Every list whose length is known before it is filled is built with
+  `List.generate` rather than a collection-for. A collection-for and a
+  hand-written `add` measure the same, because both grow a list and pay for
+  the reallocation; pre-sizing is what costs less. Measured on the runs of a
+  line, where the per-element work is smallest and so the share largest:
+  147.6ns per run became 101.7ns, a third of the cost. A loop stays a loop
+  where no list comes out of it -- asking the handlers in order, releasing
+  what a line made.
 - What it compares is the `NaturalBlockScope` it drew with, and the document
   -- not a second list of the same fields kept for comparing. That second
   list is a place for a field to reach the drawing and not the comparison,

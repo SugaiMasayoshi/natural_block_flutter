@@ -30,9 +30,10 @@ typedef SpanInputs = ({
 });
 
 /// A line's runs as spans, each with what releasing it takes.
-List<RunRendering> runSpans(SpanInputs from) => [
-  for (final run in from.line.children) _runSpan(run, from),
-];
+List<RunRendering> runSpans(SpanInputs from) {
+  final runs = from.line.children;
+  return List.generate(runs.length, (i) => _runSpan(runs[i], from));
+}
 
 RunRendering _runSpan(InlineNode run, SpanInputs from) {
   switch (run) {

@@ -12,7 +12,10 @@ import 'natural_block_render.dart';
 /// A row's cells are `ColumnNode`s and nothing else, so there is no kind to
 /// choose: the column builder is called straight from the builders.
 Widget buildRowNode(RowNode node, NaturalBlockScope scope) => RowNodeView(
-  cells: [for (final cell in node.children) scope.builders.column(cell, scope)],
+  cells: List.generate(
+    node.children.length,
+    (i) => scope.builders.column(node.children[i], scope),
+  ),
 );
 
 Widget buildColumnNode(ColumnNode node, NaturalBlockScope scope) =>

@@ -20,10 +20,10 @@ class RowNodeView extends StatelessWidget {
       return Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: bounded ? MainAxisSize.max : MainAxisSize.min,
-        children: [
-          for (final cell in cells)
-            if (bounded) Expanded(child: cell) else cell,
-        ],
+        children: List.generate(
+          cells.length,
+          (i) => bounded ? Expanded(child: cells[i]) : cells[i],
+        ),
       );
     },
   );
