@@ -10,13 +10,13 @@ class TableNodeView extends StatelessWidget {
 
   const TableNodeView({super.key, required this.node, required this.scope});
 
-  /// [row]'s cells, one per declared column.
+  /// [row] drawn as one cell per declared column.
   ///
   /// Two things the tree deliberately leaves undone, both questions about
   /// drawing rather than about what was written: `TableRow` requires every
   /// row to hold the same number of children, and a cell that stated no
   /// alignment is drawn with whatever its column stated.
-  List<TableCellNode> _squared(TableRowNode row) {
+  List<Widget> _cells(TableRowNode row) {
     return List.generate(node.columns.length, (i) {
       final column = node.columns[i];
       // A column this row never reached is a cell that stated nothing.
@@ -24,9 +24,17 @@ class TableNodeView extends StatelessWidget {
           ? row.children[i]
           : TableCellNode();
 
-      return TableCellNode(
-        children: stated.children,
-        align: stated.align == HorizontalAlign.unstated ? column : stated.align,
+      return Padding(
+        padding: scope.theme.tableCellPadding,
+        child: scope.builders.tableCell(
+          TableCellNode(
+            children: stated.children,
+            align: stated.align == HorizontalAlign.unstated
+                ? column
+                : stated.align,
+          ),
+          scope,
+        ),
       );
     });
   }
@@ -35,27 +43,22 @@ class TableNodeView extends StatelessWidget {
   Widget build(BuildContext context) {
     final stripe = scope.theme.tableStripe;
 
-    final table = Table(
-      defaultColumnWidth: const IntrinsicColumnWidth(),
-      border: scope.theme.tableBorder,
-      children: [
-        for (var i = 0; i < node.children.length; i++)
-          TableRow(
-            decoration: stripe != null && i.isOdd
-                ? BoxDecoration(color: stripe)
-                : null,
-            children: [
-              for (final cell in _squared(node.children[i]))
-                Padding(
-                  padding: scope.theme.tableCellPadding,
-                  child: scope.builders.tableCell(cell, scope),
-                ),
-            ],
-          ),
-      ],
+    // Sized to its content, and positioned by the block that holds it like
+    // anything else in a block.
+    return IntrinsicWidth(
+      child: Table(
+        defaultColumnWidth: const IntrinsicColumnWidth(),
+        border: scope.theme.tableBorder,
+        children: [
+          for (var i = 0; i < node.children.length; i++)
+            TableRow(
+              decoration: stripe != null && i.isOdd
+                  ? BoxDecoration(color: stripe)
+                  : null,
+              children: _cells(node.children[i]),
+            ),
+        ],
+      ),
     );
-
-    // Positioned by the block that holds it, like anything else in a block.
-    return IntrinsicWidth(child: table);
   }
 }
