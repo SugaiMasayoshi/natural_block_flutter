@@ -69,7 +69,7 @@ class _TextNodeViewState extends State<TextNodeView> {
     // In `build` rather than the two change hooks: it runs after both, so
     // one question in one place answers for either.
     final from = (
-      node: widget.node,
+      line: widget.node,
       theme: theme,
       rootStyle: rootStyle,
       customs: widget.scope.customs,

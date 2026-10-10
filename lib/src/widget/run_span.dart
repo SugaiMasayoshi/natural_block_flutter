@@ -11,7 +11,9 @@ import 'natural_block_theme.dart';
 /// disagree -- something could reach the building without reaching the
 /// comparison, and then a change would never redraw.
 typedef SpanInputs = ({
-  TextNode node,
+  /// The line itself, read by the comparison and nothing else: a run
+  /// arrives at [runSpan] on its own.
+  TextNode line,
   NaturalBlockTheme theme,
 
   /// What every run of the line starts from, and the size a `:+` counts
@@ -30,14 +32,14 @@ typedef SpanInputs = ({
 });
 
 /// The span for one run, and what releasing it takes.
-RunRendering runSpan(InlineNode node, SpanInputs from) {
-  switch (node) {
+RunRendering runSpan(InlineNode run, SpanInputs from) {
+  switch (run) {
     // A raw run is text the parser stopped reading, so the only thing to do
     // is not undo that: what the line is drawn in, made monospaced.
     case RawSpanNode():
       return (
         span: TextSpan(
-          text: node.text,
+          text: run.text,
           style: from.rootStyle.merge(from.theme.raw),
         ),
         dispose: () {},
@@ -45,14 +47,14 @@ RunRendering runSpan(InlineNode node, SpanInputs from) {
 
     case TextSpanNode():
       final theme = from.theme;
-      final text = node.text;
+      final text = run.text;
       final baseSize = from.rootStyle.fontSize ?? theme.baseFontSize;
-      final style = theme.styleFor(node.decoration, baseSize: baseSize);
+      final style = theme.styleFor(run.decoration, baseSize: baseSize);
 
       // Styled as actionable either way. What the handlers decide is how it
       // is drawn and whether it answers a tap -- and a run one of them
       // claims never reaches the plain span below.
-      if (node.decoration.isAction) {
+      if (run.decoration.isAction) {
         final onTap = from.onTap;
         for (final handler in from.customs) {
           final rendering = handler(
