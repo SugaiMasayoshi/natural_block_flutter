@@ -34,11 +34,11 @@ Initial release.
   reason to replace one either, so both `didChangeDependencies` and
   `didUpdateWidget` ask the same question in the same place.
 - `ColumnNodeView` stacks blocks and honours `HorizontalAlign`. Unstated and
-  `HorizontalAlign.start` both draw at the start, but are kept apart so a theme
-  can style unaligned blocks without overriding one that asked. A non-start
-  block is wrapped in `Align` rather than a width-filling box, so adding an
-  alignment marker can never make a document stop rendering where the
-  available width is unbounded.
+  `HorizontalAlign.start` both draw at the start; what keeps them apart is a
+  table, where a cell that stated nothing is drawn with its column instead.
+  A non-start block is wrapped in `Align` rather than a width-filling box, so
+  adding an alignment marker can never make a document stop rendering where
+  the available width is unbounded.
 - `RowNodeView` gives each cell of a row an equal share of the width, which
   is what keeps columns lined up between rows. Where the width is unbounded
   it falls back to shrink-wrapped cells — a degradation, since columns then

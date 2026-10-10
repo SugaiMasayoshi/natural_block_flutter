@@ -4,11 +4,6 @@ import 'package:natural_block/natural_block.dart';
 class ColumnNodeView extends StatelessWidget {
   final List<Widget> children;
 
-  /// The alignment the source stated, or `unstated` when it stated none.
-  ///
-  /// `unstated` and `start` both draw at the start today. They are kept apart
-  /// so a theme can give unaligned blocks a look of its own without also
-  /// overriding a block that asked for the start.
   final HorizontalAlign align;
 
   const ColumnNodeView({

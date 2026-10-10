@@ -84,33 +84,25 @@ class NaturalBlockTheme {
     this.rawScrollsHorizontally = false,
   });
 
+  /// A theme whose colours come from [scheme], and whose everything else is
+  /// the default constructor's.
+  ///
+  /// Only what a `ColorScheme` can answer is named here. Changing anything
+  /// else is `copyWith`'s job -- this used to take the other fields as
+  /// arguments too, which meant re-declaring their defaults in a second
+  /// place for no caller that ever passed one.
   factory NaturalBlockTheme.fromColorScheme(
     ColorScheme scheme, {
-    TextStyle base = const TextStyle(),
-    TextStyle emphasis = const TextStyle(fontWeight: FontWeight.bold),
-    double baseFontSize = 14,
-    double fontSizeStep = 4,
-    double minFontSize = 1,
-    EdgeInsets tableCellPadding = const EdgeInsets.symmetric(
-      horizontal: 8,
-      vertical: 4,
-    ),
     bool striped = false,
   }) {
     final rule = BorderSide(color: scheme.outlineVariant);
     return NaturalBlockTheme(
-      base: base,
       negative: TextStyle(color: scheme.error),
       positive: TextStyle(color: scheme.tertiary),
-      emphasis: emphasis,
       action: TextStyle(
         color: scheme.primary,
         decoration: TextDecoration.underline,
       ),
-      baseFontSize: baseFontSize,
-      fontSizeStep: fontSizeStep,
-      minFontSize: minFontSize,
-      tableCellPadding: tableCellPadding,
       tableBorder: striped
           ? TableBorder(
               top: rule,
@@ -128,13 +120,23 @@ class NaturalBlockTheme {
     );
   }
 
+  /// A theme derived from the ambient `ThemeData`: its colours from the
+  /// `ColorScheme`, and the size a `:+` counts from its body text.
+  ///
+  /// `bodyMedium` is Material's own "ordinary text", so a document reads at
+  /// the size the rest of the app does, and nothing here restates a number
+  /// Material already decided. Null leaves [baseFontSize] alone, the way
+  /// every other omitted [copyWith] argument does.
   factory NaturalBlockTheme.fromContext(
     BuildContext context, {
     bool striped = false,
-  }) => NaturalBlockTheme.fromColorScheme(
-    Theme.of(context).colorScheme,
-    striped: striped,
-  );
+  }) {
+    final theme = Theme.of(context);
+    return NaturalBlockTheme.fromColorScheme(
+      theme.colorScheme,
+      striped: striped,
+    ).copyWith(baseFontSize: theme.textTheme.bodyMedium?.fontSize);
+  }
 
   /// What one run's decoration looks like: the tone's style, with emphasis
   /// and actionability laid over it, at the size its `:+` and `:-` ask for.
