@@ -283,7 +283,7 @@ NaturalBlockView(
 
 **It is off until you pass it, deliberately.** Rendering a remote image is a network request to a third party, made simply by displaying a document. A URL carrying a per-recipient marker turns that into a read receipt; the identical request is a tracking pixel when the reader was not told. This package cannot tell those apart — it never interprets the URL — so the disclosure decision belongs to your app. It is the same reason mail clients block remote images by default.
 
-Shipping the reference implementation anyway is the point: declining to interpret would not prevent dialects, it would guarantee them, with every app inventing its own spelling. `NaturalBlockImages.urlOf` exposes the convention so a handler of your own can reuse it and sit in front of this one, which then takes whatever yours declined.
+Shipping the reference implementation anyway is the point: declining to interpret would not prevent dialects, it would guarantee them, with every app inventing its own spelling. `NaturalBlockImages.sourceOf` exposes the convention so a handler of your own can reuse it and sit in front of this one, which then takes whatever yours declined.
 
 ##### Local files
 
@@ -307,7 +307,7 @@ A relative payload (`image(assets/a.png)`) is declined by both, since resolving 
 
 ```dart
 RunRendering? assets(text, style, theme, onTap) {
-  final source = NaturalBlockImages.urlOf(text);
+  final source = NaturalBlockImages.sourceOf(text);
   if (source == null ||
       NaturalBlockImages.kindOf(source) != ImageSourceKind.relative) {
     return null;

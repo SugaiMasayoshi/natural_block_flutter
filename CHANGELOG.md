@@ -259,8 +259,11 @@ Initial release.
   conventional `image(<url>)` payload, off until included: drawing a remote
   image is a network request to a third party made by displaying a
   document, which is a disclosure decision belonging to the app.
-  `NaturalBlockImages.kindOf` classifies a payload as network, file, or
-  relative without needing `dart:io`.
+  `NaturalBlockImages.sourceOf` reads what a payload names and
+  `NaturalBlockImages.kindOf` classifies it as network, file or relative,
+  both without needing `dart:io`. `sourceOf`, not `urlOf`: a local payload
+  names a path, and on Windows that is not a URL even by accident -- which
+  is the whole trap `kindOf` exists for.
 - `NaturalBlockImages.local` draws local files, and is a handler of its own
   rather than a setting on the first, because the two are different
   decisions: a remote image tells a third party the document was opened, a

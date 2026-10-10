@@ -12,7 +12,7 @@ RunRendering? _localStandIn(
   NaturalBlockTheme theme,
   VoidCallback? onTap,
 ) {
-  final source = NaturalBlockImages.urlOf(text);
+  final source = NaturalBlockImages.sourceOf(text);
   if (source == null ||
       NaturalBlockImages.kindOf(source) != ImageSourceKind.file) {
     return null;
@@ -69,9 +69,9 @@ void main() {
   );
 
   group('the image(...) convention', () {
-    test('a payload that names an image yields its URL', () {
+    test('a payload that names an image yields its source', () {
       expect(
-        NaturalBlockImages.urlOf('image(https://example.com/a.png)'),
+        NaturalBlockImages.sourceOf('image(https://example.com/a.png)'),
         'https://example.com/a.png',
       );
     });
@@ -80,11 +80,11 @@ void main() {
       // The read-receipt shape is a query string, and it must survive intact
       // -- this package never inspects or rewrites what it carries.
       expect(
-        NaturalBlockImages.urlOf('image(https://e.com/x.png?id=you&v=2)'),
+        NaturalBlockImages.sourceOf('image(https://e.com/x.png?id=you&v=2)'),
         'https://e.com/x.png?id=you&v=2',
       );
       expect(
-        NaturalBlockImages.urlOf('image(https://e.com/a_(1).png)'),
+        NaturalBlockImages.sourceOf('image(https://e.com/a_(1).png)'),
         'https://e.com/a_(1).png',
       );
     });
@@ -102,7 +102,7 @@ void main() {
         '',
       ]) {
         expect(
-          NaturalBlockImages.urlOf(text),
+          NaturalBlockImages.sourceOf(text),
           isNull,
           reason: '"$text" is not the image(...) convention',
         );

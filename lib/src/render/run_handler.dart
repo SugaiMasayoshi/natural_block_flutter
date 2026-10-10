@@ -5,18 +5,17 @@ import '../widget/natural_block_theme.dart';
 
 /// What tapping an actionable run means, decided by the app.
 ///
-/// Nothing here interprets the text. The run's own text is the whole payload
-/// -- a URL to open, a section to jump to, a mention to resolve -- and what
-/// it means belongs to the app that showed the document.
+/// Nothing here interprets the text: no URL is opened. The run's own text
+/// is the whole payload, and what it means belongs to the app.
 typedef OnActionTap = void Function(String text);
 
 /// How one actionable run is drawn: the span to put in the line, and what to
 /// release when the line is rebuilt or goes away.
 ///
-/// Anything the `span` carries is yours, a gesture recognizer included.
-/// `dispose` is the only thing that releases it, and it is required rather than
-/// omittable so that having nothing to release is written down -- `() {}` --
-/// instead of being indistinguishable from having forgotten.
+/// Anything the `span` carries is yours, a gesture recognizer included, and
+/// `dispose` is the only thing that will ever release it. Required rather
+/// than omittable, so that having nothing to release is written -- `() {}`
+/// -- rather than indistinguishable from having forgotten.
 typedef RunRendering = ({InlineSpan span, VoidCallback dispose});
 
 /// A run drawn as [child] rather than as text, centred on the text beside it.
@@ -44,10 +43,9 @@ RunRendering widgetRun(
 /// Answers how one actionable run is drawn, or null to leave it to the next
 /// handler.
 ///
-/// [text] is the run's own text, which is the payload. [style] is what the
-/// run would have been drawn with, carrying a real size rather than an
-/// unstated one. [onTap] is what the app wants done with this run, already
-/// bound to its text, and null when the app wired nothing.
+/// [style] is what the run would have been drawn with, its `fontSize`
+/// always resolved. [onTap] comes already bound to this run's text, and is
+/// null when the app wired nothing.
 typedef RunHandler = RunRendering? Function(
   String text,
   TextStyle style,
@@ -59,12 +57,10 @@ typedef RunHandler = RunRendering? Function(
 ///
 /// The default, and a handler like any other: leave it out of a view's
 /// `customs` and actionable runs keep their style without answering a tap.
-/// It is also the shape to copy -- a recognizer made here, released by the
-/// `dispose` handed back, and a `TextSpan` so the text still wraps.
 ///
-/// Announced to a screen reader only because something answers it. Claiming
-/// interactivity that nothing answers is a promise this package cannot keep,
-/// which is why a run with no `onTap` is declined rather than underlined.
+/// Declined rather than underlined when nothing is wired, and announced to
+/// a screen reader only when something is: claiming interactivity nothing
+/// answers is a promise this package cannot keep.
 RunRendering? tappableText(
   String text,
   TextStyle style,

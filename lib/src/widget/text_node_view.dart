@@ -33,8 +33,6 @@ class _TextNodeViewState extends State<TextNodeView> {
   List<RunRendering> _runs = const [];
   List<InlineSpan> _spans = const [];
 
-  /// What the current spans were built from, so a build can tell whether they
-  /// still hold.
   SpanInputs? _builtFrom;
 
   @override
@@ -53,30 +51,23 @@ class _TextNodeViewState extends State<TextNodeView> {
     _spans = const [];
   }
 
-  /// A method rather than a closure, so it compares equal across builds: a
-  /// caller writing a fresh `onTap` on every build keeps the spans -- and the
-  /// recognizers -- as they are. Whether there is one at all still shows
-  /// through, because that decides if a run is tappable.
+  /// A method, not a closure, so a caller writing a fresh `onTap` each
+  /// build keeps the spans and their recognizers as they are.
   void _handleTap(String text) => widget.scope.onTap?.call(text);
 
   @override
   Widget build(BuildContext context) {
-    // Everything the ambient style decides is resolved here, where the
-    // `BuildContext` is, and handed over as values. Nothing further down
-    // reads one: what a span is built from has to be what it is compared
-    // by, or an ambient change reaches the drawing without reaching the
-    // comparison and the line never redraws.
     final theme = widget.scope.theme;
 
-    // The root span and the size a `:+` counts from are the same expression,
-    // because two of them drift -- and then a theme whose `base` names a
+    // Everything the context decides is resolved here and handed down as
+    // values, so that what a span is built from is also what it is
+    // compared by. The root span and the size a `:+` counts from are one
+    // expression, because two of them drift -- and then a `base` naming a
     // size makes `:+` render *smaller* than the text beside it.
     final rootStyle = DefaultTextStyle.of(context).style.merge(theme.base);
 
-    // Compared here rather than in `didUpdateWidget` and
-    // `didChangeDependencies`: build runs after both, so one question in one
-    // place answers for both -- and that is what closed the hole where an
-    // ambient change the spans could not see replaced their recognizers.
+    // In `build` rather than the two change hooks: it runs after both, so
+    // one question in one place answers for either.
     final from = (
       node: widget.node,
       theme: theme,

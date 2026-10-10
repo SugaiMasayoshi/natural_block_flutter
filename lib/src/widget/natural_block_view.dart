@@ -13,8 +13,7 @@ class NaturalBlockView extends StatefulWidget {
   /// How this document looks, or null to take it from the ambient theme.
   ///
   /// Null rather than a constant default: no constant is right in both a
-  /// light and a dark theme, so the default is derived from the surrounding
-  /// `ColorScheme` instead of guessed.
+  /// light and a dark theme.
   final NaturalBlockTheme? theme;
 
   final NaturalBlockBuilders builders;
@@ -22,13 +21,12 @@ class NaturalBlockView extends StatefulWidget {
   /// The handlers an actionable run is offered to, in order, until one claims
   /// it.
   ///
-  /// Drawing an actionable run as tappable text is itself a handler, so a
-  /// list that leaves [tappableText] out draws those runs styled but inert.
-  /// Images are handlers too, one per kind of source, so an app includes the
-  /// ones it means: `const [NaturalBlockImages.network, tappableText]`.
+  /// Drawing one as tappable text is itself a handler, and so is each kind
+  /// of image, so an app names the ones it means:
+  /// `const [NaturalBlockImages.network, tappableText]`.
   ///
-  /// Keep the list stable -- `const`, or held in your state. One written out
-  /// afresh on every build never compares equal to the last, which redraws
+  /// Keep the list stable -- `const`, or held in your state. One written
+  /// afresh each build never compares equal to the last, which redraws
   /// every line and loses a tap held across the redraw.
   final List<RunHandler> customs;
 
@@ -76,14 +74,12 @@ class _NaturalBlockViewState extends State<NaturalBlockView> {
   DocumentNode? _drawnDocument;
   NaturalBlockScope? _drawnScope;
 
-  /// What the tree is handed in place of the caller's `onTap`: a method of
-  /// this state, which compares equal across builds.
+  /// Handed to the tree in place of the caller's `onTap`, because a method
+  /// tear-off compares equal across builds where their closure never would.
   ///
-  /// A caller writes `onTap` as a closure in their own `build`, and two
-  /// closures are never equal in Dart, so comparing it would miss every
-  /// time. Reading it at tap time instead means a kept tree still calls the
-  /// newest callback. Whether there is one at all does reach the comparison,
-  /// because that decides if a run is tappable.
+  /// Read at tap time, so a kept tree still calls the newest callback.
+  /// Whether there is one at all does reach the comparison, since that
+  /// decides if a run is tappable.
   void _handleTap(String text) => widget.onTap?.call(text);
 
   @override
