@@ -31,57 +31,53 @@ typedef SpanInputs = ({
 
 /// A line's runs as spans, and whatever any of them left to release.
 ///
-/// Only a run some handler claimed puts anything in `disposes`, so a line of
-/// ordinary text has nothing to release at all. Which `dispose` came from
-/// which span is never asked, so the two lists are not kept in step and the
-/// second is usually empty.
+/// Only a run some handler claimed leaves anything, so a line of ordinary
+/// text has nothing to release at all. Which `dispose` came from which span
+/// is never asked, which is why they are two lists rather than one list of
+/// pairs, and why the second is usually shorter than the first.
 ({List<InlineSpan> spans, List<VoidCallback> disposes}) runSpans(
   SpanInputs from,
 ) {
+  final theme = from.theme;
   final runs = from.line.children;
+
+  // One span per run, so the length is known; every arm below fills its own
+  // index and the switch is exhaustive, so no slot keeps the placeholder.
+  final spans = List<InlineSpan>.filled(runs.length, const TextSpan());
   final disposes = <VoidCallback>[];
 
-  return (
-    spans: List.generate(runs.length, (i) => _spanFor(runs[i], from, disposes)),
-    disposes: disposes,
-  );
-}
+  for (var i = 0; i < runs.length; i++) {
+    final run = runs[i];
+    switch (run) {
+      // A raw run is text the parser stopped reading, so the only thing to
+      // do is not undo that: what the line is drawn in, made monospaced.
+      case RawSpanNode():
+        spans[i] = TextSpan(
+          text: run.text,
+          style: from.rootStyle.merge(theme.raw),
+        );
 
-/// The span for [run], adding to [disposes] if it made something to let go of.
-InlineSpan _spanFor(
-  InlineNode run,
-  SpanInputs from,
-  List<VoidCallback> disposes,
-) {
-  switch (run) {
-    // A raw run is text the parser stopped reading, so the only thing to do
-    // is not undo that: what the line is drawn in, made monospaced.
-    case RawSpanNode():
-      return TextSpan(
-        text: run.text,
-        style: from.rootStyle.merge(from.theme.raw),
-      );
+      case TextSpanNode():
+        final text = run.text;
+        final baseSize = from.rootStyle.fontSize ?? theme.baseFontSize;
+        final style = theme.styleFor(run.decoration, baseSize: baseSize);
 
-    case TextSpanNode():
-      final theme = from.theme;
-      final text = run.text;
-      final baseSize = from.rootStyle.fontSize ?? theme.baseFontSize;
-      final style = theme.styleFor(run.decoration, baseSize: baseSize);
+        // `styleFor` leaves the size unstated where the source asked for no
+        // step, so this is what the run actually draws at.
+        final drawnSize = style.fontSize ?? baseSize;
 
-      // `styleFor` leaves the size unstated where the source asked for no
-      // step, so this is what the run actually draws at.
-      final drawnSize = style.fontSize ?? baseSize;
+        // Styled as actionable either way. What the handlers decide is how
+        // it is drawn and whether it answers a tap.
+        final claimed = run.decoration.isAction
+            ? _claim(from, text, style.copyWith(fontSize: drawnSize))
+            : null;
 
-      // Styled as actionable either way. What the handlers decide is how it
-      // is drawn and whether it answers a tap.
-      final claimed = run.decoration.isAction
-          ? _claim(from, text, style.copyWith(fontSize: drawnSize))
-          : null;
-      if (claimed == null) return TextSpan(text: text, style: style);
-
-      disposes.add(claimed.dispose);
-      return claimed.span;
+        spans[i] = claimed?.span ?? TextSpan(text: text, style: style);
+        if (claimed != null) disposes.add(claimed.dispose);
+    }
   }
+
+  return (spans: spans, disposes: disposes);
 }
 
 /// The first handler to draw [text] itself, or null when none of them does.
