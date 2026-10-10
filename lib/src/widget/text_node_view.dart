@@ -2,7 +2,8 @@ import 'package:flutter/widgets.dart';
 import 'package:natural_block/natural_block.dart';
 
 import '../render/natural_block_builders.dart';
-import 'run_span.dart';
+import '../render/run_handler.dart';
+import 'natural_block_theme.dart';
 
 class TextNodeView extends StatefulWidget {
   final TextNode node;
@@ -32,7 +33,7 @@ class _TextNodeViewState extends State<TextNodeView> {
   /// nothing.
   TextSpan _paragraph = const TextSpan();
 
-  SpanInputs? _builtFrom;
+  _SpanInputs? _builtFrom;
 
   @override
   void dispose() {
@@ -78,11 +79,85 @@ class _TextNodeViewState extends State<TextNodeView> {
     if (from != _builtFrom) {
       _builtFrom = from;
       _release();
-      final drawn = runSpans(from);
+      final drawn = _runSpans(from);
       _disposes = drawn.disposes;
       _paragraph = TextSpan(style: rootStyle, children: drawn.spans);
     }
 
     return Text.rich(_paragraph);
   }
+}
+
+/// Everything a line's spans are made of.
+///
+/// One value, because it is both what the spans are built from and what
+/// decides whether the ones already built still hold. Two values could
+/// disagree -- something could reach the building without reaching the
+/// comparison, and then a change would never redraw.
+typedef _SpanInputs = ({
+  TextNode line,
+  NaturalBlockTheme theme,
+  TextStyle rootStyle,
+  List<RunHandler> customs,
+  OnActionTap? onTap,
+});
+
+/// A line's runs as spans, and whatever any of them left to release.
+///
+/// A function of [from] alone rather than a method of the state, so it
+/// cannot read anything the comparison does not see.
+///
+/// Only a run some handler claimed leaves anything to release. Which
+/// `dispose` came from which span is never asked, which is why they are two
+/// lists rather than one list of pairs.
+({List<InlineSpan> spans, List<VoidCallback> disposes}) _runSpans(
+  _SpanInputs from,
+) {
+  final theme = from.theme;
+  final onTap = from.onTap;
+  final runs = from.line.children;
+
+  // One span per run, so the length is known; every arm below fills its own
+  // index and the switch is exhaustive, so no slot keeps the placeholder.
+  final spans = List<InlineSpan>.filled(runs.length, const TextSpan());
+  final disposes = <VoidCallback>[];
+
+  for (var i = 0; i < runs.length; i++) {
+    final run = runs[i];
+    switch (run) {
+      // A raw run is text the parser stopped reading, so the only thing to
+      // do is not undo that: what the line is drawn in, made monospaced.
+      case RawSpanNode():
+        spans[i] = TextSpan(
+          text: run.text,
+          style: from.rootStyle.merge(theme.raw),
+        );
+
+      case TextSpanNode():
+        final text = run.text;
+        final baseSize = from.rootStyle.fontSize ?? theme.baseFontSize;
+        final style = theme.styleFor(run.decoration, baseSize: baseSize);
+
+        // Styled as actionable either way. What the handlers decide is how
+        // it is drawn and whether it answers a tap: the first to answer
+        // draws it, and the rest are not asked.
+        RunRendering? claimed;
+        if (run.decoration.isAction) {
+          // `styleFor` leaves the size unstated where the source asked for
+          // no step; a handler is handed the size the run actually draws at.
+          final offered = style.copyWith(fontSize: style.fontSize ?? baseSize);
+          final tap = onTap == null ? null : () => onTap(text);
+
+          for (final handler in from.customs) {
+            claimed = handler(text, offered, theme, tap);
+            if (claimed != null) break;
+          }
+        }
+
+        spans[i] = claimed?.span ?? TextSpan(text: text, style: style);
+        if (claimed != null) disposes.add(claimed.dispose);
+    }
+  }
+
+  return (spans: spans, disposes: disposes);
 }
