@@ -17,8 +17,11 @@ Widget? localFileImage(
 
   final String path;
   if (uri.scheme != 'file') {
-    // A plain path, drive letter and all: `uri.path` would have dropped the
-    // drive, and `NaturalBlockImages.kindOf` already said this is local.
+    // Already a path, and `toFilePath` would refuse to take it: that accepts
+    // an empty scheme or `file` and nothing else, and a Windows drive parses
+    // as a one-letter scheme -- so it throws on `C:\Users\a.png`, the most
+    // ordinary input here. `kindOf` has already said this is local, so it
+    // goes to `File` as written.
     path = source;
   } else {
     try {
