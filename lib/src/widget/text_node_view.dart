@@ -2,7 +2,6 @@ import 'package:flutter/widgets.dart';
 import 'package:natural_block/natural_block.dart';
 
 import '../render/natural_block_builders.dart';
-import '../render/run_handler.dart';
 import 'run_span.dart';
 
 class TextNodeView extends StatefulWidget {
@@ -25,9 +24,9 @@ class TextNodeView extends StatefulWidget {
 /// of an animating parent -- so they are kept until what they are made of
 /// changes.
 class _TextNodeViewState extends State<TextNodeView> {
-  /// What `runSpans` answered, kept as it came so that releasing a line is
-  /// asking each run to release what it made.
-  List<RunRendering> _runs = const [];
+  /// What the runs of this line left to release, which for a line of
+  /// ordinary text is nothing at all.
+  List<VoidCallback> _disposes = const [];
 
   /// What `build` hands over, so that a build which changes nothing does
   /// nothing.
@@ -44,10 +43,10 @@ class _TextNodeViewState extends State<TextNodeView> {
   /// Safe to call twice: the list is emptied, so the call from [dispose]
   /// finds nothing left after a rebuild already released it.
   void _release() {
-    for (final run in _runs) {
-      run.dispose();
+    for (final dispose in _disposes) {
+      dispose();
     }
-    _runs = const [];
+    _disposes = const [];
     _paragraph = const TextSpan();
   }
 
@@ -79,11 +78,9 @@ class _TextNodeViewState extends State<TextNodeView> {
     if (from != _builtFrom) {
       _builtFrom = from;
       _release();
-      _runs = runSpans(from);
-      _paragraph = TextSpan(
-        style: rootStyle,
-        children: List.generate(_runs.length, (i) => _runs[i].span),
-      );
+      final drawn = runSpans(from);
+      _disposes = drawn.disposes;
+      _paragraph = TextSpan(style: rootStyle, children: drawn.spans);
     }
 
     return Text.rich(_paragraph);

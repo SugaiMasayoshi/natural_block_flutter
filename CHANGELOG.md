@@ -18,11 +18,18 @@ Initial release.
 - Every list whose length is known before it is filled is built with
   `List.generate` rather than a collection-for. A collection-for and a
   hand-written `add` measure the same, because both grow a list and pay for
-  the reallocation; pre-sizing is what costs less. Measured on the runs of a
-  line, where the per-element work is smallest and so the share largest:
-  147.6ns per run became 101.7ns, a third of the cost. A loop stays a loop
-  where no list comes out of it -- asking the handlers in order, releasing
-  what a line made.
+  the reallocation; pre-sizing is what costs less. Compiled ahead of time and
+  measured on list building alone, a thousand elements cost 22.5us one way
+  and 3.9us the other. A loop stays a loop where no list comes out of it --
+  asking the handlers in order, releasing what a line made.
+- Turning a line into spans hands back the spans and, separately, whatever
+  needs releasing. Nothing ever asks which `dispose` belongs to which span,
+  so pairing them cost a record per run that was built, destructured, and
+  then held for the life of the line -- and a line of ordinary text held one
+  per run with nothing in it. Only a run a handler claims adds anything now,
+  so such a line has nothing to release at all. Measured in one session
+  against the shape it replaced: 156ns per run became 143ns for a line of a
+  thousand runs, and 180ns became 129ns for a line of twenty.
 - What it compares is the `NaturalBlockScope` it drew with, and the document
   -- not a second list of the same fields kept for comparing. That second
   list is a place for a field to reach the drawing and not the comparison,

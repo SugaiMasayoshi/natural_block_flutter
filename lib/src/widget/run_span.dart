@@ -29,23 +29,37 @@ typedef SpanInputs = ({
   OnActionTap? onTap,
 });
 
-/// A line's runs as spans, each with what releasing it takes.
-List<RunRendering> runSpans(SpanInputs from) {
+/// A line's runs as spans, and whatever any of them left to release.
+///
+/// Only a run some handler claimed puts anything in `disposes`, so a line of
+/// ordinary text has nothing to release at all. Which `dispose` came from
+/// which span is never asked, so the two lists are not kept in step and the
+/// second is usually empty.
+({List<InlineSpan> spans, List<VoidCallback> disposes}) runSpans(
+  SpanInputs from,
+) {
   final runs = from.line.children;
-  return List.generate(runs.length, (i) => _runSpan(runs[i], from));
+  final disposes = <VoidCallback>[];
+
+  return (
+    spans: List.generate(runs.length, (i) => _spanFor(runs[i], from, disposes)),
+    disposes: disposes,
+  );
 }
 
-RunRendering _runSpan(InlineNode run, SpanInputs from) {
+/// The span for [run], adding to [disposes] if it made something to let go of.
+InlineSpan _spanFor(
+  InlineNode run,
+  SpanInputs from,
+  List<VoidCallback> disposes,
+) {
   switch (run) {
     // A raw run is text the parser stopped reading, so the only thing to do
     // is not undo that: what the line is drawn in, made monospaced.
     case RawSpanNode():
-      return (
-        span: TextSpan(
-          text: run.text,
-          style: from.rootStyle.merge(from.theme.raw),
-        ),
-        dispose: () {},
+      return TextSpan(
+        text: run.text,
+        style: from.rootStyle.merge(from.theme.raw),
       );
 
     case TextSpanNode():
@@ -63,9 +77,10 @@ RunRendering _runSpan(InlineNode run, SpanInputs from) {
       final claimed = run.decoration.isAction
           ? _claim(from, text, style.copyWith(fontSize: drawnSize))
           : null;
+      if (claimed == null) return TextSpan(text: text, style: style);
 
-      return claimed ??
-          (span: TextSpan(text: text, style: style), dispose: () {});
+      disposes.add(claimed.dispose);
+      return claimed.span;
   }
 }
 
