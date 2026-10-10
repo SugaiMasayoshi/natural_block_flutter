@@ -25,8 +25,7 @@ class TextNodeView extends StatefulWidget {
 /// of an animating parent -- so they are kept until what they are made of
 /// changes.
 class _TextNodeViewState extends State<TextNodeView> {
-  /// What `runSpan` answered for each run, and the spans the paragraph takes
-  /// from it.
+  /// What `runSpans` answered, and the spans the paragraph takes from it.
   ///
   /// Kept as it came so that releasing a line is asking each run to release
   /// what it made, rather than reading back a list of callbacks on its own.
@@ -79,7 +78,7 @@ class _TextNodeViewState extends State<TextNodeView> {
     if (from != _builtFrom) {
       _builtFrom = from;
       _release();
-      _runs = [for (final run in widget.node.children) runSpan(run, from)];
+      _runs = runSpans(from);
       _spans = [for (final run in _runs) run.span];
     }
 

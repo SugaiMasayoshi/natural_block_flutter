@@ -189,7 +189,7 @@ Initial release.
   recognizers mid-gesture -- the one thing the line is built the way it is to
   avoid. Through `widgetRun(Builder(...))` the dependency sits in an element
   of its own and Flutter tracks it.
-- `runSpan` reads no context either, which fixed a second showing of the
+- The span building reads no context either, which fixed a second showing of
   same fault: a raw run took its style from the ambient one directly while
   the line compared `rootStyle`. A theme whose `base` names a size makes
   `rootStyle` identical across an ambient size change, so the spans were

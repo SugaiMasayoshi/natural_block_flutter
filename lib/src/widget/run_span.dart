@@ -11,8 +11,6 @@ import 'natural_block_theme.dart';
 /// disagree -- something could reach the building without reaching the
 /// comparison, and then a change would never redraw.
 typedef SpanInputs = ({
-  /// The line itself, read by the comparison and nothing else: a run
-  /// arrives at [runSpan] on its own.
   TextNode line,
   NaturalBlockTheme theme,
 
@@ -31,8 +29,12 @@ typedef SpanInputs = ({
   OnActionTap? onTap,
 });
 
-/// The span for one run, and what releasing it takes.
-RunRendering runSpan(InlineNode run, SpanInputs from) {
+/// A line's runs as spans, each with what releasing it takes.
+List<RunRendering> runSpans(SpanInputs from) => [
+  for (final run in from.line.children) _runSpan(run, from),
+];
+
+RunRendering _runSpan(InlineNode run, SpanInputs from) {
   switch (run) {
     // A raw run is text the parser stopped reading, so the only thing to do
     // is not undo that: what the line is drawn in, made monospaced.
