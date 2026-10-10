@@ -18,10 +18,12 @@ class TableNodeView extends StatelessWidget {
   /// alignment is drawn with whatever its column stated.
   List<TableCellNode> _squared(TableRowNode row) => [
     for (var i = 0; i < node.columns.length; i++)
-      if (i < row.children.length)
-        _resolved(row.children[i], node.columns[i])
-      else
-        TableCellNode(children: const [], align: node.columns[i]),
+      // A column this row never reached is a cell that stated nothing, which
+      // [_resolved] already draws with the column's own alignment.
+      _resolved(
+        i < row.children.length ? row.children[i] : TableCellNode(),
+        node.columns[i],
+      ),
   ];
 
   /// [cell] drawn with its own alignment, or [column]'s where it stated none.
