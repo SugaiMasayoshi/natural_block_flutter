@@ -10,33 +10,29 @@ class TableNodeView extends StatelessWidget {
 
   const TableNodeView({super.key, required this.node, required this.scope});
 
-  /// [row]'s cells, squared off to the table's width and with each cell's
-  /// alignment resolved against its column.
+  /// [row]'s cells, one per declared column.
   ///
-  /// Both are this layer's business, not the parser's. `TableRow` requires
-  /// every row to hold the same number of children, and a cell that stated
-  /// no alignment of its own is drawn with whatever its column stated -- a
-  /// question about how to draw, asked of a tree that only records what was
-  /// written. Going back through the builders keeps a caller's own
-  /// `TableCellNode` builder working inside a table.
+  /// Two things the tree deliberately leaves undone, both questions about
+  /// drawing rather than about what was written: `TableRow` requires every
+  /// row to hold the same number of children, and a cell that stated no
+  /// alignment is drawn with whatever its column stated.
   List<TableCellNode> _squared(TableRowNode row) => [
     for (var i = 0; i < node.columns.length; i++)
-      TableCellNode(
-        children: i < row.children.length ? row.children[i].children : const [],
-        align: _effectiveAlign(row, i),
-      ),
+      if (i < row.children.length)
+        _resolved(row.children[i], node.columns[i])
+      else
+        TableCellNode(children: const [], align: node.columns[i]),
   ];
 
-  /// What the cell at [i] is drawn with: what it stated, else what its
-  /// column declared.
+  /// [cell] drawn with its own alignment, or [column]'s where it stated none.
   ///
-  /// The resolution the tree deliberately does not do. `unstated` is a
-  /// value rather than a gap, so this is a comparison rather than a `??`.
-  HorizontalAlign _effectiveAlign(TableRowNode row, int i) {
-    if (i >= row.children.length) return node.columns[i];
-    final stated = row.children[i].align;
-    return stated == HorizontalAlign.unstated ? node.columns[i] : stated;
-  }
+  /// `unstated` is a value rather than a gap, so this is a comparison rather
+  /// than a `??`.
+  static TableCellNode _resolved(TableCellNode cell, HorizontalAlign column) =>
+      TableCellNode(
+        children: cell.children,
+        align: cell.align == HorizontalAlign.unstated ? column : cell.align,
+      );
 
   @override
   Widget build(BuildContext context) {
