@@ -38,11 +38,12 @@ RunRendering runSpan(BuildContext context, InlineNode node, SpanInputs from) {
     // A raw run is text the parser stopped reading, so the only thing to do
     // is not undo that: the ambient style, made monospaced.
     case RawSpanNode():
-      return _plain(
-        TextSpan(
+      return (
+        span: TextSpan(
           text: node.text,
           style: DefaultTextStyle.of(context).style.merge(from.theme.raw),
         ),
+        dispose: () {},
       );
 
     case TextSpanNode():
@@ -50,27 +51,25 @@ RunRendering runSpan(BuildContext context, InlineNode node, SpanInputs from) {
       final text = node.text;
       final baseSize = from.rootStyle.fontSize ?? theme.baseFontSize;
       final style = theme.styleFor(node.decoration, baseSize: baseSize);
-      final plain = _plain(TextSpan(text: text, style: style));
 
       // Styled as actionable either way. What the handlers decide is how it
-      // is drawn and whether it answers a tap.
-      if (!node.decoration.isAction) return plain;
-
-      final onTap = from.onTap;
-      for (final handler in from.customs) {
-        final rendering = handler(
-          context,
-          text,
-          // Handlers are given a size to work from, never an unstated one.
-          style.copyWith(fontSize: style.fontSize ?? baseSize),
-          theme,
-          onTap == null ? null : () => onTap(text),
-        );
-        if (rendering != null) return rendering;
+      // is drawn and whether it answers a tap -- and a run one of them
+      // claims never reaches the plain span below.
+      if (node.decoration.isAction) {
+        final onTap = from.onTap;
+        for (final handler in from.customs) {
+          final rendering = handler(
+            context,
+            text,
+            // Handlers are given a size to work from, never an unstated one.
+            style.copyWith(fontSize: style.fontSize ?? baseSize),
+            theme,
+            onTap == null ? null : () => onTap(text),
+          );
+          if (rendering != null) return rendering;
+        }
       }
-      return plain;
+
+      return (span: TextSpan(text: text, style: style), dispose: () {});
   }
 }
-
-/// A span with nothing to release.
-RunRendering _plain(InlineSpan span) => (span: span, dispose: () {});
