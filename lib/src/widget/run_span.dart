@@ -53,23 +53,36 @@ RunRendering _runSpan(InlineNode run, SpanInputs from) {
       final baseSize = from.rootStyle.fontSize ?? theme.baseFontSize;
       final style = theme.styleFor(run.decoration, baseSize: baseSize);
 
-      // Styled as actionable either way. What the handlers decide is how it
-      // is drawn and whether it answers a tap -- and a run one of them
-      // claims never reaches the plain span below.
-      if (run.decoration.isAction) {
-        final onTap = from.onTap;
-        for (final handler in from.customs) {
-          final rendering = handler(
-            text,
-            // Handlers are given a size to work from, never an unstated one.
-            style.copyWith(fontSize: style.fontSize ?? baseSize),
-            theme,
-            onTap == null ? null : () => onTap(text),
-          );
-          if (rendering != null) return rendering;
-        }
-      }
+      // `styleFor` leaves the size unstated where the source asked for no
+      // step, so this is what the run actually draws at.
+      final drawnSize = style.fontSize ?? baseSize;
 
-      return (span: TextSpan(text: text, style: style), dispose: () {});
+      // Styled as actionable either way. What the handlers decide is how it
+      // is drawn and whether it answers a tap.
+      final claimed = run.decoration.isAction
+          ? _claim(from, text, style.copyWith(fontSize: drawnSize))
+          : null;
+
+      return claimed ??
+          (span: TextSpan(text: text, style: style), dispose: () {});
   }
+}
+
+/// The first handler to draw [text] itself, or null when none of them does.
+///
+/// [style] carries a real size rather than an unstated one, so a handler has
+/// something to work from.
+RunRendering? _claim(SpanInputs from, String text, TextStyle style) {
+  final onTap = from.onTap;
+
+  for (final handler in from.customs) {
+    final rendering = handler(
+      text,
+      style,
+      from.theme,
+      onTap == null ? null : () => onTap(text),
+    );
+    if (rendering != null) return rendering;
+  }
+  return null;
 }
