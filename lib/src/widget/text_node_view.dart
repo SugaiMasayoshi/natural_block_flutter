@@ -2,7 +2,8 @@ import 'package:flutter/widgets.dart';
 import 'package:natural_block/natural_block.dart';
 
 import '../render/natural_block_builders.dart';
-import 'inline_spans.dart';
+import '../render/run_handler.dart';
+import 'run_span.dart';
 
 class TextNodeView extends StatefulWidget {
   final TextNode node;
@@ -15,16 +16,41 @@ class TextNodeView extends StatefulWidget {
   State<TextNodeView> createState() => _TextNodeViewState();
 }
 
+/// Stateful only so the spans outlive a build.
+///
+/// Rebuilding replaces the recognizers the spans carry, and a recognizer that
+/// has taken a pointer down owns an entry in the gesture arena: replace it
+/// mid-gesture and the tap vanishes with no error anywhere. `build` runs for
+/// reasons these spans owe nothing to -- an ancestor rebuilding, every frame
+/// of an animating parent -- so they are kept until what they are made of
+/// changes.
 class _TextNodeViewState extends State<TextNodeView> {
-  /// This line's spans, which own the recognizers and keep themselves until
-  /// what they are made of changes. Stateful only to hold these: they have to
-  /// outlive a build, or a tap held across one is lost.
-  final InlineSpans _line = InlineSpans();
+  /// What `runSpan` answered for each run, and the spans the paragraph takes
+  /// from it.
+  ///
+  /// Kept as it came so that releasing a line is asking each run to release
+  /// what it made, rather than reading back a list of callbacks on its own.
+  List<RunRendering> _runs = const [];
+  List<InlineSpan> _spans = const [];
+
+  /// What the current spans were built from, so a build can tell whether they
+  /// still hold.
+  SpanInputs? _builtFrom;
 
   @override
   void dispose() {
-    _line.dispose();
+    _release();
     super.dispose();
+  }
+
+  /// Safe to call twice: the list is emptied, so the call from [dispose]
+  /// finds nothing left to release after a rebuild already did.
+  void _release() {
+    for (final run in _runs) {
+      run.dispose();
+    }
+    _runs = const [];
+    _spans = const [];
   }
 
   /// A method rather than a closure, so it compares equal across builds: a
@@ -47,17 +73,25 @@ class _TextNodeViewState extends State<TextNodeView> {
     // size makes `:+` render *smaller* than the text beside it.
     final rootStyle = DefaultTextStyle.of(context).style.merge(theme.base);
 
-    // Asked on every build rather than from `didUpdateWidget` and
-    // `didChangeDependencies`: build runs after both, and `update` does
-    // nothing when nothing it is given has changed.
-    _line.update((
+    // Compared here rather than in `didUpdateWidget` and
+    // `didChangeDependencies`: build runs after both, so one question in one
+    // place answers for both -- and that is what closed the hole where an
+    // ambient change the spans could not see replaced their recognizers.
+    final from = (
       node: widget.node,
       theme: theme,
       rootStyle: rootStyle,
       customs: widget.scope.customs,
       onTap: widget.scope.onTap == null ? null : _handleTap,
-    ));
+    );
 
-    return Text.rich(TextSpan(style: rootStyle, children: _line.spans));
+    if (from != _builtFrom) {
+      _builtFrom = from;
+      _release();
+      _runs = [for (final run in widget.node.children) runSpan(run, from)];
+      _spans = [for (final run in _runs) run.span];
+    }
+
+    return Text.rich(TextSpan(style: rootStyle, children: _spans));
   }
 }

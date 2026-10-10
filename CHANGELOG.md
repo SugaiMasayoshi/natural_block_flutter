@@ -27,18 +27,27 @@ Initial release.
 - `TextNodeView` draws a line's styled runs, built with `Text.rich` so the
   result takes part in text selection: wrap a view in a `SelectionArea` and
   the text is selectable and copyable across cell and row boundaries.
-- A line's spans and the recognizers they carry are one object, built once
-  and kept until what they are made of changes. This is a correctness
-  measure, not a speed one -- it does not make a rebuild faster. A
-  recognizer that has taken a pointer down owns an entry in the gesture
-  arena, and replacing it mid-gesture throws that entry away: the tap then
-  vanishes with no error anywhere, and a test that calls `onTap` directly
-  cannot see it, because that bypasses the arena. Flutter's own
-  `TextSpan.recognizer` sample holds its recognizer in `State` for the same
-  reason and never rebuilds it. Ambient changes that do not reach the spans
-  -- a `DefaultTextStyle` size the theme's `base` overrides -- are not a
-  reason to replace one either, so both `didChangeDependencies` and
-  `didUpdateWidget` ask the same question in the same place.
+- A line's spans are built once and kept in its `State` until what they are
+  made of changes. This is a correctness measure, not a speed one -- it does
+  not make a rebuild faster. A recognizer that has taken a pointer down owns
+  an entry in the gesture arena, and replacing it mid-gesture throws that
+  entry away: the tap then vanishes with no error anywhere, and a test that
+  calls `onTap` directly cannot see it, because that bypasses the arena.
+  Flutter's own `TextSpan.recognizer` sample holds its recognizer in `State`
+  for the same reason and never rebuilds it. Ambient changes that do not
+  reach the spans -- a `DefaultTextStyle` size the theme's `base` overrides
+  -- are not a reason to replace one either, so the question is asked once
+  in `build`, which runs after both `didUpdateWidget` and
+  `didChangeDependencies`.
+- The spans lived in an `InlineSpans` object of their own for a while. That
+  existed because the state was two parallel fields -- the spans and the
+  recognizers -- whose correspondence was kept only by the order they were
+  written in, and bundling them made replacing one without the other
+  impossible. Once a handler began answering with what to release rather
+  than the package finding it, the spans became a projection of those
+  answers and could no longer disagree with them, so the object was holding
+  one widget's state and a relayed `dispose`. It went back into the `State`
+  that is for exactly that.
 - `ColumnNodeView` stacks blocks and honours `HorizontalAlign`. Unstated and
   `HorizontalAlign.start` both draw at the start; what keeps them apart is a
   table, where a cell that stated nothing is drawn with its column instead.
