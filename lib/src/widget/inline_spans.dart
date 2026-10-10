@@ -1,5 +1,6 @@
 import 'package:flutter/widgets.dart';
 
+import '../render/run_handler.dart';
 import 'run_span.dart';
 
 /// A line's runs as spans, kept until what they are made of changes.
@@ -13,7 +14,12 @@ import 'run_span.dart';
 class InlineSpans {
   List<InlineSpan> spans = const [];
 
-  List<VoidCallback> _release = const [];
+  /// What `runSpan` answered for each run, kept as it came.
+  ///
+  /// [spans] is the slice of it the paragraph needs; this is the whole
+  /// answer, so releasing a line is asking each run to release what it made
+  /// rather than reading back a list of callbacks on its own.
+  List<RunRendering> _runs = const [];
 
   SpanInputs? _from;
 
@@ -30,9 +36,8 @@ class InlineSpans {
     _from = from;
 
     dispose();
-    final runs = [for (final run in from.node.children) runSpan(run, from)];
-    spans = [for (final run in runs) run.span];
-    _release = [for (final run in runs) run.dispose];
+    _runs = [for (final run in from.node.children) runSpan(run, from)];
+    spans = [for (final run in _runs) run.span];
   }
 
   /// Releases whatever the current spans needed released, by calling what the
@@ -41,13 +46,13 @@ class InlineSpans {
   /// Nothing here looks inside a span to decide: a run that made a recognizer
   /// said how to let go of it, and one that made nothing said so too.
   ///
-  /// Safe to call twice: the lists are emptied, so a later call from the
+  /// Safe to call twice: the list is emptied, so a later call from the
   /// owner's own `dispose` finds nothing left to release.
   void dispose() {
-    for (final release in _release) {
-      release();
+    for (final run in _runs) {
+      run.dispose();
     }
-    _release = const [];
+    _runs = const [];
     spans = const [];
   }
 }
