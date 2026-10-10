@@ -25,7 +25,9 @@ Widget? localFileImage(
     path = source;
   } else {
     try {
-      path = uri.toFilePath(windows: Platform.isWindows);
+      // No `windows:` argument: its default is the platform Dart is running
+      // on, which is what this file is for.
+      path = uri.toFilePath();
     } on UnsupportedError {
       // Thrown for a URI carrying a query, a fragment, or (off Windows) an
       // authority. A document is outside input, so one of those has to
