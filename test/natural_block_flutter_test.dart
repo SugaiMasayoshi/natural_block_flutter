@@ -680,6 +680,8 @@ void main() {
               child: NaturalBlockView(
                 source: 'one|two|three',
                 builders: counter.builders,
+                // Written the usual way, so a fresh closure on every rebuild.
+                onTap: (_) {},
               ),
             ),
           ),
