@@ -39,6 +39,7 @@ typedef SpanInputs = ({
   SpanInputs from,
 ) {
   final theme = from.theme;
+  final onTap = from.onTap;
   final runs = from.line.children;
 
   // One span per run, so the length is known; every arm below fills its own
@@ -62,15 +63,21 @@ typedef SpanInputs = ({
         final baseSize = from.rootStyle.fontSize ?? theme.baseFontSize;
         final style = theme.styleFor(run.decoration, baseSize: baseSize);
 
-        // `styleFor` leaves the size unstated where the source asked for no
-        // step, so this is what the run actually draws at.
-        final drawnSize = style.fontSize ?? baseSize;
-
         // Styled as actionable either way. What the handlers decide is how
-        // it is drawn and whether it answers a tap.
-        final claimed = run.decoration.isAction
-            ? _claim(from, text, style.copyWith(fontSize: drawnSize))
-            : null;
+        // it is drawn and whether it answers a tap: the first to answer
+        // draws it, and the rest are not asked.
+        RunRendering? claimed;
+        if (run.decoration.isAction) {
+          // `styleFor` leaves the size unstated where the source asked for
+          // no step; a handler is handed the size the run actually draws at.
+          final offered = style.copyWith(fontSize: style.fontSize ?? baseSize);
+          final tap = onTap == null ? null : () => onTap(text);
+
+          for (final handler in from.customs) {
+            claimed = handler(text, offered, theme, tap);
+            if (claimed != null) break;
+          }
+        }
 
         spans[i] = claimed?.span ?? TextSpan(text: text, style: style);
         if (claimed != null) disposes.add(claimed.dispose);
@@ -78,23 +85,4 @@ typedef SpanInputs = ({
   }
 
   return (spans: spans, disposes: disposes);
-}
-
-/// The first handler to draw [text] itself, or null when none of them does.
-///
-/// [style] carries a real size rather than an unstated one, so a handler has
-/// something to work from.
-RunRendering? _claim(SpanInputs from, String text, TextStyle style) {
-  final onTap = from.onTap;
-
-  for (final handler in from.customs) {
-    final rendering = handler(
-      text,
-      style,
-      from.theme,
-      onTap == null ? null : () => onTap(text),
-    );
-    if (rendering != null) return rendering;
-  }
-  return null;
 }
