@@ -16,25 +16,20 @@ class TableNodeView extends StatelessWidget {
   /// drawing rather than about what was written: `TableRow` requires every
   /// row to hold the same number of children, and a cell that stated no
   /// alignment is drawn with whatever its column stated.
-  List<TableCellNode> _squared(TableRowNode row) => [
-    for (var i = 0; i < node.columns.length; i++)
-      // A column this row never reached is a cell that stated nothing, which
-      // [_resolved] already draws with the column's own alignment.
-      _resolved(
-        i < row.children.length ? row.children[i] : TableCellNode(),
-        node.columns[i],
-      ),
-  ];
+  List<TableCellNode> _squared(TableRowNode row) {
+    return List.generate(node.columns.length, (i) {
+      final column = node.columns[i];
+      // A column this row never reached is a cell that stated nothing.
+      final stated = i < row.children.length
+          ? row.children[i]
+          : TableCellNode();
 
-  /// [cell] drawn with its own alignment, or [column]'s where it stated none.
-  ///
-  /// `unstated` is a value rather than a gap, so this is a comparison rather
-  /// than a `??`.
-  static TableCellNode _resolved(TableCellNode cell, HorizontalAlign column) =>
-      TableCellNode(
-        children: cell.children,
-        align: cell.align == HorizontalAlign.unstated ? column : cell.align,
+      return TableCellNode(
+        children: stated.children,
+        align: stated.align == HorizontalAlign.unstated ? column : stated.align,
       );
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
