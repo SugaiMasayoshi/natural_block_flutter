@@ -571,6 +571,67 @@ void main() {
       expect(calls, 1, reason: 'only the edited line builds its spans again');
     });
 
+    testWidgets('every part of the scope reaches the comparison', (
+      tester,
+    ) async {
+      // The hazard one value exists to prevent: a field that reaches the
+      // drawing but not the comparison, so a change to it never redraws.
+      // The source never changes here, so only the scope can catch any of
+      // it -- drop a field from `NaturalBlockScope`'s equality and one of
+      // these stops holding.
+      const inert = <RunHandler>[];
+      const wired = <RunHandler>[tappableText];
+
+      Widget view({
+        NaturalBlockTheme? theme,
+        NaturalBlockBuilders builders = NaturalBlockBuilders.defaults,
+        List<RunHandler> customs = wired,
+        OnActionTap? onTap,
+      }) => MaterialApp(
+        home: NaturalBlockView(
+          source: ':@tap:@',
+          theme: theme,
+          builders: builders,
+          customs: customs,
+          onTap: onTap,
+        ),
+      );
+
+      await tester.pumpWidget(view(customs: inert, onTap: (_) {}));
+      expect(renderedSpans(tester).single.recognizer, isNull);
+
+      await tester.pumpWidget(view(onTap: (_) {}));
+      expect(
+        renderedSpans(tester).single.recognizer,
+        isNotNull,
+        reason: 'customs',
+      );
+
+      await tester.pumpWidget(view());
+      expect(
+        renderedSpans(tester).single.recognizer,
+        isNull,
+        reason: 'onTap going away',
+      );
+
+      // One change per step from here, or an earlier field's change redraws
+      // the document and hides whether the field under test was compared.
+      const sized = NaturalBlockTheme(action: TextStyle(fontSize: 33));
+
+      await tester.pumpWidget(view(theme: sized));
+      expect(renderedSpans(tester).single.style!.fontSize, 33, reason: 'theme');
+
+      await tester.pumpWidget(
+        view(
+          theme: sized,
+          builders: NaturalBlockBuilders(
+            text: (node, scope) => const Placeholder(),
+          ),
+        ),
+      );
+      expect(find.byType(Placeholder), findsOneWidget, reason: 'builders');
+    });
+
     testWidgets('an ancestor rebuild does not re-parse', (tester) async {
       final counter = counting();
       final rebuild = ValueNotifier<int>(0);

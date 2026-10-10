@@ -73,7 +73,8 @@ class _NaturalBlockViewState extends State<NaturalBlockView> {
   /// ancestor rebuilding, every frame of an animating parent -- and without
   /// this each of those redrew the document.
   Widget? _cached;
-  _DrawnFrom? _drawnFrom;
+  DocumentNode? _drawnDocument;
+  NaturalBlockScope? _drawnScope;
 
   /// What the tree is handed in place of the caller's `onTap`: a method of
   /// this state, which compares equal across builds.
@@ -89,22 +90,18 @@ class _NaturalBlockViewState extends State<NaturalBlockView> {
   Widget build(BuildContext context) {
     final theme = widget.theme ?? NaturalBlockTheme.fromContext(context);
 
-    final from = (
-      document: _document,
+    final scope = NaturalBlockScope(
       theme: theme,
       builders: widget.builders,
       customs: widget.customs,
-      tappable: widget.onTap != null,
+      onTap: widget.onTap == null ? null : _handleTap,
     );
 
-    if (_cached == null || from != _drawnFrom) {
-      _drawnFrom = from;
-      final scope = NaturalBlockScope(
-        theme: theme,
-        builders: widget.builders,
-        customs: widget.customs,
-        onTap: widget.onTap == null ? null : _handleTap,
-      );
+    if (_cached == null ||
+        _document != _drawnDocument ||
+        scope != _drawnScope) {
+      _drawnDocument = _document;
+      _drawnScope = scope;
       _cached = ColumnNodeView(
         children: buildLayouts(_document.children, scope),
       );
@@ -113,13 +110,3 @@ class _NaturalBlockViewState extends State<NaturalBlockView> {
     return _cached!;
   }
 }
-
-/// What a drawn tree was drawn from, so the next `build` can tell whether it
-/// still holds.
-typedef _DrawnFrom = ({
-  DocumentNode document,
-  NaturalBlockTheme theme,
-  NaturalBlockBuilders builders,
-  List<RunHandler> customs,
-  bool tappable,
-});

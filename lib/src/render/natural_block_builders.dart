@@ -45,6 +45,28 @@ class NaturalBlockScope {
     this.customs = const [tappableText],
     this.onTap,
   });
+
+  /// Two scopes are equal when every one of them is.
+  ///
+  /// Worth having because this is what a drawn document is drawn from, so it
+  /// is also what decides whether the one already drawn still holds. One
+  /// value for both: a second list of the same things, kept for comparing,
+  /// is a place for a field to reach the drawing and not the comparison --
+  /// and then a change never redraws.
+  ///
+  /// `customs` compares as a list does, by identity, which is why the docs
+  /// ask for a stable one. `onTap` is this package's own relay rather than
+  /// the caller's callback, and a method tear-off of one object compares
+  /// equal to itself, where two closure literals never would.
+  List<Object?> get _fields => [theme, builders, customs, onTap];
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is NaturalBlockScope && listEquals(_fields, other._fields);
+
+  @override
+  int get hashCode => Object.hashAll(_fields);
 }
 
 /// Which widget draws each kind of node.

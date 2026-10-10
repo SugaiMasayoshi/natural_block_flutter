@@ -13,11 +13,17 @@ Initial release.
   watches for: `updateChild` stops at a child whose widget has not changed,
   so the whole document is skipped rather than rebuilt. `const` is the
   framework's own version of this and cannot apply here, since a parsed
-  document is not a compile-time value. The comparison deliberately leaves
-  `onTap` out and reads it at tap time instead: a caller writes it as a
-  closure in their own `build`, and Dart never considers two closures equal,
-  so comparing it would miss every time. Measured on a debug build, an
+  document is not a compile-time value. Measured on a debug build, an
   ancestor rebuild of a 50-paragraph document went from 12.2ms to 7.0ms.
+- What it compares is the `NaturalBlockScope` it drew with, and the document
+  -- not a second list of the same fields kept for comparing. That second
+  list is a place for a field to reach the drawing and not the comparison,
+  and then a change never redraws; `NaturalBlockScope` now carries value
+  equality so there is one list instead of two. The caller's own `onTap` is
+  still never compared: what the scope holds is this package's relay, a
+  method tear-off that compares equal to itself, where a closure the caller
+  writes in their own `build` never would. Only whether there is one at all
+  shows through, because that decides if a run is tappable.
 - `TextNodeView` draws a line's styled runs, built with `Text.rich` so the
   result takes part in text selection: wrap a view in a `SelectionArea` and
   the text is selectable and copyable across cell and row boundaries.
