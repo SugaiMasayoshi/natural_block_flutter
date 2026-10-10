@@ -185,7 +185,14 @@ Initial release.
   `dispose` included, so the default is also the worked example.
 - `widgetRun(child)` is the other answer written down: a run drawn as a
   widget, centred on the text beside it, with the `dispose` that is correct
-  for one. It was a private helper in `NaturalBlockImages` while the same
+  for one. It is not a wrapper around `WidgetSpan`, because it disagrees with
+  one: the alignment defaults to `middle` where `WidgetSpan`'s own default is
+  `bottom`. Measured against 14-point text, a 20-point box centres at 10
+  either way while the text centres at 10 for `middle` and 13 for `bottom`,
+  so the default leaves the text hanging below what it sits beside. Of the
+  alignments that cost the least line height -- `top`, `bottom` and `middle`
+  all measure 20 against the baseline variants' 24 and 31 -- `middle` is the
+  one that lines the two centres up. It was a private helper in `NaturalBlockImages` while the same
   three lines were being written by hand everywhere else -- the README's
   example, four test handlers, both image handlers -- each needing the same
   sentence about why an empty `dispose` is right. The `WidgetSpan` lifecycle

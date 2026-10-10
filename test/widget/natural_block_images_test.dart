@@ -215,6 +215,13 @@ void main() {
         isA<WidgetSpan>(),
         reason: 'the run renders as a widget rather than as its text',
       );
+      expect(
+        (child.children!.single as WidgetSpan).alignment,
+        PlaceholderAlignment.middle,
+        reason:
+            'not `WidgetSpan`\'s own default of bottom, which leaves the '
+            'text beside it hanging below the image',
+      );
     });
 
     testWidgets('nothing is fetched unless a builder is supplied', (
