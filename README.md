@@ -185,7 +185,7 @@ Every field defaults to the builder that draws that kind the usual way, so a set
 
 **The node types are sealed**, so this set is the whole set: a field per kind rather than a map keyed by type, which is what keeps each builder's node type exact and makes a builder written for the wrong kind a compile error. The two entry points are narrowed the same way: `buildLayouts` takes only `LayoutNode`s and `buildContents` only `ContentNode`s, so `DocumentNode`, `TableRowNode` and the two run types — which are never drawn on their own, the view and the table and the line drawing them instead — cannot be handed to the builders at all. A table's cells skip the dispatch entirely, since `TableCellNode` is the only kind a cell can be.
 
-The widgets the default builders use are exported as well (`TextNodeView`, `ColumnNodeView`, `RowNodeView`, `TableNodeView`), so a custom builder can wrap or reuse one rather than reimplementing it. So are the types a builder signature needs: `NodeBuilder`, `NaturalBlockScope`, `RunHandler`, `RunRendering`, `widgetRun`, `OnActionTap`, and `ImageSourceKind`.
+The widgets the default builders use are exported as well, so a custom builder can wrap or reuse one rather than reimplementing it. `TextNodeView`, `TableNodeView` and `RawNodeView` take the node, because each reads more of one than its children; `RowNodeView(cells:)` and `ColumnNodeView(children:)` take widgets, so you can compose them out of anything. So are the types a builder signature needs: `NodeBuilder`, `NaturalBlockScope`, `RunHandler`, `RunRendering`, `widgetRun`, `OnActionTap`, and `ImageSourceKind`.
 
 ### Selectable text
 

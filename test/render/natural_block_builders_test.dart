@@ -40,20 +40,27 @@ void main() {
     testWidgets('a document\'s blocks and rows go to their views', (
       tester,
     ) async {
-      await pumpLayouts(tester, NaturalBlockBuilders.defaults, [
+      // The first cell holds two lines, which is the regression here:
+      // `buildRowNode` used to spread every cell's contents straight into
+      // the row, so a two-line cell rendered as two cells side by side.
+      final built = await pumpLayouts(tester, NaturalBlockBuilders.defaults, [
         RowNode(
           children: [
-            ColumnNode(children: [text('a')]),
-            ColumnNode(children: [text('b')]),
+            ColumnNode(children: [text('a'), text('b')]),
+            ColumnNode(children: [text('c')]),
           ],
         ),
-        ColumnNode(children: [text('c')]),
+        ColumnNode(children: [text('d')]),
       ]);
 
+      expect(built, hasLength(2), reason: 'one row, one plain block');
       expect(find.byType(RowNodeView), findsOneWidget);
       // One direct ColumnNode, and one for each of the RowNode's two cells.
       expect(find.byType(ColumnNodeView), findsNWidgets(3));
-      expect(find.byType(TextNodeView), findsNWidgets(3));
+      expect(find.byType(TextNodeView), findsNWidgets(4));
+
+      final cells = tester.widget<RowNodeView>(find.byType(RowNodeView)).cells;
+      expect(cells, hasLength(2), reason: 'two cells, not three');
     });
 
     testWidgets('a block\'s contents go to their views', (tester) async {

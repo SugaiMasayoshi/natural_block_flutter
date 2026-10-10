@@ -50,6 +50,17 @@ Initial release.
   it falls back to shrink-wrapped cells — a degradation, since columns then
   stop lining up and alignment markers become no-ops, but better than not
   rendering.
+- It takes the cells as widgets, not a `RowNode`, which is the line this
+  package draws between a view and the assembling that feeds it: a view
+  takes a node only where it reads more of one than its children.
+  `TextNodeView` does, because a run becomes an `InlineSpan` and never a
+  widget, so that recursion cannot leave the view at all. `TableNodeView`
+  does, because it squares short rows off against the declared columns and
+  resolves each cell's alignment against its own. `RawNodeView` is a leaf.
+  The other two decide only how to place what they are given, so they take
+  widgets and anyone can compose them — which is also what lets one
+  `ColumnNodeView` serve a `ColumnNode`, a `TableCellNode` and the document
+  root, none of which share a type.
 - `TableNodeView` renders a `TableNode` with `IntrinsicColumnWidth`, so a
   declared table's columns are as wide as their content and agree across
   every row. It also does the two things the tree deliberately leaves undone:

@@ -9,8 +9,11 @@ import '../widget/text_node_view.dart';
 import 'natural_block_builders.dart';
 import 'natural_block_render.dart';
 
-Widget buildRowNode(RowNode node, NaturalBlockScope scope) =>
-    RowNodeView(node: node, scope: scope);
+/// A row's cells are `ColumnNode`s and nothing else, so there is no kind to
+/// choose: the column builder is called straight from the builders.
+Widget buildRowNode(RowNode node, NaturalBlockScope scope) => RowNodeView(
+  cells: [for (final cell in node.children) scope.builders.column(cell, scope)],
+);
 
 Widget buildColumnNode(ColumnNode node, NaturalBlockScope scope) =>
     ColumnNodeView(

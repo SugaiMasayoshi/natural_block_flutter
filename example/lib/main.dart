@@ -4,10 +4,7 @@ import 'package:natural_block_flutter/natural_block_flutter.dart';
 
 /// Held as a const list so it compares equal across builds: one written out
 /// afresh each time would redraw every line, and lose a tap held across it.
-const _customs = <RunHandler>[
-  NaturalBlockImages.network,
-  tappableText,
-];
+const _customs = <RunHandler>[NaturalBlockImages.network, tappableText];
 
 void main() {
   runApp(const MyApp());
@@ -217,10 +214,10 @@ class NaturalBlockDemoPage extends StatelessWidget {
                           theme: theme,
                           customs: _customs,
                           onTap: (text) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text('タップされたアクション: $text')),
-                              );
-                            },
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('タップされたアクション: $text')),
+                            );
+                          },
                         ),
                       ),
                     ],
@@ -373,10 +370,10 @@ class _PlaygroundState extends State<_Playground> {
                 theme: widget.theme,
                 customs: _customs,
                 onTap: (text) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('タップされたアクション: $text')),
-                    );
-                  },
+                  ScaffoldMessenger.of(
+                    context,
+                  ).showSnackBar(SnackBar(content: Text('タップされたアクション: $text')));
+                },
               ),
             ),
           ),
