@@ -14,7 +14,9 @@ class RawNodeView extends StatelessWidget {
     final content = Text.rich(
       TextSpan(
         text: node.text,
-        style: DefaultTextStyle.of(context).style.merge(theme.raw),
+        style: DefaultTextStyle.of(context).style
+            .merge(theme.base)
+            .merge(theme.raw),
       ),
       softWrap: !theme.rawScrollsHorizontally,
     );

@@ -35,20 +35,24 @@ class _TextNodeViewState extends State<TextNodeView> {
 
   @override
   Widget build(BuildContext context) {
-    // What every run of this line starts from: the ambient style with the
-    // theme's `base` merged over it. The root span and the size a `:+` counts
-    // from are the same expression, because two of them drift -- and then a
-    // theme whose `base` names a size makes `:+` render *smaller* than the
-    // text beside it.
-    final rootStyle = DefaultTextStyle.of(context).style
-        .merge(widget.scope.theme.base);
+    // Everything the ambient style decides is resolved here, where the
+    // `BuildContext` is, and handed over as values. Nothing further down
+    // reads one: what a span is built from has to be what it is compared
+    // by, or an ambient change reaches the drawing without reaching the
+    // comparison and the line never redraws.
+    final theme = widget.scope.theme;
+
+    // The root span and the size a `:+` counts from are the same expression,
+    // because two of them drift -- and then a theme whose `base` names a
+    // size makes `:+` render *smaller* than the text beside it.
+    final rootStyle = DefaultTextStyle.of(context).style.merge(theme.base);
 
     // Asked on every build rather than from `didUpdateWidget` and
     // `didChangeDependencies`: build runs after both, and `update` does
     // nothing when nothing it is given has changed.
-    _line.update(context, (
+    _line.update((
       node: widget.node,
-      theme: widget.scope.theme,
+      theme: theme,
       rootStyle: rootStyle,
       customs: widget.scope.customs,
       onTap: widget.scope.onTap == null ? null : _handleTap,

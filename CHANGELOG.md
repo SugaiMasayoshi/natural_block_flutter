@@ -160,6 +160,24 @@ Initial release.
   the dependency in an element of its own for Flutter to notify, so the
   document is kept and only that line redraws. The invalidation rule, the
   parameter and the test harness that existed to supply it all went with it.
+- `RunHandler` lost its `BuildContext` for the same reason, where it was not
+  a hazard but a defect. A handler that read a `MediaQuery` through the
+  context it was handed drew the first value and then never moved again:
+  a line keeps its spans until what they were built from changes, and what
+  they were built from can never say what a handler went and read. There is
+  no escape of the builders' kind either, because a `TextSpan` cannot read a
+  context lazily, and dropping the spans on an ambient change would replace
+  recognizers mid-gesture -- the one thing the line is built the way it is to
+  avoid. Through `widgetRun(Builder(...))` the dependency sits in an element
+  of its own and Flutter tracks it.
+- `runSpan` reads no context either, which fixed a second showing of the
+  same fault: a raw run took its style from the ambient one directly while
+  the line compared `rootStyle`. A theme whose `base` names a size makes
+  `rootStyle` identical across an ambient size change, so the spans were
+  kept and the raw run went on showing the old size. Every run of a line now
+  starts from `rootStyle`, so `base` reaches a raw run as it reaches its
+  neighbours and the one value the line compares covers all of them.
+  `RawNodeView` starts a raw block from `base` too, for the same reason.
 
 ### Raw regions
 

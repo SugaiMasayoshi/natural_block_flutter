@@ -10,7 +10,6 @@ import 'rendered_spans.dart';
 /// tests: a WidgetSpan is what splits a paragraph's selection into
 /// segments.
 RunRendering? _boxed(
-  BuildContext context,
   String text,
   TextStyle style,
   NaturalBlockTheme theme,
@@ -507,6 +506,42 @@ void main() {
       );
     }
 
+    testWidgets('a handler reading an inherited widget sees it change', (
+      tester,
+    ) async {
+      // A handler is handed no context either, and for a sharper reason than
+      // a builder: a span cannot read one lazily, and the line compares what
+      // it was built from, which cannot say what a handler went and read. A
+      // handler that read a `MediaQuery` through a context it was given drew
+      // the first value and then never moved. Through `widgetRun` the
+      // dependency sits in an element of its own and Flutter tracks it.
+      RunRendering? reads(
+        String text,
+        TextStyle style,
+        NaturalBlockTheme theme,
+        VoidCallback? onTap,
+      ) => widgetRun(
+        Builder(
+          builder: (context) =>
+              Text('${MediaQuery.sizeOf(context).width.round()}'),
+        ),
+      );
+
+      final customs = <RunHandler>[reads];
+      Widget view(double width) => MediaQuery(
+        data: MediaQueryData(size: Size(width, 600)),
+        child: MaterialApp(
+          home: NaturalBlockView(source: ':@x:@', customs: customs),
+        ),
+      );
+
+      await tester.pumpWidget(view(300));
+      expect(find.text('300'), findsOneWidget);
+
+      await tester.pumpWidget(view(500));
+      expect(find.text('500'), findsOneWidget);
+    });
+
     testWidgets('a builder reading an inherited widget sees it change', (
       tester,
     ) async {
@@ -544,7 +579,6 @@ void main() {
       // rebuilt every line's spans and recognizers.
       var calls = 0;
       RunRendering? counting(
-        BuildContext context,
         String text,
         TextStyle style,
         NaturalBlockTheme theme,

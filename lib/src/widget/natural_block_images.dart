@@ -18,7 +18,6 @@ enum ImageSourceKind { network, file, relative }
 abstract final class NaturalBlockImages {
   /// Draws an `image(...)` payload that names a network source.
   static RunRendering? network(
-    BuildContext context,
     String text,
     TextStyle style,
     NaturalBlockTheme theme,
@@ -49,7 +48,6 @@ abstract final class NaturalBlockImages {
   /// document degrades there the way it does for an app that never included
   /// it at all.
   static RunRendering? local(
-    BuildContext context,
     String text,
     TextStyle style,
     NaturalBlockTheme theme,

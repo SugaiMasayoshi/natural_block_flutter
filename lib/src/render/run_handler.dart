@@ -52,7 +52,6 @@ RunRendering widgetRun(
 /// unstated one. [onTap] is what the app wants done with this run, already
 /// bound to its text, and null when the app wired nothing.
 typedef RunHandler = RunRendering? Function(
-  BuildContext context,
   String text,
   TextStyle style,
   NaturalBlockTheme theme,
@@ -70,7 +69,6 @@ typedef RunHandler = RunRendering? Function(
 /// interactivity that nothing answers is a promise this package cannot keep,
 /// which is why a run with no `onTap` is declined rather than underlined.
 RunRendering? tappableText(
-  BuildContext context,
   String text,
   TextStyle style,
   NaturalBlockTheme theme,

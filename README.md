@@ -171,7 +171,7 @@ NaturalBlockView(source: source, builders: builders);
 
 A builder receives the node — already typed as the kind it was registered for, so there is no cast — and a `NaturalBlockScope`: the theme, the builders, the customs and the `onTap`, which travel together the whole way down. Recurse into a node's own children with `buildLayouts(node.children, scope)` for the blocks and rows a document holds, or `buildContents(node.children, scope)` for the lines, raw blocks and tables a block or a table cell holds. Either keeps every child on the same theme, builders and handlers. Where the tree already names one kind -- a row's cells, a table's rows -- reach for that field directly (`scope.builders.column(cell, scope)`), since there is nothing to choose.
 
-**A builder gets no `BuildContext`.** It is called while its parent builds, so reading an inherited widget there would bake what it read into a tree that cannot say what that was -- and the view, unable to know whether this document cared, would have to redraw all of it on every ambient change. To read one, return a `Builder`:
+**Neither a builder nor a handler gets a `BuildContext`.** Each is called while its parent builds, so reading an inherited widget there would bake what it read into something that cannot say what that was -- and the view, unable to know whether this document cared, would have to redraw all of it on every ambient change. For a handler it is sharper still: a span cannot read a context lazily at all, and a line keeps its spans until what they were built from changes, which can never include what a handler went and read. To read one, return a `Builder`:
 
 ```dart
 text: (node, scope) => Builder(
@@ -233,7 +233,7 @@ An actionable run is offered to each handler in `customs` until one claims it, a
 A handler answers with a span to put in the line and a `dispose` to release whatever that span carries:
 
 ```dart
-RunRendering? mentions(context, text, style, theme, onTap) {
+RunRendering? mentions(text, style, theme, onTap) {
   if (!text.startsWith('@')) return null; // not mine -- offer it to the next
 
   final recognizer = TapGestureRecognizer()..onTap = onTap;
@@ -306,7 +306,7 @@ The convention does not fork — it is still `image(...)`, and only the *resolut
 A relative payload (`image(assets/a.png)`) is declined by both, since resolving one needs an asset bundle or a base that only the app has. Write a handler for those and put it in front; the ones behind take whatever it declines:
 
 ```dart
-RunRendering? assets(context, text, style, theme, onTap) {
+RunRendering? assets(text, style, theme, onTap) {
   final source = NaturalBlockImages.urlOf(text);
   if (source == null ||
       NaturalBlockImages.kindOf(source) != ImageSourceKind.relative) {

@@ -23,7 +23,13 @@ typedef SpanInputs = ({
   TextNode node,
   NaturalBlockTheme theme,
 
-  /// What the line starts from, and the size a `:+` counts from.
+  /// What every run of the line starts from, and the size a `:+` counts
+  /// from: the ambient style with the theme's `base` over it.
+  ///
+  /// Resolved by the owner rather than read from a `BuildContext` down here,
+  /// because whatever is read has to be part of what the spans are compared
+  /// by. Reading the ambient style in both places is what let an ambient
+  /// change reach the drawing without reaching the comparison.
   TextStyle rootStyle,
   List<RunHandler> customs,
 
@@ -33,15 +39,15 @@ typedef SpanInputs = ({
 });
 
 /// The span for one run, and what releasing it takes.
-RunRendering runSpan(BuildContext context, InlineNode node, SpanInputs from) {
+RunRendering runSpan(InlineNode node, SpanInputs from) {
   switch (node) {
     // A raw run is text the parser stopped reading, so the only thing to do
-    // is not undo that: the ambient style, made monospaced.
+    // is not undo that: what the line is drawn in, made monospaced.
     case RawSpanNode():
       return (
         span: TextSpan(
           text: node.text,
-          style: DefaultTextStyle.of(context).style.merge(from.theme.raw),
+          style: from.rootStyle.merge(from.theme.raw),
         ),
         dispose: () {},
       );
@@ -59,7 +65,6 @@ RunRendering runSpan(BuildContext context, InlineNode node, SpanInputs from) {
         final onTap = from.onTap;
         for (final handler in from.customs) {
           final rendering = handler(
-            context,
             text,
             // Handlers are given a size to work from, never an unstated one.
             style.copyWith(fontSize: style.fontSize ?? baseSize),

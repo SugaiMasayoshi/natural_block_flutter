@@ -282,6 +282,38 @@ void main() {
         expect(recognizerOf(tester), isNot(same(first)));
       });
 
+      testWidgets('a raw run is drawn from the same root as its neighbours', (
+        tester,
+      ) async {
+        // Both used to read the ambient style for themselves, which put what
+        // they read outside what they are compared by: a `base` that names a
+        // size makes `rootStyle` identical across an ambient size change, so
+        // the spans were kept while a raw run, reading the ambient size
+        // directly, had every reason to have moved. It showed the old size
+        // for as long as the line was not rebuilt for some other reason.
+        const theme = NaturalBlockTheme(base: TextStyle(fontSize: 20));
+
+        Future<void> pump(double ambient) => pumpRuns(
+          tester,
+          [TextSpanNode(text: 'a'), RawSpanNode(text: 'code')],
+          theme: theme,
+          ambient: TextStyle(fontSize: ambient),
+        );
+
+        await pump(14);
+        var spans = renderedSpans(tester);
+        expect(spans[1].style!.fontSize, spans[0].style!.fontSize);
+
+        await pump(30);
+        spans = renderedSpans(tester);
+        expect(
+          spans[1].style!.fontSize,
+          spans[0].style!.fontSize,
+          reason: 'the raw run moves with the line or not at all',
+        );
+        expect(spans[1].style!.fontFamily, theme.raw.fontFamily);
+      });
+
       testWidgets('a changed ambient text style rebuilds the spans', (
         tester,
       ) async {

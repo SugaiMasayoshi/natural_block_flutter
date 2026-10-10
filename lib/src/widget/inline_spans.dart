@@ -25,14 +25,12 @@ class InlineSpans {
   /// the call site. Dart never considers two closure literals equal, so a
   /// fresh one each time would rebuild every time, and every tap held across
   /// a rebuild would be lost.
-  void update(BuildContext context, SpanInputs from) {
+  void update(SpanInputs from) {
     if (from == _from) return;
     _from = from;
 
     dispose();
-    final runs = [
-      for (final run in from.node.children) runSpan(context, run, from),
-    ];
+    final runs = [for (final run in from.node.children) runSpan(run, from)];
     spans = [for (final run in runs) run.span];
     _release = [for (final run in runs) run.dispose];
   }

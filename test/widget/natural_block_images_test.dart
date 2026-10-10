@@ -7,7 +7,6 @@ import '../rendered_spans.dart';
 /// A local-file handler standing in for `NaturalBlockImages.local`, which
 /// this test cannot exercise without a file on disk.
 RunRendering? _localStandIn(
-  BuildContext context,
   String text,
   TextStyle style,
   NaturalBlockTheme theme,
@@ -23,7 +22,6 @@ RunRendering? _localStandIn(
 
 /// A handler of the app's own, which claims `user(...)` and declines the rest.
 RunRendering? _mentions(
-  BuildContext context,
   String text,
   TextStyle style,
   NaturalBlockTheme theme,
@@ -38,7 +36,6 @@ RunRendering? _mentions(
 /// Draws any actionable run as a box that answers the tap itself, through a
 /// widget rather than a recognizer this package would have to release.
 RunRendering? _tappableBox(
-  BuildContext context,
   String text,
   TextStyle style,
   NaturalBlockTheme theme,
@@ -545,7 +542,6 @@ void main() {
       // twice for the same span.
       var released = 0;
       RunRendering? counting(
-        BuildContext context,
         String text,
         TextStyle style,
         NaturalBlockTheme theme,
