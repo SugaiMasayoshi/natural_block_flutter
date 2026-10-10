@@ -46,18 +46,13 @@ class NaturalBlockScope {
     this.onTap,
   });
 
-  /// Two scopes are equal when every one of them is.
+  /// What a document is drawn from, which is therefore also what decides
+  /// whether the one already drawn still holds.
   ///
-  /// Worth having because this is what a drawn document is drawn from, so it
-  /// is also what decides whether the one already drawn still holds. One
-  /// value for both: a second list of the same things, kept for comparing,
-  /// is a place for a field to reach the drawing and not the comparison --
-  /// and then a change never redraws.
-  ///
-  /// `customs` compares as a list does, by identity, which is why the docs
-  /// ask for a stable one. `onTap` is this package's own relay rather than
-  /// the caller's callback, and a method tear-off of one object compares
-  /// equal to itself, where two closure literals never would.
+  /// One list for both: a second one, kept for comparing, is a place for a
+  /// field to reach the drawing and not the comparison -- and then a change
+  /// never redraws. `customs` compares as a list does, by identity, which is
+  /// why a view's `customs` asks for a stable one.
   List<Object?> get _fields => [theme, builders, customs, onTap];
 
   @override

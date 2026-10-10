@@ -21,16 +21,13 @@ typedef RunRendering = ({InlineSpan span, VoidCallback dispose});
 
 /// A run drawn as [child] rather than as text, centred on the text beside it.
 ///
-/// Not a wrapper around `WidgetSpan`: it answers the two questions one leaves
-/// open.
+/// Not a wrapper around `WidgetSpan`: it answers the two questions one
+/// leaves open.
 ///
-/// [alignment] defaults to `middle` where `WidgetSpan`'s own default is
-/// `bottom`. Measured against 14-point text, a 20-point box puts its centre
-/// at 10 either way, but the text's centre lands at 10 for `middle` and at 13
-/// for `bottom` -- so the default has the text hanging below the thing it sits
-/// beside. `top`, `bottom` and `middle` all cost the same line height; the
-/// baseline variants cost more (24 and 31 against 20) and assert unless a
-/// `TextBaseline` is passed too.
+/// [alignment] defaults to `middle`, not `WidgetSpan`'s own `bottom`, which
+/// lines the text's bottom up with the box's and so leaves it hanging below
+/// what it sits beside. `middle` costs no more line height and puts the two
+/// centres together; the measurements are in the changelog.
 ///
 /// And there is nothing to release, so this is the answer with no `dispose`
 /// to get wrong: everything inside a `WidgetSpan` gets the ordinary widget

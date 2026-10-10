@@ -10,15 +10,6 @@ import 'natural_block_theme.dart';
 /// decides whether the ones already built still hold. Two values could
 /// disagree -- something could reach the building without reaching the
 /// comparison, and then a change would never redraw.
-///
-/// `customs` is compared as a list, so hand over a stable one: a `const` list
-/// of named handlers compares equal across builds, where one written out
-/// afresh in a `build` never does. Writing it afresh costs a redraw of every
-/// line, and a tap held across that redraw is lost.
-///
-/// The `BuildContext` is deliberately not in here: it is not something to
-/// compare, and the spans are rebuilt when what it carries changes by way of
-/// `rootStyle`.
 typedef SpanInputs = ({
   TextNode node,
   NaturalBlockTheme theme,

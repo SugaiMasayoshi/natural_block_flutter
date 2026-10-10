@@ -106,7 +106,17 @@ Initial release.
   invisible.
 - A view given no theme uses `fromContext`, so a document reads correctly in
   a light theme and a dark one without being told which it is in. Passing a
-  theme is opting out of that.
+  theme is opting out of that. `fromContext` takes `baseFontSize` from the
+  ambient `textTheme.bodyMedium`, which is Material's own "ordinary text",
+  so a document reads at the size the rest of the app does and nothing here
+  restates a number Material already decided. The step a `:+` is worth
+  cannot come from there: the Material scale runs 12, 14, 16, 22, 24, 28,
+  32, 36, 45, 57, so its steps are not uniform, and a size does not even
+  name a slot -- 14 is `bodyMedium`, `titleSmall` and `labelLarge` alike.
+- `fromColorScheme` names only what a `ColorScheme` can answer. It used to
+  take the other fields as arguments as well, which meant re-declaring six
+  of the default constructor's defaults in a second place -- for no caller,
+  anywhere, that ever passed one. `copyWith` covers them.
 - "None" is written as a value, not as null: `const TableBorder()` has
   `BorderSide.none` on every side and measures the same as no border at all,
   and a `const BoxDecoration()` names no colour, border or shadow. That is

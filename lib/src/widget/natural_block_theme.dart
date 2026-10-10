@@ -88,9 +88,7 @@ class NaturalBlockTheme {
   /// the default constructor's.
   ///
   /// Only what a `ColorScheme` can answer is named here. Changing anything
-  /// else is `copyWith`'s job -- this used to take the other fields as
-  /// arguments too, which meant re-declaring their defaults in a second
-  /// place for no caller that ever passed one.
+  /// else is `copyWith`'s job.
   factory NaturalBlockTheme.fromColorScheme(
     ColorScheme scheme, {
     bool striped = false,

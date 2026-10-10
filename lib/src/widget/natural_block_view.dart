@@ -32,7 +32,7 @@ class NaturalBlockView extends StatefulWidget {
   /// every line and loses a tap held across the redraw.
   final List<RunHandler> customs;
 
-  /// What tapping an actionable run means. Null leaves them inert.
+  /// Null leaves actionable runs styled but inert.
   final OnActionTap? onTap;
 
   const NaturalBlockView({
