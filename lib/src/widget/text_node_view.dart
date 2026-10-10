@@ -25,12 +25,13 @@ class TextNodeView extends StatefulWidget {
 /// of an animating parent -- so they are kept until what they are made of
 /// changes.
 class _TextNodeViewState extends State<TextNodeView> {
-  /// What `runSpans` answered, and the spans the paragraph takes from it.
-  ///
-  /// Kept as it came so that releasing a line is asking each run to release
-  /// what it made, rather than reading back a list of callbacks on its own.
+  /// What `runSpans` answered, kept as it came so that releasing a line is
+  /// asking each run to release what it made.
   List<RunRendering> _runs = const [];
-  List<InlineSpan> _spans = const [];
+
+  /// What `build` hands over, so that a build which changes nothing does
+  /// nothing.
+  TextSpan _paragraph = const TextSpan();
 
   SpanInputs? _builtFrom;
 
@@ -41,13 +42,13 @@ class _TextNodeViewState extends State<TextNodeView> {
   }
 
   /// Safe to call twice: the list is emptied, so the call from [dispose]
-  /// finds nothing left to release after a rebuild already did.
+  /// finds nothing left after a rebuild already released it.
   void _release() {
     for (final run in _runs) {
       run.dispose();
     }
     _runs = const [];
-    _spans = const [];
+    _paragraph = const TextSpan();
   }
 
   /// A method, not a closure, so a caller writing a fresh `onTap` each
@@ -79,9 +80,12 @@ class _TextNodeViewState extends State<TextNodeView> {
       _builtFrom = from;
       _release();
       _runs = runSpans(from);
-      _spans = [for (final run in _runs) run.span];
+      _paragraph = TextSpan(
+        style: rootStyle,
+        children: [for (final run in _runs) run.span],
+      );
     }
 
-    return Text.rich(TextSpan(style: rootStyle, children: _spans));
+    return Text.rich(_paragraph);
   }
 }
