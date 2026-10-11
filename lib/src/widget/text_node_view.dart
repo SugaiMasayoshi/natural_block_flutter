@@ -1,8 +1,8 @@
 import 'package:flutter/widgets.dart';
 import 'package:natural_block/natural_block.dart';
 
+import '../custom/run_handler.dart';
 import '../render/natural_block_builders.dart';
-import '../render/run_handler.dart';
 import 'natural_block_theme.dart';
 
 class TextNodeView extends StatefulWidget {

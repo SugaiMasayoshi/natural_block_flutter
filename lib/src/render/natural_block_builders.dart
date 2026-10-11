@@ -2,9 +2,9 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:natural_block/natural_block.dart';
 
+import '../custom/run_handler.dart';
 import '../widget/natural_block_theme.dart';
 import 'default_builders.dart';
-import 'run_handler.dart';
 
 /// Draws one node of kind [T].
 ///

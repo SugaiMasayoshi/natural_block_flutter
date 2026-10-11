@@ -1,9 +1,9 @@
 import 'package:flutter/widgets.dart';
 
-import '../render/run_handler.dart';
+import '../widget/natural_block_theme.dart';
 import 'local_file_image_stub.dart'
     if (dart.library.io) 'local_file_image_io.dart';
-import 'natural_block_theme.dart';
+import 'run_handler.dart';
 
 enum ImageSourceKind { network, file, relative }
 
