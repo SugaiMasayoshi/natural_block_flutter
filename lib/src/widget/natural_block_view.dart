@@ -18,12 +18,12 @@ class NaturalBlockView extends StatefulWidget {
 
   final NaturalBlockBuilders builders;
 
-  /// The handlers an actionable run is offered to, in order, until one claims
+  /// The handlers an custom run is offered to, in order, until one claims
   /// it.
   ///
   /// Each kind of image is a handler, and so is whatever draws a tappable run,
   /// so an app names the ones it means:
-  /// `const [NaturalBlockImages.network, links]`. With none, actionable runs
+  /// `const [NaturalBlockImages.network, links]`. With none, custom runs
   /// are styled and nothing more.
   ///
   /// Keep the list stable -- `const`, or held in your state. One written

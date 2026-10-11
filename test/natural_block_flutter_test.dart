@@ -6,7 +6,7 @@ import 'package:natural_block_flutter/natural_block_flutter.dart';
 
 import 'rendered_spans.dart';
 
-/// A handler that draws any actionable run as a box, for the selection
+/// A handler that draws any custom run as a box, for the selection
 /// tests: a WidgetSpan is what splits a paragraph's selection into
 /// segments.
 RunRendering? _boxed(String text, TextStyle style, NaturalBlockTheme theme) =>
@@ -596,7 +596,7 @@ void main() {
       );
 
       await tester.pumpWidget(view('one :@a:@|two :@b:@'));
-      expect(calls, 2, reason: 'both lines built their action span');
+      expect(calls, 2, reason: 'both lines built their custom span');
 
       calls = 0;
       await tester.pumpWidget(view('ONE :@a:@|two :@b:@'));
@@ -640,7 +640,7 @@ void main() {
 
       // One change per step from here, or an earlier field's change redraws
       // the document and hides whether the field under test was compared.
-      const sized = NaturalBlockTheme(action: TextStyle(fontSize: 33));
+      const sized = NaturalBlockTheme(custom: TextStyle(fontSize: 33));
 
       await tester.pumpWidget(view(theme: sized));
       expect(renderedSpans(tester).single.style!.fontSize, 33, reason: 'theme');

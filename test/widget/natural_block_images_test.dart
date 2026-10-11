@@ -31,7 +31,7 @@ RunRendering? _mentions(
       )
     : null;
 
-/// Draws any actionable run as a box that answers the tap itself, through a
+/// Draws any custom run as a box that answers the tap itself, through a
 /// widget rather than a recognizer this package would have to release.
 RunHandler _tappableBox(List<String> sink) =>
     (text, style, theme) => widgetRun(
@@ -172,7 +172,7 @@ void main() {
   });
 
   group('as a run handler', () {
-    testWidgets('declining leaves the run as ordinary actionable text', (
+    testWidgets('declining leaves the run as ordinary custom text', (
       tester,
     ) async {
       // The property that makes the extension point safe: a builder never

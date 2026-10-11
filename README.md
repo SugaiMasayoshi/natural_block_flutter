@@ -97,7 +97,7 @@ class Example extends StatelessWidget {
 * `source` (required) -- the markup text to parse and render.
 * `theme` -- a [`NaturalBlockTheme`](#naturalblocktheme) controlling how tones, emphasis, and base text look. Defaults to `null`, meaning `NaturalBlockTheme.fromContext(context)`: the tones come from the surrounding `ColorScheme`, so a document reads correctly in a light theme and a dark one without being told which it is in.
 * `builders` -- a [`NaturalBlockBuilders`](#naturalblockbuilders) controlling which widget renders each kind of node. Defaults to `NaturalBlockBuilders.defaults`.
-* `customs` -- the [handlers](#actionable-text) an actionable run is offered to, in order, until one claims it. Defaults to `const []`, which leaves those runs styled but inert. Tappable text and images are handlers, so an app includes the ones it means: `const [NaturalBlockImages.network, links]`, where `links` is a handler of your own built on `tappableText`.
+* `customs` -- the [handlers](#custom-text) an custom run is offered to, in order, until one claims it. Defaults to `const []`, which leaves those runs styled but inert. Tappable text and images are handlers, so an app includes the ones it means: `const [NaturalBlockImages.network, links]`, where `links` is a handler of your own built on `tappableText`.
 
 ### `NaturalBlockTheme`
 
@@ -109,7 +109,7 @@ const theme = NaturalBlockTheme(
   negative: TextStyle(color: Colors.red),
   positive: TextStyle(color: Colors.green),
   emphasis: TextStyle(fontWeight: FontWeight.bold),
-  action: TextStyle(color: Colors.indigo, decoration: TextDecoration.underline),
+  custom: TextStyle(color: Colors.indigo, decoration: TextDecoration.underline),
 );
 
 NaturalBlockView(source: source, theme: theme);
@@ -125,7 +125,7 @@ Three more fields control what a size step is *worth*, since `natural_block` onl
 * `fontSizeStep` — logical pixels added per `:+` (or removed per `:-`). Defaults to `4`.
 * `minFontSize` — the floor. `:-----` would otherwise be able to drive the size to zero or below, which Flutter asserts on. Defaults to `1`.
 
-`copyWith` returns a modified copy, and `styleFor(decoration, baseSize: ...)` gives the style one run draws with -- the tone, with emphasis and actionability laid over it, at the size its `:+` and `:-` ask for. That is the whole mapping from what the source said to what is drawn, so a builder of your own can ask for it instead of reproducing the order. Every `copyWith` argument means "leave this alone" when omitted, the way Flutter's own do, and none of them can set a field *to* null -- "none" is written as a value instead (`const TableBorder()`, `const BoxDecoration()`), and a theme without stripes is what `fromColorScheme` gives you unless you ask for them.
+`copyWith` returns a modified copy, and `styleFor(decoration, baseSize: ...)` gives the style one run draws with -- the tone, with emphasis and custom marking laid over it, at the size its `:+` and `:-` ask for. That is the whole mapping from what the source said to what is drawn, so a builder of your own can ask for it instead of reproducing the order. Every `copyWith` argument means "leave this alone" when omitted, the way Flutter's own do, and none of them can set a field *to* null -- "none" is written as a value instead (`const TableBorder()`, `const BoxDecoration()`), and a theme without stripes is what `fromColorScheme` gives you unless you ask for them.
 
 ### Raw regions
 
@@ -150,7 +150,7 @@ A region also works inside a table cell, which a `|`-based marker could never ha
 
 ### Semantics
 
-Actionable runs are announced to a screen reader only when something is actually wired to them: the action *style* follows the document, which said the run is actionable, but claiming interactivity when nothing is wired to them would be a promise nothing keeps. `NaturalBlockImages.network` gives every image a `semanticLabel` taken from its payload.
+Custom runs are announced to a screen reader only when something is actually wired to them: the custom *style* follows the document, which said the run is custom, but claiming interactivity when nothing is wired to them would be a promise nothing keeps. `NaturalBlockImages.network` gives every image a `semanticLabel` taken from its payload.
 
 Tables carry no row/column semantics yet — a screen reader reads their cells as an undifferentiated stream, losing the structure the `~` declaration exists to express.
 
@@ -166,7 +166,7 @@ const builders = NaturalBlockBuilders(
 NaturalBlockView(source: source, builders: builders);
 ```
 
-**Which of the two extension points to reach for.** `builders` changes how a *kind of node* is drawn, everywhere it appears. `customs` decides how one *actionable run* is drawn, and declines the rest by returning null. An actionable run is not a node: `:@` is a decoration a run carries, like a tone or emphasis, so there is nothing for a builder to key on.
+**Which of the two extension points to reach for.** `builders` changes how a *kind of node* is drawn, everywhere it appears. `customs` decides how one *custom run* is drawn, and declines the rest by returning null. An custom run is not a node: `:@` is a decoration a run carries, like a tone or emphasis, so there is nothing for a builder to key on.
 
 A builder receives the node — already typed as the kind it was registered for, so there is no cast — and a `NaturalBlockScope`: the theme, the builders, the customs, which travel together the whole way down. Recurse into a node's own children with `buildLayouts(node.children, scope)` for the blocks and rows a document holds, or `buildContents(node.children, scope)` for the lines, raw blocks and tables a block or a table cell holds. Either keeps every child on the same theme, builders and handlers. Where the tree already names one kind -- a row's cells, a table's rows -- reach for that field directly (`scope.builders.column(cell, scope)`), since there is nothing to choose.
 
@@ -184,7 +184,7 @@ Every field defaults to the builder that draws that kind the usual way, so a set
 
 **The node types are sealed**, so this set is the whole set: a field per kind rather than a map keyed by type, which is what keeps each builder's node type exact and makes a builder written for the wrong kind a compile error. The two entry points are narrowed the same way: `buildLayouts` takes only `LayoutNode`s and `buildContents` only `ContentNode`s, so `DocumentNode`, `TableRowNode` and the two run types — which are never drawn on their own, the view and the table and the line drawing them instead — cannot be handed to the builders at all. A table's cells skip the dispatch entirely, since `TableCellNode` is the only kind a cell can be.
 
-The widgets the default builders use are exported as well, so a custom builder can wrap or reuse one rather than reimplementing it. `TextNodeView`, `TableNodeView` and `RawNodeView` take the node, because each reads more of one than its children; `RowNodeView(cells:)` and `ColumnNodeView(children:)` take widgets, so you can compose them out of anything. So are the types a builder signature needs: `NodeBuilder`, `NaturalBlockScope`, `RunHandler`, `RunRendering`, `widgetRun`, `OnActionTap`, and `ImageSourceKind`.
+The widgets the default builders use are exported as well, so a custom builder can wrap or reuse one rather than reimplementing it. `TextNodeView`, `TableNodeView` and `RawNodeView` take the node, because each reads more of one than its children; `RowNodeView(cells:)` and `ColumnNodeView(children:)` take widgets, so you can compose them out of anything. So are the types a builder signature needs: `NodeBuilder`, `NaturalBlockScope`, `RunHandler`, `RunRendering`, `widgetRun`, `OnCustomTap`, and `ImageSourceKind`.
 
 ### Selectable text
 
@@ -196,9 +196,9 @@ SelectionArea(child: NaturalBlockView(source: source));
 
 A directly-constructed `RichText` never registers with the selection machinery, so a `SelectionArea` around one would silently do nothing — which is why this package does not use one.
 
-### Actionable text
+### Custom text
 
-Text wrapped in `:@...:@` is parsed as *actionable* -- `TextSpanNode.isAction == true`:
+Text wrapped in `:@...:@` is parsed as *custom* -- `TextSpanNode.decoration.isCustom == true`:
 
 ```dart
 const source = ':@https://example.com:@ 参照';
@@ -209,8 +209,8 @@ This package deliberately does not call it a "link". `natural_block` only record
 Tapping is a handler's job, and each handler brings its own `onTap`. `tappableText` draws the run as tappable text; give it the function that says what a tap means, from a handler of your own:
 
 ```dart
-void onActionTap(String text) {
-  // `text` is exactly the actionable run's own text -- see the
+void onCustomTap(String text) {
+  // `text` is exactly the custom run's own text -- see the
   // convention table below for the shapes it commonly takes.
   if (text.startsWith('https://') || text.startsWith('http://')) {
     // openUrl(text); -- e.g. via url_launcher, in your own app code.
@@ -220,16 +220,16 @@ void onActionTap(String text) {
 }
 
 RunRendering? links(text, style, theme) =>
-    tappableText(text, style, onTap: onActionTap);
+    tappableText(text, style, onTap: onCustomTap);
 
 NaturalBlockView(source: source, customs: const [links]);
 ```
 
-With no handler (the default) actionable runs are still drawn in `NaturalBlockTheme.action`'s style, but they get no tap recognizer at all -- they read as tappable but aren't.
+With no handler (the default) custom runs are still drawn in `NaturalBlockTheme.custom`'s style, but they get no tap recognizer at all -- they read as tappable but aren't.
 
-#### Drawing an actionable run yourself
+#### Drawing a custom run yourself
 
-An actionable run is offered to each handler in `customs` until one claims it, and a handler declines by returning `null` -- so it never has to understand every payload it might meet. Drawing a run as tappable text is what `tappableText` does, and since each handler decides what its own tap means, there is no one `onTap` for the whole view.
+An custom run is offered to each handler in `customs` until one claims it, and a handler declines by returning `null` -- so it never has to understand every payload it might meet. Drawing a run as tappable text is what `tappableText` does, and since each handler decides what its own tap means, there is no one `onTap` for the whole view.
 
 A handler answers with a span to put in the line and a `dispose` to release whatever that span carries:
 
@@ -268,7 +268,7 @@ A `WidgetSpan` you return is laid out with the paragraph's width but an **unboun
 
 #### Images
 
-There is no image syntax, and there is not going to be one. An image is written as an ordinary actionable span using the conventional payload `image(<url>)`, so an implementation that has never heard of images still shows `image(https://...)` — readable text — instead of failing to parse.
+There is no image syntax, and there is not going to be one. An image is written as an ordinary custom span using the conventional payload `image(<url>)`, so an implementation that has never heard of images still shows `image(https://...)` — readable text — instead of failing to parse.
 
 The word is spelled out, and `img` is deliberately **not** accepted as an alias. What the reader sees when nothing renders the payload is the whole point of the convention, and `img` is borrowed HTML jargon rather than a word; there is also no scarcity here to buy the two characters back, unlike the single-character markers. Two accepted spellings would be exactly the dialect this convention exists to prevent — so if the payload convention grows (`video(...)`, `user(...)`), the rule is simply to use the word.
 
@@ -326,7 +326,7 @@ Note also that letting documents name local files lets them probe for one: a pat
 
 #### A convention for what the text means (non-normative)
 
-`natural_block` places no constraint on an actionable span's text. The following convention is not enforced by the parser or this package, but mirrors URI/fragment conventions most readers and authors already know, so it's a reasonable default if you don't already have one:
+`natural_block` places no constraint on an custom span's text. The following convention is not enforced by the parser or this package, but mirrors URI/fragment conventions most readers and authors already know, so it's a reasonable default if you don't already have one:
 
 | text | meaning |
 |---|---|
@@ -337,7 +337,7 @@ Note also that letting documents name local files lets them probe for one: a pat
 | `image(<url>)` | an image -- see [Images](#images) |
 | anything else | app-defined |
 
-Whichever shapes you use, **keep the payload human-readable**. That is what makes actions a safe place to extend the language at all: an implementation that does not recognise a payload still renders it as text, so `image(https://example.com/a.png)` degrades into something a person can read and act on, while an opaque identifier would degrade into nothing useful. Note that a run you draw as a `WidgetSpan` gives up part of that safety net *within your own app* too: it occupies one `￼` in the paragraph's own text, so an image copies as nothing that names it. (A `WidgetSpan` wrapping a `Text` does copy its text -- `SelectionArea` reaches into it -- so this is about widgets that hold no text, not about `WidgetSpan` itself.)
+Whichever shapes you use, **keep the payload human-readable**. That is what makes custom runs a safe place to extend the language at all: an implementation that does not recognise a payload still renders it as text, so `image(https://example.com/a.png)` degrades into something a person can read and act on, while an opaque identifier would degrade into nothing useful. Note that a run you draw as a `WidgetSpan` gives up part of that safety net *within your own app* too: it occupies one `￼` in the paragraph's own text, so an image copies as nothing that names it. (A `WidgetSpan` wrapping a `Text` does copy its text -- `SelectionArea` reaches into it -- so this is about widgets that hold no text, not about `WidgetSpan` itself.)
 
 Resolving any of this -- looking up `#name`, deciding what `@name` refers to, or anything else -- is entirely the app's responsibility; `natural_block` and `natural_block_flutter` only carry the text through.
 

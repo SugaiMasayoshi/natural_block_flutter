@@ -104,7 +104,7 @@ Initial release.
 
 ### Theming
 
-- `NaturalBlockTheme` maps tones, emphasis, and actionability to
+- `NaturalBlockTheme` maps tones, emphasis, and custom marking to
   `TextStyle`s, and controls what a size step is worth (`baseFontSize`,
   `fontSizeStep`, `minFontSize`).
 - Table appearance: `tableCellPadding`, `tableBorder` (a full frame by
@@ -139,7 +139,7 @@ Initial release.
   "none" of its own and a transparent one is still a fill -- it would put a
   decoration on every other row of every table.
 - `styleFor(decoration, baseSize: ...)` is the whole mapping from what the
-  source said to what is drawn: the tone, with emphasis and actionability
+  source said to what is drawn: the tone, with emphasis and custom marking
   laid over it, at the size its `:+` and `:-` ask for. It lives on the theme
   because every value it needs is a field of one, and because a builder of
   your own would otherwise have to reproduce the order. It replaced a
@@ -176,9 +176,9 @@ Initial release.
   already names one kind, as a table's cells do, there is nothing to choose
   and the field is called directly. They are also how a builder of your own
   recurses into a node's children, which keeps those children on the same
-  theme, builders and actions.
+  theme, builders and handlers.
 - A builder receives the node and one `NaturalBlockScope`, which carries the
-  theme, the builders and the actions. The three travel together the whole
+  theme, the builders and the custom handlers. The three travel together the whole
   way down and no level swaps one of them for its children, so they are one
   value rather than three parameters repeated at every level.
 - A builder gets no `BuildContext`, and neither do `buildLayouts` and
@@ -222,9 +222,9 @@ Initial release.
   rather than wrap. Wrapping is wrong for code, but turning this on puts a
   scroll view inside the caller's layout, which nothing else here does.
 
-### Actionable runs
+### Custom runs
 
-- `customs` is the list of handlers an actionable run is offered to, in
+- `customs` is the list of handlers an custom run is offered to, in
   order, until one claims it. The default list is empty: tappable text and
   each kind of image are things an app includes, so replacing a run and
   making it tappable are not the same switch.

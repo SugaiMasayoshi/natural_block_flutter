@@ -109,7 +109,7 @@ const _samples = [
   _Sample('表を閉じる(~をもう一度書く)\n閉じないと入力の終わりまで表が続く', '~商品^価格|りんご^150~合計^150'),
   _Sample(
     '画像(構文の追加なし、image(url)というアクションの慣習)\n'
-        'このアプリは NaturalBlockActions.buildSpan を渡しているので描画される。'
+        'このアプリは NaturalBlockImages.network を customs に入れているので描画される。'
         '渡さなければ読めるテキストのままで通信も起きない',
     ':@image(https://flutter.github.io/assets-for-api-docs/assets/widgets/owl.jpg):@',
   ),

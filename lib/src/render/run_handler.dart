@@ -3,13 +3,13 @@ import 'package:flutter/widgets.dart';
 
 import '../widget/natural_block_theme.dart';
 
-/// What tapping an actionable run means, decided by the handler that drew it.
+/// What tapping an custom run means, decided by the handler that drew it.
 ///
 /// Nothing here interprets the text: no URL is opened. The run's own text
 /// is the whole payload, and what it means belongs to the app.
-typedef OnActionTap = void Function(String text);
+typedef OnCustomTap = void Function(String text);
 
-/// How one actionable run is drawn: the span to put in the line, and what to
+/// How one custom run is drawn: the span to put in the line, and what to
 /// release when the line is rebuilt or goes away.
 ///
 /// Anything the `span` carries is yours, a gesture recognizer included, and
@@ -40,7 +40,7 @@ RunRendering widgetRun(
   PlaceholderAlignment alignment = PlaceholderAlignment.middle,
 }) => (span: WidgetSpan(alignment: alignment, child: child), dispose: () {});
 
-/// Answers how one actionable run is drawn, or null to leave it to the next
+/// Answers how one custom run is drawn, or null to leave it to the next
 /// handler.
 ///
 /// [style] is what the run would have been drawn with, its `fontSize`
@@ -66,7 +66,7 @@ typedef RunHandler = RunRendering? Function(
 RunRendering tappableText(
   String text,
   TextStyle style, {
-  required OnActionTap onTap,
+  required OnCustomTap onTap,
 }) {
   final recognizer = TapGestureRecognizer()..onTap = () => onTap(text);
   return (

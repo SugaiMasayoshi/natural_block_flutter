@@ -27,7 +27,7 @@ class NaturalBlockScope {
 
   final NaturalBlockBuilders builders;
 
-  /// The handlers an actionable run is offered to, in order.
+  /// The handlers an custom run is offered to, in order.
   final List<RunHandler> customs;
 
   const NaturalBlockScope({

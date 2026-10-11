@@ -22,14 +22,14 @@ void main() {
       expect(styleOf(const SpanDecoration()).color, theme.base.color);
     });
 
-    test('emphasis and actionability lay over the tone', () {
+    test('emphasis and custom marking lay over the tone', () {
       final both = styleOf(
-        SpanDecoration(tone: Tone.negative, emphasis: true, isAction: true),
+        SpanDecoration(tone: Tone.negative, emphasis: true, isCustom: true),
       );
 
-      expect(both.color, theme.action.color, reason: 'action is laid last');
+      expect(both.color, theme.custom.color, reason: 'custom is laid last');
       expect(both.fontWeight, theme.emphasis.fontWeight);
-      expect(both.decoration, theme.action.decoration);
+      expect(both.decoration, theme.custom.decoration);
     });
 
     test('a size step counts from baseSize', () {
@@ -69,7 +69,7 @@ void main() {
       expect(copy.base, theme.base);
       expect(copy.positive, theme.positive);
       expect(copy.emphasis, theme.emphasis);
-      expect(copy.action, theme.action);
+      expect(copy.custom, theme.custom);
       expect(copy.baseFontSize, theme.baseFontSize);
       expect(copy.minFontSize, theme.minFontSize);
     });
@@ -127,12 +127,12 @@ void main() {
       expect(theme.positive.color, Colors.teal);
     });
 
-    test('action picks up primary and is underlined', () {
+    test('custom picks up primary and is underlined', () {
       const scheme = ColorScheme.light(primary: Colors.indigo);
       final theme = NaturalBlockTheme.fromColorScheme(scheme);
 
-      expect(theme.action.color, Colors.indigo);
-      expect(theme.action.decoration, TextDecoration.underline);
+      expect(theme.custom.color, Colors.indigo);
+      expect(theme.custom.decoration, TextDecoration.underline);
     });
   });
 
@@ -149,7 +149,7 @@ void main() {
       'emphasis': base.copyWith(
         emphasis: const TextStyle(fontStyle: FontStyle.italic),
       ),
-      'action': base.copyWith(action: const TextStyle(color: Colors.pink)),
+      'custom': base.copyWith(custom: const TextStyle(color: Colors.pink)),
       'baseFontSize': base.copyWith(baseFontSize: 99),
       'fontSizeStep': base.copyWith(fontSizeStep: 99),
       'minFontSize': base.copyWith(minFontSize: 99),

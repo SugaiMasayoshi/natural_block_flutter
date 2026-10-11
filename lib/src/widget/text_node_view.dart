@@ -131,11 +131,11 @@ typedef _SpanInputs = ({
         final baseSize = from.rootStyle.fontSize ?? theme.baseFontSize;
         final style = theme.styleFor(run.decoration, baseSize: baseSize);
 
-        // Styled as actionable either way. What the handlers decide is how
+        // Styled as custom either way. What the handlers decide is how
         // it is drawn and whether it answers a tap: the first to answer
         // draws it, and the rest are not asked.
         RunRendering? claimed;
-        if (run.decoration.isAction) {
+        if (run.decoration.isCustom) {
           // `styleFor` leaves the size unstated where the source asked for
           // no step; a handler is handed the size the run actually draws at.
           final offered = style.copyWith(fontSize: style.fontSize ?? baseSize);

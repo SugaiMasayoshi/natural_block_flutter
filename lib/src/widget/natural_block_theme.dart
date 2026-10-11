@@ -13,7 +13,7 @@ class NaturalBlockTheme {
 
   final TextStyle emphasis;
 
-  final TextStyle action;
+  final TextStyle custom;
 
   final double baseFontSize;
 
@@ -59,7 +59,7 @@ class NaturalBlockTheme {
     this.negative = const TextStyle(color: Colors.red),
     this.positive = const TextStyle(color: Colors.green),
     this.emphasis = const TextStyle(fontWeight: FontWeight.bold),
-    this.action = const TextStyle(
+    this.custom = const TextStyle(
       color: Colors.blue,
       decoration: TextDecoration.underline,
     ),
@@ -97,7 +97,7 @@ class NaturalBlockTheme {
     return NaturalBlockTheme(
       negative: TextStyle(color: scheme.error),
       positive: TextStyle(color: scheme.tertiary),
-      action: TextStyle(
+      custom: TextStyle(
         color: scheme.primary,
         decoration: TextDecoration.underline,
       ),
@@ -137,7 +137,7 @@ class NaturalBlockTheme {
   }
 
   /// What one run's decoration looks like: the tone's style, with emphasis
-  /// and actionability laid over it, at the size its `:+` and `:-` ask for.
+  /// and custom marking laid over it, at the size its `:+` and `:-` ask for.
   ///
   /// The whole mapping from what the source said to what is drawn, in the one
   /// place that holds every value it needs. [baseSize] is what the sizes
@@ -150,7 +150,7 @@ class NaturalBlockTheme {
             Tone.none => base,
           }
           .merge(decoration.emphasis ? emphasis : null)
-          .merge(decoration.isAction ? action : null)
+          .merge(decoration.isCustom ? custom : null)
           .copyWith(
             // Left unstated when the source asked for no step, so the run
             // keeps whatever size it would have drawn at anyway.
@@ -175,7 +175,7 @@ class NaturalBlockTheme {
     TextStyle? negative,
     TextStyle? positive,
     TextStyle? emphasis,
-    TextStyle? action,
+    TextStyle? custom,
     double? baseFontSize,
     double? fontSizeStep,
     double? minFontSize,
@@ -191,7 +191,7 @@ class NaturalBlockTheme {
     negative: negative ?? this.negative,
     positive: positive ?? this.positive,
     emphasis: emphasis ?? this.emphasis,
-    action: action ?? this.action,
+    custom: custom ?? this.custom,
     baseFontSize: baseFontSize ?? this.baseFontSize,
     fontSizeStep: fontSizeStep ?? this.fontSizeStep,
     minFontSize: minFontSize ?? this.minFontSize,
@@ -213,7 +213,7 @@ class NaturalBlockTheme {
     negative,
     positive,
     emphasis,
-    action,
+    custom,
     baseFontSize,
     fontSizeStep,
     minFontSize,

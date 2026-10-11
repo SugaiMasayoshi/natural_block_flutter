@@ -25,12 +25,12 @@ List<RunHandler> _into(List<String> sink) => [
 ];
 
 void main() {
-  TextSpanNode action(String text) =>
-      TextSpanNode(text: text, decoration: SpanDecoration(isAction: true));
+  TextSpanNode custom(String text) =>
+      TextSpanNode(text: text, decoration: SpanDecoration(isCustom: true));
 
   /// Draws [runs] as one line. By default something is wired to every
-  /// actionable run; `const []` is an app that wired nothing, which is the
-  /// difference between an actionable run and a tappable one.
+  /// custom run; `const []` is an app that wired nothing, which is the
+  /// difference between an custom run and a tappable one.
   Future<void> pumpRuns(
     WidgetTester tester,
     List<InlineNode> runs, {
@@ -60,7 +60,7 @@ void main() {
     ) async {
       // All this layer owes: each run's decoration goes to the theme and the
       // answer lands on that run's span, in that run's place. What any one
-      // decoration is worth -- how tones, emphasis, actionability and the
+      // decoration is worth -- how tones, emphasis, custom marking and the
       // size steps compose -- is `styleFor`'s own business, tested there
       // without pumping anything.
       const theme = NaturalBlockTheme();
@@ -68,7 +68,7 @@ void main() {
       const decorations = [
         SpanDecoration(),
         SpanDecoration(tone: Tone.negative),
-        SpanDecoration(tone: Tone.negative, emphasis: true, isAction: true),
+        SpanDecoration(tone: Tone.negative, emphasis: true, isCustom: true),
         SpanDecoration(sizeOffset: 2),
         SpanDecoration(sizeOffset: -99),
       ];
@@ -133,17 +133,17 @@ void main() {
     });
   });
 
-  group('actionable spans', () {
-    testWidgets('a recognizer appears for an actionable run, and only when '
+  group('custom spans', () {
+    testWidgets('a recognizer appears for an custom run, and only when '
         'something is wired to it', (tester) async {
-      await pumpRuns(tester, [action('tap me')]);
+      await pumpRuns(tester, [custom('tap me')]);
       expect(recognizerOf(tester), isA<TapGestureRecognizer>());
 
-      await pumpRuns(tester, [action('tap me')], customs: const []);
+      await pumpRuns(tester, [custom('tap me')], customs: const []);
       expect(recognizerOf(tester), isNull, reason: 'nothing wired');
 
       await pumpRuns(tester, [TextSpanNode(text: 'plain')]);
-      expect(recognizerOf(tester), isNull, reason: 'not actionable');
+      expect(recognizerOf(tester), isNull, reason: 'not custom');
     });
 
     testWidgets("a tap calls onTap with exactly that run's text", (
@@ -151,7 +151,7 @@ void main() {
     ) async {
       final tapped = <String>[];
       await pumpRuns(tester, [
-        action('actionable'),
+        custom('actionable'),
         TextSpanNode(text: ' plain'),
       ], customs: _into(tapped));
 
@@ -160,12 +160,10 @@ void main() {
       expect(tapped, ['actionable']);
     });
 
-    testWidgets('tapping a non-actionable run does not fire onTap', (
-      tester,
-    ) async {
+    testWidgets('tapping a non-custom run does not fire onTap', (tester) async {
       final tapped = <String>[];
       await pumpRuns(tester, [
-        action('actionable'),
+        custom('actionable'),
         TextSpanNode(text: ' plain'),
       ], customs: _into(tapped));
 
@@ -181,22 +179,22 @@ void main() {
     testWidgets('only a run that actually does something is announced', (
       tester,
     ) async {
-      // Style follows the document -- it said the run is actionable, so it
+      // Style follows the document -- it said the run is custom, so it
       // renders as such either way. Semantics follow what will actually
       // happen: telling a screen reader a run is interactive when no
       // handler is wired is a promise nothing keeps.
       const theme = NaturalBlockTheme();
 
-      await pumpRuns(tester, [action('tap me')], customs: const []);
+      await pumpRuns(tester, [custom('tap me')], customs: const []);
       final inert = renderedSpans(tester).single;
-      expect(inert.style!.decoration, theme.action.decoration);
+      expect(inert.style!.decoration, theme.custom.decoration);
       expect(
         inert.semanticsLabel,
         isNull,
         reason: 'no handler, so nothing is announced as interactive',
       );
 
-      await pumpRuns(tester, [action('tap me')]);
+      await pumpRuns(tester, [custom('tap me')]);
       expect(renderedSpans(tester).single.semanticsLabel, 'tap me');
     });
 
@@ -209,10 +207,10 @@ void main() {
       testWidgets('a rebuild with the same runs keeps the recognizer', (
         tester,
       ) async {
-        await pumpRuns(tester, [action('tap me')]);
+        await pumpRuns(tester, [custom('tap me')]);
         final first = recognizerOf(tester);
 
-        await pumpRuns(tester, [action('tap me')]);
+        await pumpRuns(tester, [custom('tap me')]);
 
         expect(recognizerOf(tester), same(first));
       });
@@ -228,7 +226,7 @@ void main() {
 
         await pumpRuns(
           tester,
-          [action('tap me')],
+          [custom('tap me')],
           theme: theme,
           ambient: const TextStyle(fontSize: 14, color: Color(0xFF000000)),
         );
@@ -236,7 +234,7 @@ void main() {
 
         await pumpRuns(
           tester,
-          [action('tap me')],
+          [custom('tap me')],
           theme: theme,
           ambient: const TextStyle(fontSize: 30, color: Color(0xFF000000)),
         );
@@ -250,21 +248,21 @@ void main() {
         // A handler is compared by identity, so a caller who keeps theirs
         // stable -- a top-level function, or a method of their state --
         // keeps the recognizers too.
-        await pumpRuns(tester, [action('tap me')], customs: const [_wired]);
+        await pumpRuns(tester, [custom('tap me')], customs: const [_wired]);
         final first = recognizerOf(tester);
 
-        await pumpRuns(tester, [action('tap me')], customs: const [_wired]);
+        await pumpRuns(tester, [custom('tap me')], customs: const [_wired]);
 
         expect(recognizerOf(tester), same(first));
       });
 
       testWidgets('a different handler rebuilds the spans', (tester) async {
-        await pumpRuns(tester, [action('tap me')], customs: const [_wired]);
+        await pumpRuns(tester, [custom('tap me')], customs: const [_wired]);
         final first = recognizerOf(tester);
 
         await pumpRuns(
           tester,
-          [action('tap me')],
+          [custom('tap me')],
           customs: const [_wiredElsewhere],
         );
 
@@ -273,20 +271,20 @@ void main() {
 
       testWidgets('changed runs rebuild the spans', (tester) async {
         // The accepted cost: a tap held across an edit to this line is lost.
-        await pumpRuns(tester, [action('tap me')]);
+        await pumpRuns(tester, [custom('tap me')]);
         final first = recognizerOf(tester);
 
-        await pumpRuns(tester, [action('tap again')]);
+        await pumpRuns(tester, [custom('tap again')]);
 
         expect(recognizerOf(tester), isNot(same(first)));
       });
 
       testWidgets('a changed theme rebuilds the spans', (tester) async {
-        await pumpRuns(tester, [action('tap me')]);
+        await pumpRuns(tester, [custom('tap me')]);
         final first = recognizerOf(tester);
 
         await pumpRuns(tester, [
-          action('tap me'),
+          custom('tap me'),
         ], theme: const NaturalBlockTheme(fontSizeStep: 9));
 
         expect(recognizerOf(tester), isNot(same(first)));
@@ -331,12 +329,12 @@ void main() {
         // `DefaultTextStyle` decides what every run starts from and can
         // change without any of this widget's own fields changing.
         await pumpRuns(tester, [
-          action('tap me'),
+          custom('tap me'),
         ], ambient: const TextStyle(fontSize: 14));
         final first = recognizerOf(tester);
 
         await pumpRuns(tester, [
-          action('tap me'),
+          custom('tap me'),
         ], ambient: const TextStyle(fontSize: 22));
 
         expect(recognizerOf(tester), isNot(same(first)));
@@ -357,12 +355,12 @@ void main() {
         // both of the places it happens -- replacing the spans, and
         // unmounting the view. Disposing one twice throws, so the second
         // must find nothing left.
-        await pumpRuns(tester, [action('one'), action('two'), action('three')]);
+        await pumpRuns(tester, [custom('one'), custom('two'), custom('three')]);
         expect(tester.takeException(), isNull);
 
-        // Fewer actionable runs than before: the surplus recognizers are
+        // Fewer custom runs than before: the surplus recognizers are
         // released here rather than at unmount.
-        await pumpRuns(tester, [action('one')]);
+        await pumpRuns(tester, [custom('one')]);
         expect(tester.takeException(), isNull);
 
         await pumpRuns(tester, [TextSpanNode(text: 'plain')]);
@@ -389,7 +387,7 @@ void main() {
       // rather than an identical widget Flutter can skip.
       Future<void> pump(String suffix) => pumpRuns(
         tester,
-        [action('press')],
+        [custom('press')],
         theme: NaturalBlockTheme(
           base: TextStyle(letterSpacing: suffix.length * 0.0),
         ),
