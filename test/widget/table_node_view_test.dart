@@ -323,7 +323,15 @@ void main() {
     ) async {
       final tapped = <String>[];
       await tester.pumpWidget(
-        wrap(NaturalBlockView(source: '~:@tap:@^B|C^D~', onTap: tapped.add)),
+        wrap(
+          NaturalBlockView(
+            source: '~:@tap:@^B|C^D~',
+            customs: [
+              (text, style, theme) =>
+                  tappableText(text, style, onTap: tapped.add),
+            ],
+          ),
+        ),
       );
 
       final span = renderedSpans(tester).single;

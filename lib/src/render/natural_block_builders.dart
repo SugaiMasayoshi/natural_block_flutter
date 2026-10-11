@@ -27,17 +27,13 @@ class NaturalBlockScope {
 
   final NaturalBlockBuilders builders;
 
-  /// The handlers an actionable run is offered to, in order, and what
-  /// the app wants done when one is tapped.
+  /// The handlers an actionable run is offered to, in order.
   final List<RunHandler> customs;
-
-  final OnActionTap? onTap;
 
   const NaturalBlockScope({
     this.theme = const NaturalBlockTheme(),
     this.builders = NaturalBlockBuilders.defaults,
-    this.customs = const [tappableText],
-    this.onTap,
+    this.customs = const [],
   });
 
   /// What a document is drawn from, which is therefore also what decides
@@ -47,7 +43,7 @@ class NaturalBlockScope {
   /// field to reach the drawing and not the comparison -- and then a change
   /// never redraws. `customs` compares as a list does, by identity, which is
   /// why a view's `customs` asks for a stable one.
-  List<Object?> get _fields => [theme, builders, customs, onTap];
+  List<Object?> get _fields => [theme, builders, customs];
 
   @override
   bool operator ==(Object other) =>

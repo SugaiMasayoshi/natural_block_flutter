@@ -97,8 +97,7 @@ class Example extends StatelessWidget {
 * `source` (required) -- the markup text to parse and render.
 * `theme` -- a [`NaturalBlockTheme`](#naturalblocktheme) controlling how tones, emphasis, and base text look. Defaults to `null`, meaning `NaturalBlockTheme.fromContext(context)`: the tones come from the surrounding `ColorScheme`, so a document reads correctly in a light theme and a dark one without being told which it is in.
 * `builders` -- a [`NaturalBlockBuilders`](#naturalblockbuilders) controlling which widget renders each kind of node. Defaults to `NaturalBlockBuilders.defaults`.
-* `customs` -- the [handlers](#actionable-text) an actionable run is offered to, in order, until one claims it. Defaults to `const [tappableText]`, which draws them as tappable text. Images are handlers too, so an app includes the ones it means: `const [NaturalBlockImages.network, tappableText]`.
-* `onTap` -- called with an actionable run's own text when it is tapped. Defaults to `null`, which leaves those runs styled but inert.
+* `customs` -- the [handlers](#actionable-text) an actionable run is offered to, in order, until one claims it. Defaults to `const []`, which leaves those runs styled but inert. Tappable text and images are handlers, so an app includes the ones it means: `const [NaturalBlockImages.network, links]`, where `links` is a handler of your own built on `tappableText`.
 
 ### `NaturalBlockTheme`
 
@@ -169,7 +168,7 @@ NaturalBlockView(source: source, builders: builders);
 
 **Which of the two extension points to reach for.** `builders` changes how a *kind of node* is drawn, everywhere it appears. `customs` decides how one *actionable run* is drawn, and declines the rest by returning null. An actionable run is not a node: `:@` is a decoration a run carries, like a tone or emphasis, so there is nothing for a builder to key on.
 
-A builder receives the node — already typed as the kind it was registered for, so there is no cast — and a `NaturalBlockScope`: the theme, the builders, the customs and the `onTap`, which travel together the whole way down. Recurse into a node's own children with `buildLayouts(node.children, scope)` for the blocks and rows a document holds, or `buildContents(node.children, scope)` for the lines, raw blocks and tables a block or a table cell holds. Either keeps every child on the same theme, builders and handlers. Where the tree already names one kind -- a row's cells, a table's rows -- reach for that field directly (`scope.builders.column(cell, scope)`), since there is nothing to choose.
+A builder receives the node — already typed as the kind it was registered for, so there is no cast — and a `NaturalBlockScope`: the theme, the builders, the customs, which travel together the whole way down. Recurse into a node's own children with `buildLayouts(node.children, scope)` for the blocks and rows a document holds, or `buildContents(node.children, scope)` for the lines, raw blocks and tables a block or a table cell holds. Either keeps every child on the same theme, builders and handlers. Where the tree already names one kind -- a row's cells, a table's rows -- reach for that field directly (`scope.builders.column(cell, scope)`), since there is nothing to choose.
 
 **Neither a builder nor a handler gets a `BuildContext`.** Each is called while its parent builds, so reading an inherited widget there would bake what it read into something that cannot say what that was -- and the view, unable to know whether this document cared, would have to redraw all of it on every ambient change. For a handler it is sharper still: a span cannot read a context lazily at all, and a line keeps its spans until what they were built from changes, which can never include what a handler went and read. To read one, return a `Builder`:
 
@@ -207,36 +206,38 @@ const source = ':@https://example.com:@ 参照';
 
 This package deliberately does not call it a "link". `natural_block` only records that a run of text is tappable; the run's own `text` is the payload, and what tapping it *means* -- opening a URL, jumping to a section, resolving a mention, running a command -- is entirely the consuming app's decision. Neither the parser nor this package ever opens a URL, validates one, or otherwise interprets the text; there is no `url_launcher` dependency here and never will be.
 
-Give `NaturalBlockView` an `onTap` to find out when an actionable run is tapped:
+Tapping is a handler's job, and each handler brings its own `onTap`. `tappableText` draws the run as tappable text; give it the function that says what a tap means, from a handler of your own:
 
 ```dart
-NaturalBlockView(
-  source: source,
-  onTap: (text) {
-    // `text` is exactly the actionable run's own text -- see the
-    // convention table below for the shapes it commonly takes.
-    if (text.startsWith('https://') || text.startsWith('http://')) {
-      // openUrl(text); -- e.g. via url_launcher, in your own app code.
-    } else {
-      // Any other shape is app-defined; ignore what you don't handle.
-    }
-  },
-);
+void onActionTap(String text) {
+  // `text` is exactly the actionable run's own text -- see the
+  // convention table below for the shapes it commonly takes.
+  if (text.startsWith('https://') || text.startsWith('http://')) {
+    // openUrl(text); -- e.g. via url_launcher, in your own app code.
+  } else {
+    // Any other shape is app-defined; ignore what you don't handle.
+  }
+}
+
+RunRendering? links(text, style, theme) =>
+    tappableText(text, style, onTap: onActionTap);
+
+NaturalBlockView(source: source, customs: const [links]);
 ```
 
-Leaving `onTap` unset (the default) still renders actionable runs with `NaturalBlockTheme.action`'s style, but they get no tap recognizer at all -- they read as tappable but aren't.
+With no handler (the default) actionable runs are still drawn in `NaturalBlockTheme.action`'s style, but they get no tap recognizer at all -- they read as tappable but aren't.
 
 #### Drawing an actionable run yourself
 
-An actionable run is offered to each handler in `customs` until one claims it, and a handler declines by returning `null` -- so it never has to understand every payload it might meet. Drawing a run as tappable text is itself a handler (`tappableText`), which is why it is in the default list and why leaving it out takes tappability away.
+An actionable run is offered to each handler in `customs` until one claims it, and a handler declines by returning `null` -- so it never has to understand every payload it might meet. Drawing a run as tappable text is what `tappableText` does, and since each handler decides what its own tap means, there is no one `onTap` for the whole view.
 
 A handler answers with a span to put in the line and a `dispose` to release whatever that span carries:
 
 ```dart
-RunRendering? mentions(text, style, theme, onTap) {
+RunRendering? mentions(text, style, theme) {
   if (!text.startsWith('@')) return null; // not mine -- offer it to the next
 
-  final recognizer = TapGestureRecognizer()..onTap = onTap;
+  final recognizer = TapGestureRecognizer()..onTap = () => openProfile(text);
   return (
     span: TextSpan(
       text: text.substring(1),
@@ -249,8 +250,7 @@ RunRendering? mentions(text, style, theme, onTap) {
 
 NaturalBlockView(
   source: source,
-  customs: const [mentions, NaturalBlockImages.network, tappableText],
-  onTap: openUrl,
+  customs: const [mentions, NaturalBlockImages.network, links],
 );
 ```
 
@@ -260,7 +260,7 @@ NaturalBlockView(
 
 Returning a `TextSpan` rather than a widget is what keeps a long run wrapping: a `WidgetSpan` is one unbreakable box in the paragraph. Both are available, and so is anything else -- a `TextSpan` with `children:` for text built from several styled pieces that must still select as one, or a recognizer other than `TapGestureRecognizer` for a gesture other than a tap.
 
-**Keep the list stable.** A `const` list of named handlers compares equal across builds; one written out afresh inside a `build` never does, which redraws every line and loses a tap held across the redraw.
+**Keep the list, and what it holds, stable.** A `const` list of named handlers compares equal across builds; one written out afresh inside a `build` never does, which redraws every line and loses a tap held across the redraw. A handler of your own should be a top-level function or a method of your state for the same reason.
 
 The `style` you receive is what the span *would* have been drawn with, including everything the surrounding markup asked for, and with its `fontSize` always resolved to a concrete value -- reading it is what lets `:++` / `:--` reach content that is not text at all. `theme` comes along so you can work out what that size means relative to an unmarked run (`theme.baseFontSize`, `theme.fontSizeStep`) rather than hardcoding a reference.
 
@@ -277,7 +277,7 @@ The word is spelled out, and `img` is deliberately **not** accepted as an alias.
 ```dart
 NaturalBlockView(
   source: ':@image(https://example.com/a.png):@',
-  customs: const [NaturalBlockImages.network, tappableText],
+  customs: const [NaturalBlockImages.network, links],
 );
 ```
 
@@ -293,7 +293,7 @@ Shipping the reference implementation anyway is the point: declining to interpre
 customs: const [
   NaturalBlockImages.local,
   NaturalBlockImages.network,
-  tappableText,
+  links,
 ],
 ```
 
@@ -306,7 +306,7 @@ The convention does not fork — it is still `image(...)`, and only the *resolut
 A relative payload (`image(assets/a.png)`) is declined by both, since resolving one needs an asset bundle or a base that only the app has. Write a handler for those and put it in front; the ones behind take whatever it declines:
 
 ```dart
-RunRendering? assets(text, style, theme, onTap) {
+RunRendering? assets(text, style, theme) {
   final source = NaturalBlockImages.sourceOf(text);
   if (source == null ||
       NaturalBlockImages.kindOf(source) != ImageSourceKind.relative) {
@@ -315,7 +315,7 @@ RunRendering? assets(text, style, theme, onTap) {
   return widgetRun(Image.asset(source));
 }
 
-customs: const [assets, NaturalBlockImages.network, tappableText],
+customs: const [assets, NaturalBlockImages.network, links],
 ```
 
 `NaturalBlockImages.kindOf` is provided because the classification has a trap in it: `Uri.parse` reads `C:\Users\a.png` as a URI **whose scheme is `c`**, so the obvious "does it have a scheme, then it's a URL" test mistakes every Windows path for one. It reads the string only — no `dart:io`, works on every platform.

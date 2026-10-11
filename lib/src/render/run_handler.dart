@@ -3,7 +3,7 @@ import 'package:flutter/widgets.dart';
 
 import '../widget/natural_block_theme.dart';
 
-/// What tapping an actionable run means, decided by the app.
+/// What tapping an actionable run means, decided by the handler that drew it.
 ///
 /// Nothing here interprets the text: no URL is opened. The run's own text
 /// is the whole payload, and what it means belongs to the app.
@@ -44,32 +44,31 @@ RunRendering widgetRun(
 /// handler.
 ///
 /// [style] is what the run would have been drawn with, its `fontSize`
-/// always resolved. [onTap] comes already bound to this run's text, and is
-/// null when the app wired nothing.
+/// always resolved.
 typedef RunHandler = RunRendering? Function(
   String text,
   TextStyle style,
   NaturalBlockTheme theme,
-  VoidCallback? onTap,
 );
 
-/// Draws an actionable run as tappable text, which is what a URL wants.
+/// [text] drawn as tappable text, which is what a URL wants. Not a
+/// [RunHandler] itself: [onTap] says what a tap means, so a handler of your
+/// own supplies it --
 ///
-/// The default, and a handler like any other: leave it out of a view's
-/// `customs` and actionable runs keep their style without answering a tap.
+/// ```dart
+/// RunRendering? links(String text, TextStyle style, NaturalBlockTheme theme) =>
+///     tappableText(text, style, onTap: openUrl);
+/// ```
 ///
-/// Declined rather than underlined when nothing is wired, and announced to
-/// a screen reader only when something is: claiming interactivity nothing
-/// answers is a promise this package cannot keep.
-RunRendering? tappableText(
+/// -- and keeps it stable (a top-level function, or a method of your state),
+/// since a closure written afresh each build never compares equal to the
+/// last and redraws every line.
+RunRendering tappableText(
   String text,
-  TextStyle style,
-  NaturalBlockTheme theme,
-  VoidCallback? onTap,
-) {
-  if (onTap == null) return null;
-
-  final recognizer = TapGestureRecognizer()..onTap = onTap;
+  TextStyle style, {
+  required OnActionTap onTap,
+}) {
+  final recognizer = TapGestureRecognizer()..onTap = () => onTap(text);
   return (
     span: TextSpan(
       text: text,

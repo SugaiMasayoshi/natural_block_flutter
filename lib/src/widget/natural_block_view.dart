@@ -21,25 +21,22 @@ class NaturalBlockView extends StatefulWidget {
   /// The handlers an actionable run is offered to, in order, until one claims
   /// it.
   ///
-  /// Drawing one as tappable text is itself a handler, and so is each kind
-  /// of image, so an app names the ones it means:
-  /// `const [NaturalBlockImages.network, tappableText]`.
+  /// Each kind of image is a handler, and so is whatever draws a tappable run,
+  /// so an app names the ones it means:
+  /// `const [NaturalBlockImages.network, links]`. With none, actionable runs
+  /// are styled and nothing more.
   ///
   /// Keep the list stable -- `const`, or held in your state. One written
   /// afresh each build never compares equal to the last, which redraws
   /// every line and loses a tap held across the redraw.
   final List<RunHandler> customs;
 
-  /// Null leaves actionable runs styled but inert.
-  final OnActionTap? onTap;
-
   const NaturalBlockView({
     super.key,
     required this.source,
     this.theme,
     this.builders = NaturalBlockBuilders.defaults,
-    this.customs = const [tappableText],
-    this.onTap,
+    this.customs = const [],
   });
 
   @override
@@ -74,14 +71,6 @@ class _NaturalBlockViewState extends State<NaturalBlockView> {
   DocumentNode? _drawnDocument;
   NaturalBlockScope? _drawnScope;
 
-  /// Handed to the tree in place of the caller's `onTap`, because a method
-  /// tear-off compares equal across builds where their closure never would.
-  ///
-  /// Read at tap time, so a kept tree still calls the newest callback.
-  /// Whether there is one at all does reach the comparison, since that
-  /// decides if a run is tappable.
-  void _handleTap(String text) => widget.onTap?.call(text);
-
   @override
   Widget build(BuildContext context) {
     final theme = widget.theme ?? NaturalBlockTheme.fromContext(context);
@@ -90,7 +79,6 @@ class _NaturalBlockViewState extends State<NaturalBlockView> {
       theme: theme,
       builders: widget.builders,
       customs: widget.customs,
-      onTap: widget.onTap == null ? null : _handleTap,
     );
 
     if (_cached == null ||

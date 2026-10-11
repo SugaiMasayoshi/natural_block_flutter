@@ -10,7 +10,6 @@ RunRendering? _localStandIn(
   String text,
   TextStyle style,
   NaturalBlockTheme theme,
-  VoidCallback? onTap,
 ) {
   final source = NaturalBlockImages.sourceOf(text);
   if (source == null ||
@@ -25,7 +24,6 @@ RunRendering? _mentions(
   String text,
   TextStyle style,
   NaturalBlockTheme theme,
-  VoidCallback? onTap,
 ) => text.startsWith('user(') && text.endsWith(')')
     ? (
         span: TextSpan(text: text.substring(5, text.length - 1), style: style),
@@ -35,19 +33,20 @@ RunRendering? _mentions(
 
 /// Draws any actionable run as a box that answers the tap itself, through a
 /// widget rather than a recognizer this package would have to release.
-RunRendering? _tappableBox(
-  String text,
-  TextStyle style,
-  NaturalBlockTheme theme,
-  VoidCallback? onTap,
-) => widgetRun(
-  GestureDetector(
-    // An empty box defers its hit testing to a child it does not have.
-    behavior: HitTestBehavior.opaque,
-    onTap: onTap,
-    child: const SizedBox(width: 20, height: 20),
-  ),
-);
+RunHandler _tappableBox(List<String> sink) =>
+    (text, style, theme) => widgetRun(
+      GestureDetector(
+        // An empty box defers its hit testing to a child it does not have.
+        behavior: HitTestBehavior.opaque,
+        onTap: () => sink.add(text),
+        child: const SizedBox(width: 20, height: 20),
+      ),
+    );
+
+void _ignore(String _) {}
+
+RunRendering? _links(String text, TextStyle style, NaturalBlockTheme theme) =>
+    tappableText(text, style, onTap: _ignore);
 
 void main() {
   Widget wrap(Widget child) => MaterialApp(
@@ -63,7 +62,7 @@ void main() {
     WidgetTester tester,
     String source, {
     NaturalBlockTheme theme = const NaturalBlockTheme(),
-    List<RunHandler> customs = const [NaturalBlockImages.network, tappableText],
+    List<RunHandler> customs = const [NaturalBlockImages.network, _links],
   }) => tester.pumpWidget(
     wrap(NaturalBlockView(source: source, theme: theme, customs: customs)),
   );
@@ -179,13 +178,11 @@ void main() {
       // The property that makes the extension point safe: a builder never
       // has to understand every payload it meets, and one it does not
       // understand still reads as text rather than disappearing.
-      final tapped = <String>[];
       await tester.pumpWidget(
         wrap(
           NaturalBlockView(
             source: ':@#section:@',
-            customs: [NaturalBlockImages.network, tappableText],
-            onTap: tapped.add,
+            customs: [NaturalBlockImages.network, _links],
           ),
         ),
       );
@@ -348,7 +345,7 @@ void main() {
             customs: [
               NaturalBlockImages.local,
               NaturalBlockImages.network,
-              tappableText,
+              _links,
             ],
           ),
         ),
@@ -367,7 +364,7 @@ void main() {
             customs: [
               NaturalBlockImages.local,
               NaturalBlockImages.network,
-              tappableText,
+              _links,
             ],
           ),
         ),
@@ -394,7 +391,7 @@ void main() {
               customs: [
                 NaturalBlockImages.local,
                 NaturalBlockImages.network,
-                tappableText,
+                _links,
               ],
             ),
           ),
@@ -418,7 +415,7 @@ void main() {
             customs: [
               NaturalBlockImages.local,
               NaturalBlockImages.network,
-              tappableText,
+              _links,
             ],
           ),
         ),
@@ -466,31 +463,27 @@ void main() {
   });
 
   group('customs as a chain', () {
-    testWidgets('leaving tappableText out keeps the style and drops the tap', (
-      tester,
-    ) async {
-      // The default is a handler like any other, so an app can take it away.
-      final tapped = <String>[];
-      await tester.pumpWidget(
-        MaterialApp(
-          home: NaturalBlockView(
-            source: ':@リンク:@',
-            customs: const [],
-            onTap: tapped.add,
+    testWidgets(
+      'with no tapping handler a run keeps its style and drops the tap',
+      (tester) async {
+        // Tapping is a handler like any other, so an app that includes none
+        // gets none.
+        await tester.pumpWidget(
+          MaterialApp(
+            home: NaturalBlockView(source: ':@リンク:@', customs: const []),
           ),
-        ),
-      );
+        );
 
-      final span = renderedSpans(tester).single;
-      expect(
-        span.style!.decoration,
-        TextDecoration.underline,
-        reason: 'the document still says the run is actionable',
-      );
-      expect(span.recognizer, isNull);
-      expect(span.semanticsLabel, isNull);
-      expect(tapped, isEmpty);
-    });
+        final span = renderedSpans(tester).single;
+        expect(
+          span.style!.decoration,
+          TextDecoration.underline,
+          reason: 'the document still says the run is actionable',
+        );
+        expect(span.recognizer, isNull);
+        expect(span.semanticsLabel, isNull);
+      },
+    );
 
     testWidgets(
       'a widget run answers a tap through Flutter, not a recognizer',
@@ -505,8 +498,7 @@ void main() {
               alignment: Alignment.topLeft,
               child: NaturalBlockView(
                 source: ':@box:@',
-                customs: const [_tappableBox],
-                onTap: tapped.add,
+                customs: [_tappableBox(tapped)],
               ),
             ),
           ),
@@ -545,7 +537,6 @@ void main() {
         String text,
         TextStyle style,
         NaturalBlockTheme theme,
-        VoidCallback? onTap,
       ) =>
           (span: TextSpan(text: text, style: style), dispose: () => released++);
 

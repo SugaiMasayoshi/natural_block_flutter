@@ -34,11 +34,9 @@ Initial release.
   -- not a second list of the same fields kept for comparing. That second
   list is a place for a field to reach the drawing and not the comparison,
   and then a change never redraws; `NaturalBlockScope` now carries value
-  equality so there is one list instead of two. The caller's own `onTap` is
-  still never compared: what the scope holds is this package's relay, a
-  method tear-off that compares equal to itself, where a closure the caller
-  writes in their own `build` never would. Only whether there is one at all
-  shows through, because that decides if a run is tappable.
+  equality so there is one list instead of two. `customs` compares by
+  identity, so a handler of one's own is a top-level function or a method of
+  one's state, never a closure written afresh in a `build`.
 - `TextNodeView` draws a line's styled runs, built with `Text.rich` so the
   result takes part in text selection: wrap a view in a `SelectionArea` and
   the text is selectable and copyable across cell and row boundaries.
@@ -227,10 +225,9 @@ Initial release.
 ### Actionable runs
 
 - `customs` is the list of handlers an actionable run is offered to, in
-  order, until one claims it. Drawing a run as tappable text is itself a
-  handler (`tappableText`) and the only one in the default list, so an app
-  can take tappability away as easily as it adds an image. Replacing a run
-  and making it tappable are no longer the same switch.
+  order, until one claims it. The default list is empty: tappable text and
+  each kind of image are things an app includes, so replacing a run and
+  making it tappable are not the same switch.
 - A handler answers with a `RunRendering`: the `InlineSpan` to put in the
   line, and the `dispose` that releases whatever that span carries. Returning
   a span rather than a description of one is what makes the extension point
@@ -250,8 +247,10 @@ Initial release.
   `TextSpan.recognizer` already hands a caller; Flutter has no inline-link
   widget of its own (flutter#91600 is open), so the package is not standing
   in front of something better.
-- `tappableText` is now written through that public API, recognizer and
-  `dispose` included, so the default is also the worked example.
+- `tappableText` is written through that public API, recognizer and
+  `dispose` included, so it is also the worked example. It is a function
+  taking the `onTap` rather than a handler, since a handler has no way to be
+  handed one.
 - `widgetRun(child)` is the other answer written down: a run drawn as a
   widget, centred on the text beside it, with the `dispose` that is correct
   for one. It is not a wrapper around `WidgetSpan`, because it disagrees with
@@ -266,10 +265,14 @@ Initial release.
   example, four test handlers, both image handlers -- each needing the same
   sentence about why an empty `dispose` is right. The `WidgetSpan` lifecycle
   is not an image's business, so it moved to where handlers are defined.
-- `onTap` reports a tap with the run's own text. Nothing here ever
-  interprets that text — no URL is opened, and there is no `url_launcher`
-  dependency. A handler is handed it already bound to its run, so even a
-  widget run can answer it.
+- What a tap means belongs to the handler that drew the run, so there is no
+  `onTap` on the view. One for the whole view could only receive a string and
+  guess which handler it came from, and a widget run answers a tap through its
+  own `GestureDetector` without ever seeing it. `tappableText` reports a tap
+  with the run's own text. Nothing here ever interprets that text — no URL is
+  opened, and there is no `url_launcher` dependency. The cost is that the
+  callback is part of what is compared, which a view-wide `onTap` kept out
+  through a relay: a handler of one's own is stable, as above.
 - `NaturalBlockImages.network` is the reference rendering for the
   conventional `image(<url>)` payload, off until included: drawing a remote
   image is a network request to a third party made by displaying a

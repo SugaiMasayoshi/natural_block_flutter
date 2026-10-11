@@ -9,12 +9,13 @@ import 'rendered_spans.dart';
 /// A handler that draws any actionable run as a box, for the selection
 /// tests: a WidgetSpan is what splits a paragraph's selection into
 /// segments.
-RunRendering? _boxed(
-  String text,
-  TextStyle style,
-  NaturalBlockTheme theme,
-  VoidCallback? onTap,
-) => widgetRun(const SizedBox(width: 20, height: 10));
+RunRendering? _boxed(String text, TextStyle style, NaturalBlockTheme theme) =>
+    widgetRun(const SizedBox(width: 20, height: 10));
+
+void _ignore(String _) {}
+
+RunRendering? _links(String text, TextStyle style, NaturalBlockTheme theme) =>
+    tappableText(text, style, onTap: _ignore);
 
 void main() {
   Future<void> pump(
@@ -519,7 +520,6 @@ void main() {
         String text,
         TextStyle style,
         NaturalBlockTheme theme,
-        VoidCallback? onTap,
       ) => widgetRun(
         Builder(
           builder: (context) =>
@@ -582,7 +582,6 @@ void main() {
         String text,
         TextStyle style,
         NaturalBlockTheme theme,
-        VoidCallback? onTap,
       ) {
         calls++;
         return null;
@@ -614,38 +613,29 @@ void main() {
       // it -- drop a field from `NaturalBlockScope`'s equality and one of
       // these stops holding.
       const inert = <RunHandler>[];
-      const wired = <RunHandler>[tappableText];
+      const wired = <RunHandler>[_links];
 
       Widget view({
         NaturalBlockTheme? theme,
         NaturalBlockBuilders builders = NaturalBlockBuilders.defaults,
         List<RunHandler> customs = wired,
-        OnActionTap? onTap,
       }) => MaterialApp(
         home: NaturalBlockView(
           source: ':@tap:@',
           theme: theme,
           builders: builders,
           customs: customs,
-          onTap: onTap,
         ),
       );
 
-      await tester.pumpWidget(view(customs: inert, onTap: (_) {}));
+      await tester.pumpWidget(view(customs: inert));
       expect(renderedSpans(tester).single.recognizer, isNull);
-
-      await tester.pumpWidget(view(onTap: (_) {}));
-      expect(
-        renderedSpans(tester).single.recognizer,
-        isNotNull,
-        reason: 'customs',
-      );
 
       await tester.pumpWidget(view());
       expect(
         renderedSpans(tester).single.recognizer,
-        isNull,
-        reason: 'onTap going away',
+        isNotNull,
+        reason: 'customs',
       );
 
       // One change per step from here, or an earlier field's change redraws
@@ -680,8 +670,6 @@ void main() {
               child: NaturalBlockView(
                 source: 'one|two|three',
                 builders: counter.builders,
-                // Written the usual way, so a fresh closure on every rebuild.
-                onTap: (_) {},
               ),
             ),
           ),

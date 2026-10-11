@@ -51,10 +51,6 @@ class _TextNodeViewState extends State<TextNodeView> {
     _paragraph = const TextSpan();
   }
 
-  /// A method, not a closure, so a caller writing a fresh `onTap` each
-  /// build keeps the spans and their recognizers as they are.
-  void _handleTap(String text) => widget.scope.onTap?.call(text);
-
   @override
   Widget build(BuildContext context) {
     final theme = widget.scope.theme;
@@ -73,7 +69,6 @@ class _TextNodeViewState extends State<TextNodeView> {
       theme: theme,
       rootStyle: rootStyle,
       customs: widget.scope.customs,
-      onTap: widget.scope.onTap == null ? null : _handleTap,
     );
 
     if (from != _builtFrom) {
@@ -99,7 +94,6 @@ typedef _SpanInputs = ({
   NaturalBlockTheme theme,
   TextStyle rootStyle,
   List<RunHandler> customs,
-  OnActionTap? onTap,
 });
 
 /// A line's runs as spans, and whatever any of them left to release.
@@ -114,7 +108,6 @@ typedef _SpanInputs = ({
   _SpanInputs from,
 ) {
   final theme = from.theme;
-  final onTap = from.onTap;
   final runs = from.line.children;
 
   // One span per run, so the length is known; every arm below fills its own
@@ -146,10 +139,8 @@ typedef _SpanInputs = ({
           // `styleFor` leaves the size unstated where the source asked for
           // no step; a handler is handed the size the run actually draws at.
           final offered = style.copyWith(fontSize: style.fontSize ?? baseSize);
-          final tap = onTap == null ? null : () => onTap(text);
-
           for (final handler in from.customs) {
-            claimed = handler(text, offered, theme, tap);
+            claimed = handler(text, offered, theme);
             if (claimed != null) break;
           }
         }

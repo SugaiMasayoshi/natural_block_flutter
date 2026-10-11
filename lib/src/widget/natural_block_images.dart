@@ -22,7 +22,6 @@ abstract final class NaturalBlockImages {
     String text,
     TextStyle style,
     NaturalBlockTheme theme,
-    VoidCallback? onTap,
   ) {
     final source = sourceOf(text);
     if (source == null || kindOf(source) != ImageSourceKind.network) {
@@ -52,7 +51,6 @@ abstract final class NaturalBlockImages {
     String text,
     TextStyle style,
     NaturalBlockTheme theme,
-    VoidCallback? onTap,
   ) {
     final source = sourceOf(text);
     if (source == null || kindOf(source) != ImageSourceKind.file) return null;
