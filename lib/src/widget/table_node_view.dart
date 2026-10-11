@@ -46,15 +46,15 @@ class TableNodeView extends StatelessWidget {
     return Table(
       defaultColumnWidth: const IntrinsicColumnWidth(),
       border: scope.theme.tableBorder,
-      children: [
-        for (var i = 0; i < node.children.length; i++)
-          TableRow(
-            decoration: stripe != null && i.isOdd
-                ? BoxDecoration(color: stripe)
-                : null,
-            children: _cells(node.children[i]),
-          ),
-      ],
+      children: List.generate(
+        node.children.length,
+        (i) => TableRow(
+          decoration: stripe != null && i.isOdd
+              ? BoxDecoration(color: stripe)
+              : null,
+          children: _cells(node.children[i]),
+        ),
+      ),
     );
   }
 }
