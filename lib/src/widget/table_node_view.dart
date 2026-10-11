@@ -43,22 +43,18 @@ class TableNodeView extends StatelessWidget {
   Widget build(BuildContext context) {
     final stripe = scope.theme.tableStripe;
 
-    // Sized to its content, and positioned by the block that holds it like
-    // anything else in a block.
-    return IntrinsicWidth(
-      child: Table(
-        defaultColumnWidth: const IntrinsicColumnWidth(),
-        border: scope.theme.tableBorder,
-        children: [
-          for (var i = 0; i < node.children.length; i++)
-            TableRow(
-              decoration: stripe != null && i.isOdd
-                  ? BoxDecoration(color: stripe)
-                  : null,
-              children: _cells(node.children[i]),
-            ),
-        ],
-      ),
+    return Table(
+      defaultColumnWidth: const IntrinsicColumnWidth(),
+      border: scope.theme.tableBorder,
+      children: [
+        for (var i = 0; i < node.children.length; i++)
+          TableRow(
+            decoration: stripe != null && i.isOdd
+                ? BoxDecoration(color: stripe)
+                : null,
+            children: _cells(node.children[i]),
+          ),
+      ],
     );
   }
 }
