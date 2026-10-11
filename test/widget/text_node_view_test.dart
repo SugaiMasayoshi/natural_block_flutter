@@ -30,7 +30,7 @@ void main() {
 
   /// Draws [runs] as one line. By default something is wired to every
   /// custom run; `const []` is an app that wired nothing, which is the
-  /// difference between an custom run and a tappable one.
+  /// difference between a custom run and a tappable one.
   Future<void> pumpRuns(
     WidgetTester tester,
     List<InlineNode> runs, {
@@ -134,7 +134,7 @@ void main() {
   });
 
   group('custom spans', () {
-    testWidgets('a recognizer appears for an custom run, and only when '
+    testWidgets('a recognizer appears for a custom run, and only when '
         'something is wired to it', (tester) async {
       await pumpRuns(tester, [custom('tap me')]);
       expect(recognizerOf(tester), isA<TapGestureRecognizer>());

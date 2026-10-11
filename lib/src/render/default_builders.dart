@@ -9,8 +9,6 @@ import '../widget/text_node_view.dart';
 import 'natural_block_builders.dart';
 import 'natural_block_render.dart';
 
-/// A row's cells are `ColumnNode`s and nothing else, so there is no kind to
-/// choose: the column builder is called straight from the builders.
 Widget buildRowNode(RowNode node, NaturalBlockScope scope) => RowNodeView(
   cells: List.generate(
     node.children.length,
@@ -33,8 +31,6 @@ Widget buildTableNode(TableNode node, NaturalBlockScope scope) =>
 Widget buildRawNode(RawNode node, NaturalBlockScope scope) =>
     RawNodeView(node: node, theme: scope.theme);
 
-/// A table's cell draws like a block: its contents stacked, aligned by what
-/// the cell or its column stated.
 Widget buildTableCellNode(TableCellNode node, NaturalBlockScope scope) =>
     ColumnNodeView(
       align: node.align,

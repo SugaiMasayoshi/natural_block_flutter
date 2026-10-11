@@ -318,7 +318,7 @@ void main() {
       expect(find.byType(Placeholder), findsNWidgets(2));
     });
 
-    testWidgets('an custom span inside a table cell is tappable', (
+    testWidgets('a custom span inside a table cell is tappable', (
       tester,
     ) async {
       final tapped = <String>[];

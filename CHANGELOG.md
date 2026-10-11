@@ -224,7 +224,7 @@ Initial release.
 
 ### Custom runs
 
-- `customs` is the list of handlers an custom run is offered to, in
+- `customs` is the list of handlers a custom run is offered to, in
   order, until one claims it. The default list is empty: tappable text and
   each kind of image are things an app includes, so replacing a run and
   making it tappable are not the same switch.

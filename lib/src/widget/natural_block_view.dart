@@ -10,25 +10,16 @@ import 'natural_block_theme.dart';
 class NaturalBlockView extends StatefulWidget {
   final String source;
 
-  /// How this document looks, or null to take it from the ambient theme.
-  ///
-  /// Null rather than a constant default: no constant is right in both a
-  /// light and a dark theme.
+  /// Null takes the theme from the ambient one.
   final NaturalBlockTheme? theme;
 
   final NaturalBlockBuilders builders;
 
-  /// The handlers an custom run is offered to, in order, until one claims
-  /// it.
-  ///
-  /// Each kind of image is a handler, and so is whatever draws a tappable run,
-  /// so an app names the ones it means:
-  /// `const [NaturalBlockImages.network, links]`. With none, custom runs
-  /// are styled and nothing more.
+  /// The handlers a custom run is offered to, in order, until one claims it.
+  /// With none, custom runs are styled and nothing more.
   ///
   /// Keep the list stable -- `const`, or held in your state. One written
-  /// afresh each build never compares equal to the last, which redraws
-  /// every line and loses a tap held across the redraw.
+  /// afresh each build redraws every line and loses a tap held across it.
   final List<RunHandler> customs;
 
   const NaturalBlockView({
@@ -44,12 +35,6 @@ class NaturalBlockView extends StatefulWidget {
 }
 
 class _NaturalBlockViewState extends State<NaturalBlockView> {
-  /// The parsed `source`, kept across rebuilds.
-  ///
-  /// The tree is a pure function of `source` and owes nothing to the
-  /// `BuildContext`, but `build` runs whenever an ancestor rebuilds -- a
-  /// theme change, a `MediaQuery` change, every frame of an animating
-  /// parent. Parsing there charged the whole document to each of those.
   late DocumentNode _document = NaturalBlockParser.parse(widget.source);
 
   @override
@@ -60,13 +45,7 @@ class _NaturalBlockViewState extends State<NaturalBlockView> {
     }
   }
 
-  /// The tree last drawn, and what it was drawn from.
-  ///
-  /// Returning the very same widget object is what lets Flutter skip the
-  /// whole subtree: `updateChild` stops at a child whose widget has not
-  /// changed. `build` runs for reasons the tree owes nothing to -- an
-  /// ancestor rebuilding, every frame of an animating parent -- and without
-  /// this each of those redrew the document.
+  // The same widget object lets Flutter skip the whole subtree.
   Widget? _cached;
   DocumentNode? _drawnDocument;
   NaturalBlockScope? _drawnScope;

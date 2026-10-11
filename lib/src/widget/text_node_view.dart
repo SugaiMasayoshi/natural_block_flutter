@@ -16,21 +16,10 @@ class TextNodeView extends StatefulWidget {
   State<TextNodeView> createState() => _TextNodeViewState();
 }
 
-/// Stateful only so the spans outlive a build.
-///
-/// Rebuilding replaces the recognizers the spans carry, and a recognizer that
-/// has taken a pointer down owns an entry in the gesture arena: replace it
-/// mid-gesture and the tap vanishes with no error anywhere. `build` runs for
-/// reasons these spans owe nothing to -- an ancestor rebuilding, every frame
-/// of an animating parent -- so they are kept until what they are made of
-/// changes.
+// Spans are kept across builds: replacing a recognizer mid-gesture drops the tap.
 class _TextNodeViewState extends State<TextNodeView> {
-  /// What the runs of this line left to release, which for a line of
-  /// ordinary text is nothing at all.
   List<VoidCallback> _disposes = const [];
 
-  /// What `build` hands over, so that a build which changes nothing does
-  /// nothing.
   TextSpan _paragraph = const TextSpan();
 
   _SpanInputs? _builtFrom;
@@ -41,8 +30,6 @@ class _TextNodeViewState extends State<TextNodeView> {
     super.dispose();
   }
 
-  /// Safe to call twice: the list is emptied, so the call from [dispose]
-  /// finds nothing left after a rebuild already released it.
   void _release() {
     for (final dispose in _disposes) {
       dispose();
@@ -55,15 +42,9 @@ class _TextNodeViewState extends State<TextNodeView> {
   Widget build(BuildContext context) {
     final theme = widget.scope.theme;
 
-    // Everything the context decides is resolved here and handed down as
-    // values, so that what a span is built from is also what it is
-    // compared by. The root span and the size a `:+` counts from are one
-    // expression, because two of them drift -- and then a `base` naming a
-    // size makes `:+` render *smaller* than the text beside it.
+    // One expression for the root span and the size `:+` counts from, or they drift.
     final rootStyle = DefaultTextStyle.of(context).style.merge(theme.base);
 
-    // In `build` rather than the two change hooks: it runs after both, so
-    // one question in one place answers for either.
     final from = (
       line: widget.node,
       theme: theme,
@@ -83,12 +64,7 @@ class _TextNodeViewState extends State<TextNodeView> {
   }
 }
 
-/// Everything a line's spans are made of.
-///
-/// One value, because it is both what the spans are built from and what
-/// decides whether the ones already built still hold. Two values could
-/// disagree -- something could reach the building without reaching the
-/// comparison, and then a change would never redraw.
+// Everything the spans are built from, and so everything they are compared by.
 typedef _SpanInputs = ({
   TextNode line,
   NaturalBlockTheme theme,
@@ -96,30 +72,18 @@ typedef _SpanInputs = ({
   List<RunHandler> customs,
 });
 
-/// A line's runs as spans, and whatever any of them left to release.
-///
-/// A function of [from] alone rather than a method of the state, so it
-/// cannot read anything the comparison does not see.
-///
-/// Only a run some handler claimed leaves anything to release. Which
-/// `dispose` came from which span is never asked, which is why they are two
-/// lists rather than one list of pairs.
 ({List<InlineSpan> spans, List<VoidCallback> disposes}) _runSpans(
   _SpanInputs from,
 ) {
   final theme = from.theme;
   final runs = from.line.children;
 
-  // One span per run, so the length is known; every arm below fills its own
-  // index and the switch is exhaustive, so no slot keeps the placeholder.
   final spans = List<InlineSpan>.filled(runs.length, const TextSpan());
   final disposes = <VoidCallback>[];
 
   for (var i = 0; i < runs.length; i++) {
     final run = runs[i];
     switch (run) {
-      // A raw run is text the parser stopped reading, so the only thing to
-      // do is not undo that: what the line is drawn in, made monospaced.
       case RawSpanNode():
         spans[i] = TextSpan(
           text: run.text,
@@ -131,13 +95,9 @@ typedef _SpanInputs = ({
         final baseSize = from.rootStyle.fontSize ?? theme.baseFontSize;
         final style = theme.styleFor(run.decoration, baseSize: baseSize);
 
-        // Styled as custom either way. What the handlers decide is how
-        // it is drawn and whether it answers a tap: the first to answer
-        // draws it, and the rest are not asked.
         RunRendering? claimed;
         if (run.decoration.isCustom) {
-          // `styleFor` leaves the size unstated where the source asked for
-          // no step; a handler is handed the size the run actually draws at.
+          // `styleFor` leaves the size unstated when the source asked for no step.
           final offered = style.copyWith(fontSize: style.fontSize ?? baseSize);
           for (final handler in from.customs) {
             claimed = handler(text, offered, theme);

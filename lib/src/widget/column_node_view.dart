@@ -14,12 +14,7 @@ class ColumnNodeView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Alignment reaches the drawing three times: `lines` sets where each line
-    // sits inside the block, `text` where a wrapped paragraph's own lines sit
-    // inside it, `block` where the block sits in the space it was given. A
-    // block drawn at the start needs no `block` at all, and leaving it off is
-    // what keeps an alignment marker from making a document stop rendering
-    // where the available width is unbounded.
+    // A start-aligned block gets no `Align`, which breaks under unbounded width.
     final (:lines, :text, :block) = switch (align) {
       HorizontalAlign.unstated || HorizontalAlign.start => (
         lines: CrossAxisAlignment.start,

@@ -7,15 +7,9 @@ import 'natural_block_theme.dart';
 
 enum ImageSourceKind { network, file, relative }
 
-/// The reference rendering for the conventional `image(<source>)` payload.
-///
-/// Two handlers, because fetching a remote image and reading the reader's
-/// own file are different decisions: one tells a third party the document
-/// was opened, the other puts a file from the reader's machine on screen
-/// under someone else's text. An app includes whichever it means.
-///
-/// Either way, an image that cannot be drawn falls back to its payload as
-/// text.
+/// The reference rendering for the `image(<source>)` payload: `network` and
+/// `local` are handlers, and an app includes the ones it means. An image that
+/// cannot be drawn falls back to its payload as text.
 abstract final class NaturalBlockImages {
   /// Draws `image(<url>)` by fetching it.
   static RunRendering? network(
@@ -43,10 +37,8 @@ abstract final class NaturalBlockImages {
     );
   }
 
-  /// Draws `image(<path>)` or `image(file:...)` by reading the file.
-  ///
-  /// Declines everything where `dart:io` does not exist -- the web -- so a
-  /// document degrades there as it does for an app that never included it.
+  /// Draws `image(<path>)` or `image(file:...)` by reading the file. Declines
+  /// where there is no `dart:io`, the web.
   static RunRendering? local(
     String text,
     TextStyle style,
@@ -75,7 +67,8 @@ abstract final class NaturalBlockImages {
     return source.isEmpty ? null : source;
   }
 
-  /// Where a source points, read off one `Uri`.
+  /// Where a source points: a network URL, a local file, or a path relative to
+  /// something only the app knows.
   static ImageSourceKind kindOf(String source) {
     final uri = Uri.tryParse(source.trim());
     if (uri == null) return ImageSourceKind.relative;

@@ -10,16 +10,9 @@ class TableNodeView extends StatelessWidget {
 
   const TableNodeView({super.key, required this.node, required this.scope});
 
-  /// [row] drawn as one cell per declared column.
-  ///
-  /// Two things the tree deliberately leaves undone, both questions about
-  /// drawing rather than about what was written: `TableRow` requires every
-  /// row to hold the same number of children, and a cell that stated no
-  /// alignment is drawn with whatever its column stated.
   List<Widget> _cells(TableRowNode row) {
     return List.generate(node.columns.length, (i) {
       final column = node.columns[i];
-      // A column this row never reached is a cell that stated nothing.
       final stated = i < row.children.length
           ? row.children[i]
           : TableCellNode();

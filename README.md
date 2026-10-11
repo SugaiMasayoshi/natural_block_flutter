@@ -97,7 +97,7 @@ class Example extends StatelessWidget {
 * `source` (required) -- the markup text to parse and render.
 * `theme` -- a [`NaturalBlockTheme`](#naturalblocktheme) controlling how tones, emphasis, and base text look. Defaults to `null`, meaning `NaturalBlockTheme.fromContext(context)`: the tones come from the surrounding `ColorScheme`, so a document reads correctly in a light theme and a dark one without being told which it is in.
 * `builders` -- a [`NaturalBlockBuilders`](#naturalblockbuilders) controlling which widget renders each kind of node. Defaults to `NaturalBlockBuilders.defaults`.
-* `customs` -- the [handlers](#custom-text) an custom run is offered to, in order, until one claims it. Defaults to `const []`, which leaves those runs styled but inert. Tappable text and images are handlers, so an app includes the ones it means: `const [NaturalBlockImages.network, links]`, where `links` is a handler of your own built on `tappableText`.
+* `customs` -- the [handlers](#custom-text) a custom run is offered to, in order, until one claims it. Defaults to `const []`, which leaves those runs styled but inert. Tappable text and images are handlers, so an app includes the ones it means: `const [NaturalBlockImages.network, links]`, where `links` is a handler of your own built on `tappableText`.
 
 ### `NaturalBlockTheme`
 
@@ -326,7 +326,7 @@ Note also that letting documents name local files lets them probe for one: a pat
 
 #### A convention for what the text means (non-normative)
 
-`natural_block` places no constraint on an custom span's text. The following convention is not enforced by the parser or this package, but mirrors URI/fragment conventions most readers and authors already know, so it's a reasonable default if you don't already have one:
+`natural_block` places no constraint on a custom span's text. The following convention is not enforced by the parser or this package, but mirrors URI/fragment conventions most readers and authors already know, so it's a reasonable default if you don't already have one:
 
 | text | meaning |
 |---|---|

@@ -23,33 +23,17 @@ class NaturalBlockTheme {
 
   final EdgeInsets tableCellPadding;
 
-  /// The rules drawn around and between a table's rows and columns.
-  ///
-  /// Not nullable, because the type already says "none": every side of a
-  /// `const TableBorder()` defaults to `BorderSide.none`, which draws nothing
-  /// and measures the same as no border at all. Writing none as a value
-  /// rather than as null is what lets `copyWith` below stay plain.
+  /// The rules around and between a table's cells; `const TableBorder()` for none.
   final TableBorder tableBorder;
 
-  /// A background painted on every other row, or null for none.
-  ///
-  /// The one field here where null earns its keep. `Color` has no "none" of
-  /// its own, and a transparent one is still a fill: it would put a
-  /// `BoxDecoration` on every other row of every table, where null leaves
-  /// `TableRow.decoration` off entirely. Flutter types that field the same
-  /// way, and for the same reason.
+  /// A background on every other row, or null for none.
   final Color? tableStripe;
 
   final TextStyle raw;
 
   final EdgeInsets rawPadding;
 
-  /// The box drawn around a raw block.
-  ///
-  /// Not nullable for the same reason as [tableBorder]: a
-  /// `const BoxDecoration()` names no colour, border or shadow, so it draws
-  /// nothing. It costs one inert `DecoratedBox` per raw block, which buys a
-  /// `copyWith` with no sentinel in it.
+  /// The box around a raw block; `const BoxDecoration()` for none.
   final BoxDecoration rawDecoration;
 
   final bool rawScrollsHorizontally;
@@ -84,11 +68,7 @@ class NaturalBlockTheme {
     this.rawScrollsHorizontally = false,
   });
 
-  /// A theme whose colours come from [scheme], and whose everything else is
-  /// the default constructor's.
-  ///
-  /// Only what a `ColorScheme` can answer is named here. Changing anything
-  /// else is `copyWith`'s job.
+  /// A theme whose colours come from [scheme]; everything else is the default's.
   factory NaturalBlockTheme.fromColorScheme(
     ColorScheme scheme, {
     bool striped = false,
@@ -118,13 +98,8 @@ class NaturalBlockTheme {
     );
   }
 
-  /// A theme derived from the ambient `ThemeData`: its colours from the
-  /// `ColorScheme`, and the size a `:+` counts from its body text.
-  ///
-  /// `bodyMedium` is Material's own "ordinary text", so a document reads at
-  /// the size the rest of the app does, and nothing here restates a number
-  /// Material already decided. Null leaves [baseFontSize] alone, the way
-  /// every other omitted [copyWith] argument does.
+  /// A theme from the ambient `ThemeData`: colours from its `ColorScheme`, and
+  /// the size a `:+` counts from its `bodyMedium`.
   factory NaturalBlockTheme.fromContext(
     BuildContext context, {
     bool striped = false,
@@ -136,13 +111,9 @@ class NaturalBlockTheme {
     ).copyWith(baseFontSize: theme.textTheme.bodyMedium?.fontSize);
   }
 
-  /// What one run's decoration looks like: the tone's style, with emphasis
-  /// and custom marking laid over it, at the size its `:+` and `:-` ask for.
-  ///
-  /// The whole mapping from what the source said to what is drawn, in the one
-  /// place that holds every value it needs. [baseSize] is what the sizes
-  /// count from -- the ambient size, or [baseFontSize] where nothing ambient
-  /// names one -- and is the only thing here that comes from outside.
+  /// The style one run draws with: its tone, then emphasis, then custom
+  /// marking, at the size its `:+` and `:-` ask for. [baseSize] is what the
+  /// sizes count from.
   TextStyle styleFor(SpanDecoration decoration, {required double baseSize}) =>
       switch (decoration.tone) {
             Tone.negative => negative,
@@ -152,9 +123,7 @@ class NaturalBlockTheme {
           .merge(decoration.emphasis ? emphasis : null)
           .merge(decoration.isCustom ? custom : null)
           .copyWith(
-            // Left unstated when the source asked for no step, so the run
-            // keeps whatever size it would have drawn at anyway.
-            // Clamped, so no number of `:-` can reach zero or go negative.
+            // Unstated without a step; clamped so `:-` never reaches zero.
             fontSize: decoration.sizeOffset == 0
                 ? null
                 : max(
@@ -163,13 +132,8 @@ class NaturalBlockTheme {
                   ),
           );
 
-  /// This theme with the given fields replaced.
-  ///
-  /// Every argument means "leave this alone" when omitted, the way Flutter's
-  /// own `copyWith` methods do. None of them can set a field *to* null, and
-  /// none needs to: "no rules" is `const TableBorder()`, "no box" is
-  /// `const BoxDecoration()`, and a theme without stripes is what
-  /// [NaturalBlockTheme.fromColorScheme] gives you unless you ask for them.
+  /// This theme with the given fields replaced. An omitted argument keeps the
+  /// current value; none can set a field to null.
   NaturalBlockTheme copyWith({
     TextStyle? base,
     TextStyle? negative,
@@ -205,9 +169,7 @@ class NaturalBlockTheme {
         rawScrollsHorizontally ?? this.rawScrollsHorizontally,
   );
 
-  /// Every field, in one list, so equality and the hash cannot disagree about
-  /// what this theme is made of. Listing them twice let a field reach one and
-  /// not the other, which makes two unequal themes hash alike.
+  // One list for `==` and `hashCode`, so they cannot disagree.
   List<Object?> get _fields => [
     base,
     negative,

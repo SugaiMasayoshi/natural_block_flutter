@@ -8,26 +8,20 @@ import 'run_handler.dart';
 
 /// Draws one node of kind [T].
 ///
-/// No `BuildContext`: reading an inherited widget here would bake what it
-/// read into a tree that cannot say what that was, so the view would have
-/// to redraw the whole document on every ambient change. Return a
-/// `Builder` instead and the dependency is Flutter's to track.
+/// No `BuildContext`: return a `Builder` to read an inherited widget, so
+/// Flutter tracks the dependency.
 typedef NodeBuilder<T extends NaturalBlockNode> = Widget Function(
   T node,
   NaturalBlockScope scope,
 );
 
 /// Everything a node needs to draw itself that is not the node.
-///
-/// They travel together the whole way down and no level swaps one of them
-/// for its children, so they are one value rather than parameters repeated
-/// at every level. No `BuildContext` here either: see [NodeBuilder].
 class NaturalBlockScope {
   final NaturalBlockTheme theme;
 
   final NaturalBlockBuilders builders;
 
-  /// The handlers an custom run is offered to, in order.
+  /// The handlers a custom run is offered to, in order.
   final List<RunHandler> customs;
 
   const NaturalBlockScope({
@@ -55,13 +49,6 @@ class NaturalBlockScope {
 }
 
 /// Which widget draws each kind of node.
-///
-/// A field per kind rather than a `Type`-keyed map: the node types are
-/// sealed, so the set is closed and known here. Naming each one keeps the
-/// builder's node type exact -- the node arrives as `RowNode`, not as
-/// something to narrow, and a builder written for the wrong kind does not
-/// compile. Choosing between the fields is `natural_block_render.dart`'s
-/// job; this is the table it chooses from.
 class NaturalBlockBuilders {
   final NodeBuilder<RowNode> row;
 
