@@ -54,5 +54,35 @@ void main() {
         },
       );
     }
+
+    for (final entry in {
+      HorizontalAlign.unstated: TextAlign.start,
+      HorizontalAlign.start: TextAlign.start,
+      HorizontalAlign.center: TextAlign.center,
+      HorizontalAlign.end: TextAlign.end,
+    }.entries) {
+      testWidgets('${entry.key} aligns the lines of a wrapped paragraph', (
+        tester,
+      ) async {
+        late BuildContext inside;
+        await tester.pumpWidget(
+          MaterialApp(
+            home: ColumnNodeView(
+              align: entry.key,
+              children: [
+                Builder(
+                  builder: (context) {
+                    inside = context;
+                    return const SizedBox();
+                  },
+                ),
+              ],
+            ),
+          ),
+        );
+
+        expect(DefaultTextStyle.of(inside).textAlign, entry.value);
+      });
+    }
   });
 }
