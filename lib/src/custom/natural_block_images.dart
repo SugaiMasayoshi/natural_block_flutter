@@ -57,20 +57,20 @@ abstract final class NaturalBlockImages {
 
   static const String _prefix = 'image(';
 
-  /// What an `image(...)` payload names, or null when it names nothing --
-  /// an empty `image()` included.
+  /// What an `image(...)` payload names, or null when it is not one exactly:
+  /// an empty `image()` and any surrounding whitespace are declined, not
+  /// trimmed away.
   static String? sourceOf(String text) {
-    final trimmed = text.trim();
-    if (!trimmed.startsWith(_prefix) || !trimmed.endsWith(')')) return null;
+    if (!text.startsWith(_prefix) || !text.endsWith(')')) return null;
 
-    final source = trimmed.substring(_prefix.length, trimmed.length - 1).trim();
-    return source.isEmpty ? null : source;
+    final source = text.substring(_prefix.length, text.length - 1);
+    return source.isEmpty || source != source.trim() ? null : source;
   }
 
   /// Where a source points: a network URL, a local file, or a path relative to
   /// something only the app knows.
   static ImageSourceKind kindOf(String source) {
-    final uri = Uri.tryParse(source.trim());
+    final uri = Uri.tryParse(source);
     if (uri == null) return ImageSourceKind.relative;
 
     // `Uri` reads `C:/Users/a.png` as scheme `c`, and no registered scheme

@@ -45,10 +45,6 @@ void main() {
         NaturalBlockImages.sourceOf('image(https://example.com/a.png)'),
         'https://example.com/a.png',
       );
-      expect(
-        NaturalBlockImages.sourceOf('  image( https://example.com/a.png )  '),
-        'https://example.com/a.png',
-      );
     });
 
     test('a URL keeps its query string and any parentheses in the path', () {
@@ -67,6 +63,10 @@ void main() {
         'https://example.com',
         '#section',
         'image()',
+        ' image(https://e.com/a.png)',
+        'image(https://e.com/a.png) ',
+        'image( https://e.com/a.png)',
+        'image(https://e.com/a.png )',
         'img(https://e.com/a.png)',
         'IMAGE(https://e.com/a.png)',
         'image(https://e.com/a.png) trailing',

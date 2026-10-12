@@ -270,7 +270,7 @@ A `WidgetSpan` you return is laid out with the paragraph's width but an **unboun
 
 There is no image syntax, and there is not going to be one. An image is written as an ordinary custom span using the conventional payload `image(<url>)`, so an implementation that has never heard of images still shows `image(https://...)` — readable text — instead of failing to parse.
 
-The word is spelled out, and `img` is deliberately **not** accepted as an alias. What the reader sees when nothing renders the payload is the whole point of the convention, and `img` is borrowed HTML jargon rather than a word; there is also no scarcity here to buy the two characters back, unlike the single-character markers. Two accepted spellings would be exactly the dialect this convention exists to prevent — so if the payload convention grows (`video(...)`, `user(...)`), the rule is simply to use the word.
+The word is spelled out, and `img` is deliberately **not** accepted as an alias. What the reader sees when nothing renders the payload is the whole point of the convention, and `img` is borrowed HTML jargon rather than a word; there is also no scarcity here to buy the two characters back, unlike the single-character markers. Two accepted spellings would be exactly the dialect this convention exists to prevent — so if the payload convention grows (`video(...)`, `user(...)`), the rule is simply to use the word. For the same reason whitespace is never trimmed: `image( a.png )` is not an image, and reads as text, so a mistake shows up where it was made.
 
 `NaturalBlockImages.network` is the reference rendering for that convention:
 
