@@ -188,6 +188,21 @@ void main() {
       // with no sentinel in it.
       expect(decoratedBoxes(tester).single.decoration, const BoxDecoration());
     });
+
+    testWidgets('the base style of the theme reaches a raw block', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        wrap(
+          const NaturalBlockView(
+            source: '`x`',
+            theme: NaturalBlockTheme(base: TextStyle(fontSize: 30)),
+          ),
+        ),
+      );
+
+      expect(renderedSpans(tester).single.style!.fontSize, 30);
+    });
   });
 
   group('selection', () {
