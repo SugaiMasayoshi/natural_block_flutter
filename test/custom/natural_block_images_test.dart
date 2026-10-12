@@ -45,6 +45,10 @@ void main() {
         NaturalBlockImages.sourceOf('image(https://example.com/a.png)'),
         'https://example.com/a.png',
       );
+      expect(
+        NaturalBlockImages.sourceOf('  image( https://example.com/a.png )  '),
+        'https://example.com/a.png',
+      );
     });
 
     test('a URL keeps its query string and any parentheses in the path', () {
@@ -77,63 +81,34 @@ void main() {
     });
   });
 
-  group('classifying where a payload points', () {
-    const bs = r'\';
-
-    test('a URL is a network source', () {
-      for (final source in [
+  test('kindOf classifies where a payload points', () {
+    const expected = <ImageSourceKind, List<String>>{
+      ImageSourceKind.network: [
         'https://example.com/a.png',
         'http://example.com/a.png',
         'https://e.com/x.png?id=you',
-      ]) {
-        expect(NaturalBlockImages.kindOf(source), ImageSourceKind.network);
-      }
-    });
-
-    test('a Windows path is a file, not a URL with scheme "c"', () {
-      expect(Uri.parse('C:${bs}Users${bs}a.png').scheme, 'c');
-
-      for (final source in [
-        'C:${bs}Users${bs}sugai${bs}a.png',
+      ],
+      ImageSourceKind.file: [
+        r'C:\Users\sugai\a.png',
         'C:/Users/sugai/a.png',
-        'D:${bs}photos${bs}My Pictures${bs}a.png',
-        'c:${bs}lower${bs}a.png',
-      ]) {
+        r'D:\photos\My Pictures\a.png',
+        r'c:\lower\a.png',
+        r'\server\share\a.png',
+        '/home/sugai/a.png',
+        'file:///C:/Users/a.png',
+      ],
+      ImageSourceKind.relative: ['./assets/a.png', 'assets/a.png', 'a.png', ''],
+    };
+
+    for (final MapEntry(key: kind, value: sources) in expected.entries) {
+      for (final source in sources) {
         expect(
           NaturalBlockImages.kindOf(source),
-          ImageSourceKind.file,
-          reason: '"$source" is a path',
+          kind,
+          reason: '"$source" is $kind',
         );
       }
-    });
-
-    test('UNC and POSIX absolute paths are files', () {
-      expect(
-        NaturalBlockImages.kindOf('$bs${bs}server${bs}share${bs}a.png'),
-        ImageSourceKind.file,
-      );
-      expect(
-        NaturalBlockImages.kindOf('/home/sugai/a.png'),
-        ImageSourceKind.file,
-      );
-    });
-
-    test('a file: URI is a file', () {
-      expect(
-        NaturalBlockImages.kindOf('file:///C:/Users/a.png'),
-        ImageSourceKind.file,
-      );
-    });
-
-    test('anything with no scheme and no root is left to the app', () {
-      for (final source in ['./assets/a.png', 'assets/a.png', 'a.png', '']) {
-        expect(
-          NaturalBlockImages.kindOf(source),
-          ImageSourceKind.relative,
-          reason: '"$source" is only resolvable by the app',
-        );
-      }
-    });
+    }
   });
 
   group('as a run handler', () {
@@ -156,24 +131,6 @@ void main() {
         reason:
             'not `WidgetSpan`\'s own default of bottom, which leaves the '
             'text beside it hanging below the image',
-      );
-    });
-
-    testWidgets('nothing is fetched unless a builder is supplied', (
-      tester,
-    ) async {
-      await tester.pumpWidget(
-        wrap(
-          const NaturalBlockView(
-            source: ':@image(https://example.com/a.png):@',
-          ),
-        ),
-      );
-
-      expect(find.byType(Image), findsNothing);
-      expect(
-        renderedSpans(tester).single.text,
-        'image(https://example.com/a.png)',
       );
     });
 

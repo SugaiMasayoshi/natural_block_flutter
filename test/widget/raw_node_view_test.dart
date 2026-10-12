@@ -124,24 +124,6 @@ void main() {
   });
 
   group('layout safety', () {
-    testWidgets('renders where the available width is unbounded', (
-      tester,
-    ) async {
-      await tester.pumpWidget(
-        wrap(
-          const Scaffold(
-            body: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: NaturalBlockView(source: '`code here`'),
-            ),
-          ),
-        ),
-      );
-
-      expect(tester.takeException(), isNull);
-      expect(renderedText(tester), 'code here');
-    });
-
     testWidgets('a region inside a table cell renders', (tester) async {
       await tester.pumpWidget(
         wrap(const NaturalBlockView(source: '~x^`a|b`|y^z~')),

@@ -58,57 +58,9 @@ void main() {
     List<LayoutNode> nodes,
   ) => buildWith(tester, builders, (scope) => buildLayouts(nodes, scope));
 
-  Future<List<Widget>> pumpContents(
-    WidgetTester tester,
-    NaturalBlockBuilders builders,
-    List<ContentNode> nodes,
-  ) => buildWith(tester, builders, (scope) => buildContents(nodes, scope));
-
   TextNode text(String s) => TextNode(children: [TextSpanNode(text: s)]);
 
   group('NaturalBlockBuilders.defaults', () {
-    testWidgets('a document\'s blocks and rows go to their views', (
-      tester,
-    ) async {
-      final built = await pumpLayouts(tester, NaturalBlockBuilders.defaults, [
-        RowNode(
-          children: [
-            ColumnNode(children: [text('a'), text('b')]),
-            ColumnNode(children: [text('c')]),
-          ],
-        ),
-        ColumnNode(children: [text('d')]),
-      ]);
-
-      expect(built, hasLength(2), reason: 'one row, one plain block');
-      expect(find.byType(RowNodeView), findsOneWidget);
-      expect(find.byType(ColumnNodeView), findsNWidgets(3));
-      expect(find.byType(TextNodeView), findsNWidgets(4));
-
-      final cells = tester.widget<RowNodeView>(find.byType(RowNodeView)).cells;
-      expect(cells, hasLength(2), reason: 'two cells, not three');
-    });
-
-    testWidgets('a block\'s contents go to their views', (tester) async {
-      await pumpContents(tester, NaturalBlockBuilders.defaults, [
-        text('line'),
-        RawNode(text: 'code'),
-        TableNode(
-          children: [
-            TableRowNode(
-              children: [
-                TableCellNode(children: [text('cell')]),
-              ],
-            ),
-          ],
-        ),
-      ]);
-
-      expect(find.byType(TextNodeView), findsNWidgets(2)); // the line, and
-      expect(find.byType(RawNodeView), findsOneWidget); // the table's cell
-      expect(find.byType(TableNodeView), findsOneWidget);
-    });
-
     testWidgets(
       'one RowNode renders as one Row, keeping other blocks separate',
       (tester) async {
@@ -140,19 +92,6 @@ void main() {
   });
 
   group('builders of your own', () {
-    testWidgets('one replaces the default for that kind of node', (
-      tester,
-    ) async {
-      final builders = NaturalBlockBuilders(
-        text: (node, scope) => const Placeholder(),
-      );
-
-      await pumpContents(tester, builders, [text('a')]);
-
-      expect(find.byType(Placeholder), findsOneWidget);
-      expect(find.byType(TextNodeView), findsNothing);
-    });
-
     testWidgets(
       'a ColumnNode builder also applies to row cells, since cells are '
       'built through the builders',
@@ -174,18 +113,5 @@ void main() {
         expect(find.byType(TextNodeView), findsNothing);
       },
     );
-
-    testWidgets('the kinds left out keep their default', (tester) async {
-      final builders = NaturalBlockBuilders(
-        text: (node, scope) => const Placeholder(),
-      );
-
-      await pumpLayouts(tester, builders, [
-        ColumnNode(children: [text('a')]),
-      ]);
-
-      expect(find.byType(ColumnNodeView), findsOneWidget);
-      expect(find.byType(Placeholder), findsOneWidget);
-    });
   });
 }

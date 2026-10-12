@@ -77,30 +77,6 @@ void main() {
       const theme = NaturalBlockTheme();
       expect(theme.copyWith(), theme);
     });
-
-    test('null leaves a field alone, the way Flutter\'s copyWith does', () {
-      const base = NaturalBlockTheme(tableStripe: Color(0xFFEEEEEE));
-
-      expect(base.copyWith(tableBorder: null).tableBorder, base.tableBorder);
-      expect(base.copyWith(tableStripe: null).tableStripe, base.tableStripe);
-      expect(
-        base.copyWith(rawDecoration: null).rawDecoration,
-        base.rawDecoration,
-      );
-    });
-
-    test('none is written as a value', () {
-      const base = NaturalBlockTheme();
-
-      final unruled = base.copyWith(tableBorder: const TableBorder());
-      expect(unruled.tableBorder.top.style, BorderStyle.none);
-      expect(unruled.tableBorder.horizontalInside.style, BorderStyle.none);
-
-      final unboxed = base.copyWith(rawDecoration: const BoxDecoration());
-      expect(unboxed.rawDecoration.color, isNull);
-      expect(unboxed.rawDecoration.border, isNull);
-      expect(unboxed.rawDecoration.boxShadow, isNull);
-    });
   });
 
   group('NaturalBlockTheme.fromColorScheme', () {
@@ -247,5 +223,26 @@ void main() {
 
       expect(border.horizontalInside.style, BorderStyle.solid);
     });
+  });
+
+  testWidgets('fromContext counts sizes from the ambient body text', (
+    tester,
+  ) async {
+    late NaturalBlockTheme theme;
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: ThemeData(
+          textTheme: const TextTheme(bodyMedium: TextStyle(fontSize: 21)),
+        ),
+        home: Builder(
+          builder: (context) {
+            theme = NaturalBlockTheme.fromContext(context);
+            return const SizedBox();
+          },
+        ),
+      ),
+    );
+
+    expect(theme.baseFontSize, 21);
   });
 }

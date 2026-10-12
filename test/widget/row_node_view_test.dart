@@ -131,4 +131,24 @@ void main() {
       },
     );
   });
+
+  group('row cell heights', () {
+    testWidgets('cells of different heights share a top edge', (tester) async {
+      await tester.pumpWidget(
+        const MaterialApp(home: NaturalBlockView(source: 'a\nb\nc^d')),
+      );
+
+      double top(String text) => tester
+          .getTopLeft(
+            find.byWidget(
+              tester
+                  .widgetList<RichText>(find.byType(RichText))
+                  .firstWhere((w) => w.text.toPlainText().startsWith(text)),
+            ),
+          )
+          .dy;
+
+      expect(top('d'), top('a'));
+    });
+  });
 }

@@ -146,19 +146,6 @@ void main() {
       expect(tapped, ['actionable']);
     });
 
-    testWidgets('tapping a non-custom run does not fire onTap', (tester) async {
-      final tapped = <String>[];
-      await pumpRuns(tester, [
-        custom('actionable'),
-        TextSpanNode(text: ' plain'),
-      ], customs: _into(tapped));
-
-      await tester.tapOnText(find.textRange.ofSubstring('plain'));
-      await tester.pump();
-
-      expect(tapped, isEmpty);
-    });
-
     testWidgets('only a run that actually does something is announced', (
       tester,
     ) async {

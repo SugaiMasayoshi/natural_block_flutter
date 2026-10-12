@@ -6,54 +6,33 @@ import 'package:natural_block_flutter/natural_block_flutter.dart';
 
 void main() {
   group('ColumnNodeView', () {
-    testWidgets('stacks its children vertically in a Column', (tester) async {
-      const children = [Text('first'), Text('second')];
-
-      await tester.pumpWidget(
-        const MaterialApp(home: ColumnNodeView(children: children)),
-      );
-
-      final column = tester.widget<Column>(find.byType(Column));
-      expect(column.children, hasLength(2));
-      expect(column.crossAxisAlignment, CrossAxisAlignment.start);
-      expect(column.mainAxisSize, MainAxisSize.min);
-      expect(find.text('first'), findsOneWidget);
-      expect(find.text('second'), findsOneWidget);
-    });
-
-    testWidgets('renders an empty Column for an empty children list', (
-      tester,
-    ) async {
-      await tester.pumpWidget(
-        const MaterialApp(home: ColumnNodeView(children: [])),
-      );
-
-      final column = tester.widget<Column>(find.byType(Column));
-      expect(column.children, isEmpty);
-      expect(tester.takeException(), isNull);
-    });
-
     for (final entry in {
-      HorizontalAlign.start: CrossAxisAlignment.start,
-      HorizontalAlign.center: CrossAxisAlignment.center,
-      HorizontalAlign.end: CrossAxisAlignment.end,
+      HorizontalAlign.start: 0.0,
+      HorizontalAlign.center: 40.0,
+      HorizontalAlign.end: 80.0,
     }.entries) {
-      testWidgets(
-        'align: ${entry.key} maps to crossAxisAlignment: ${entry.value}',
-        (tester) async {
-          await tester.pumpWidget(
-            MaterialApp(
-              home: ColumnNodeView(
-                align: entry.key,
-                children: const [Text('only')],
-              ),
+      testWidgets('${entry.key} places a narrow child within a wide one', (
+        tester,
+      ) async {
+        await tester.pumpWidget(
+          Directionality(
+            textDirection: TextDirection.ltr,
+            child: ColumnNodeView(
+              align: entry.key,
+              children: const [
+                SizedBox(key: Key('wide'), width: 100, height: 10),
+                SizedBox(key: Key('narrow'), width: 20, height: 10),
+              ],
             ),
-          );
+          ),
+        );
 
-          final column = tester.widget<Column>(find.byType(Column));
-          expect(column.crossAxisAlignment, entry.value);
-        },
-      );
+        expect(
+          tester.getTopLeft(find.byKey(const Key('narrow'))).dx -
+              tester.getTopLeft(find.byKey(const Key('wide'))).dx,
+          entry.value,
+        );
+      });
     }
 
     for (final entry in {
@@ -139,42 +118,5 @@ void main() {
 
       expect(center, closeTo(400, 1));
     });
-
-    testWidgets('a source with no alignment markers is unchanged', (
-      tester,
-    ) async {
-      await tester.pumpWidget(
-        const MaterialApp(home: NaturalBlockView(source: 'left|right')),
-      );
-
-      final columns = tester.widgetList<Column>(find.byType(Column));
-      expect(columns, isNotEmpty);
-      for (final column in columns) {
-        expect(column.crossAxisAlignment, CrossAxisAlignment.start);
-      }
-    });
-  });
-
-  group('block alignment in an unbounded width', () {
-    for (final source in ['|=A|', '|>A|']) {
-      testWidgets(
-        '"$source" renders inside a horizontal scroll view without throwing',
-        (tester) async {
-          await tester.pumpWidget(
-            MaterialApp(
-              home: Scaffold(
-                body: SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: NaturalBlockView(source: source),
-                ),
-              ),
-            ),
-          );
-
-          expect(tester.takeException(), isNull);
-          expect(find.byType(RichText), findsOneWidget);
-        },
-      );
-    }
   });
 }

@@ -95,24 +95,6 @@ void main() {
         closeTo(tester.getRect(find.byType(MaterialApp)).center.dx, 1),
       );
     });
-
-    testWidgets('a table in an unbounded width renders without throwing', (
-      tester,
-    ) async {
-      await tester.pumpWidget(
-        wrap(
-          const Scaffold(
-            body: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: NaturalBlockView(source: '|=~A^B|C^D~'),
-            ),
-          ),
-        ),
-      );
-
-      expect(tester.takeException(), isNull);
-      expect(find.byType(Table), findsOneWidget);
-    });
   });
 
   group('theming', () {

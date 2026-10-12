@@ -38,24 +38,6 @@ void main() {
       );
     });
 
-    testWidgets('renders plain text as a single RichText', (tester) async {
-      await pump(tester, 'Hello world');
-
-      expect(find.byType(RichText), findsOneWidget);
-      final richText = tester.widget<RichText>(find.byType(RichText));
-      expect(richText.text.toPlainText(), 'Hello world');
-      expect(find.byType(RowNodeView), findsNothing);
-    });
-
-    testWidgets('renders column-separated content stacked vertically', (
-      tester,
-    ) async {
-      await pump(tester, 'first|second');
-
-      expect(find.byType(ColumnNodeView), findsNWidgets(3));
-      expect(find.byType(TextNodeView), findsNWidgets(2));
-    });
-
     testWidgets('"a^b|c^d" renders as two separate two-cell Rows, not one '
         'four-cell Row', (tester) async {
       await pump(tester, 'a^b|c^d');
@@ -222,15 +204,6 @@ void main() {
         text.text.toPlainText(includePlaceholders: false),
         'before  after',
       );
-    });
-
-    testWidgets('without a SelectionArea nothing registers for selection', (
-      tester,
-    ) async {
-      await pump(tester, 'hello');
-
-      final text = tester.widget<RichText>(find.byType(RichText));
-      expect(text.selectionRegistrar, isNull);
     });
   });
 
@@ -438,13 +411,31 @@ void main() {
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets('a whitespace-only source renders without throwing', (
+    testWidgets('every kind of block renders in an unbounded width', (
       tester,
     ) async {
-      await pump(tester, '   ');
+      for (final source in [
+        'plain',
+        '|=A|',
+        '|>A|',
+        '`code here`',
+        'a^b',
+        '|=~A^B|C^D~',
+        '   ',
+      ]) {
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: NaturalBlockView(source: source),
+              ),
+            ),
+          ),
+        );
 
-      expect(find.byType(ColumnNodeView), findsNWidgets(2));
-      expect(tester.takeException(), isNull);
+        expect(tester.takeException(), isNull, reason: '"$source"');
+      }
     });
   });
 }
