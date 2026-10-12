@@ -4,8 +4,6 @@ import 'package:natural_block_flutter/natural_block_flutter.dart';
 
 import '../rendered_spans.dart';
 
-/// A local-file handler standing in for `NaturalBlockImages.local`, which
-/// this test cannot exercise without a file on disk.
 RunRendering? _localStandIn(
   String text,
   TextStyle style,
@@ -32,8 +30,6 @@ void main() {
     ),
   );
 
-  /// Pumps [source] with the handlers an app that wants remote images would
-  /// include, under a known ambient size so the sizes below are exact.
   Future<void> pumpImages(
     WidgetTester tester,
     String source, {
@@ -52,8 +48,6 @@ void main() {
     });
 
     test('a URL keeps its query string and any parentheses in the path', () {
-      // The read-receipt shape is a query string, and it must survive intact
-      // -- this package never inspects or rewrites what it carries.
       expect(
         NaturalBlockImages.sourceOf('image(https://e.com/x.png?id=you&v=2)'),
         'https://e.com/x.png?id=you&v=2',
@@ -69,8 +63,6 @@ void main() {
         'https://example.com',
         '#section',
         'image()',
-        // The abbreviation is not an alias: one convention, one spelling,
-        // or the thing meant to prevent dialects becomes one.
         'img(https://e.com/a.png)',
         'IMAGE(https://e.com/a.png)',
         'image(https://e.com/a.png) trailing',
@@ -99,9 +91,6 @@ void main() {
     });
 
     test('a Windows path is a file, not a URL with scheme "c"', () {
-      // The trap this helper exists for. `Uri.parse` reads `C:\Users\a.png`
-      // as a URI whose scheme is `c`, so any "has a scheme, therefore a URL"
-      // test mistakes every Windows path for one.
       expect(Uri.parse('C:${bs}Users${bs}a.png').scheme, 'c');
 
       for (final source in [
@@ -173,9 +162,6 @@ void main() {
     testWidgets('nothing is fetched unless a builder is supplied', (
       tester,
     ) async {
-      // The default: displaying a document must not reach out to a third
-      // party on its own, because that request is indistinguishable from a
-      // tracking pixel and the reader was never asked.
       await tester.pumpWidget(
         wrap(
           const NaturalBlockView(
@@ -192,13 +178,6 @@ void main() {
     });
 
     testWidgets('the size vocabulary reaches the image', (tester) async {
-      // Block alignment reaches an image for free, since it moves the whole
-      // block; size only arrives because the builder reads the style it was
-      // handed. Shipping the builder is what makes that a guarantee.
-      // `.first`, not `.single`: with no network in a test the image fails
-      // and its errorBuilder renders the payload as text, which is itself a
-      // RichText nested inside the WidgetSpan. That fallback working is the
-      // point -- it just means the outer paragraph is no longer the only one.
       Image currentImage() {
         final root =
             tester.widget<RichText>(find.byType(RichText).first).text
@@ -213,7 +192,6 @@ void main() {
       await pumpImages(tester, ':++:@image(https://example.com/a.png):@');
       final bigger = currentImage();
 
-      // `scale` divides, so asking for bigger text has to lower it.
       expect(
         (bigger.image as NetworkImage).scale,
         lessThan((plain.image as NetworkImage).scale),
@@ -223,11 +201,6 @@ void main() {
     testWidgets('the loading placeholder reserves a real height', (
       tester,
     ) async {
-      // `style.fontSize` is null for every run without size markup, so
-      // reading it directly gave `SizedBox(height: null)` -- a zero-sized
-      // box that reserved nothing in the ordinary case, which is exactly
-      // the case the placeholder exists for. The theme's base size is what
-      // an unmarked run actually renders at.
       await pumpImages(tester, ':@image(https://example.com/a.png):@');
 
       final image = tester.widget<Image>(find.byType(Image));
@@ -247,8 +220,6 @@ void main() {
     testWidgets('the scale follows the theme, not a hardcoded size', (
       tester,
     ) async {
-      // The builder used to compare against a literal 14.0, duplicating the
-      // theme's default and drifting the moment anyone changed it.
       await pumpImages(
         tester,
         ':@image(https://example.com/a.png):@',
@@ -256,15 +227,10 @@ void main() {
       );
 
       final image = tester.widget<Image>(find.byType(Image).first);
-      // The ambient size is 14 and the theme's base is 28, so an unmarked
-      // run is half the base and the image is drawn at half size -- which
-      // `scale`, dividing, expresses as 2.
       expect((image.image as NetworkImage).scale, 2);
     });
 
     testWidgets('an image carries a semantic label', (tester) async {
-      // Without one a screen reader announces nothing at all where a
-      // sighted reader sees a picture.
       await pumpImages(tester, ':@image(https://example.com/a.png):@');
 
       expect(
@@ -274,10 +240,6 @@ void main() {
     });
 
     testWidgets('a local path is declined rather than fetched', (tester) async {
-      // Drawing one needs `dart:io`, which the web does not have -- taking
-      // that on would cost this package its web support. Declining leaves a
-      // clean handoff to an app that wants it, and wastes no request in the
-      // meantime.
       await pumpImages(tester, r':@image(C:\Users\sugai\a.png):@');
 
       expect(find.byType(Image), findsNothing);
@@ -287,9 +249,6 @@ void main() {
     testWidgets('NaturalBlockImages.local draws a local path from a file', (
       tester,
     ) async {
-      // The second entry point, for an app that knows its documents name
-      // files the reader is meant to see -- a note shared between the
-      // reader's own machines, say.
       await tester.pumpWidget(
         wrap(
           const NaturalBlockView(
@@ -332,10 +291,6 @@ void main() {
       'NaturalBlockImages.local declines a file URI it cannot turn into a '
       'path, rather than throwing',
       (tester) async {
-        // `Uri.toFilePath` throws for a query, a fragment, or an authority off
-        // Windows. A document is outside input, so one of those has to read as
-        // text like any other payload the builder does not handle -- throwing
-        // would break the line it sits on.
         await tester.pumpWidget(
           wrap(
             const NaturalBlockView(
@@ -358,8 +313,6 @@ void main() {
     testWidgets('NaturalBlockImages.local leaves a relative path to the app', (
       tester,
     ) async {
-      // Resolving `assets/a.png` needs something only the app has: an asset
-      // bundle, or a base to join it to.
       await tester.pumpWidget(
         wrap(
           const NaturalBlockView(
@@ -378,8 +331,6 @@ void main() {
     });
 
     testWidgets('an app can render local paths by composing', (tester) async {
-      // Standing in for the real `NaturalBlockImages.local`, which this test
-      // cannot exercise without a file on disk.
       await tester.pumpWidget(
         wrap(
           const NaturalBlockView(

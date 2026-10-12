@@ -42,10 +42,6 @@ void main() {
     });
   });
 
-  /// Builds with [build], then pumps the result so the views can be found.
-  ///
-  /// Building needs no `BuildContext`, so it happens here rather than from
-  /// inside a pumped `Builder`.
   Future<List<Widget>> buildWith(
     WidgetTester tester,
     NaturalBlockBuilders builders,
@@ -56,14 +52,12 @@ void main() {
     return built;
   }
 
-  /// The blocks and rows a document holds.
   Future<List<Widget>> pumpLayouts(
     WidgetTester tester,
     NaturalBlockBuilders builders,
     List<LayoutNode> nodes,
   ) => buildWith(tester, builders, (scope) => buildLayouts(nodes, scope));
 
-  /// The lines, raw blocks and tables a block holds.
   Future<List<Widget>> pumpContents(
     WidgetTester tester,
     NaturalBlockBuilders builders,
@@ -76,9 +70,6 @@ void main() {
     testWidgets('a document\'s blocks and rows go to their views', (
       tester,
     ) async {
-      // The first cell holds two lines, which is the regression here:
-      // `buildRowNode` used to spread every cell's contents straight into
-      // the row, so a two-line cell rendered as two cells side by side.
       final built = await pumpLayouts(tester, NaturalBlockBuilders.defaults, [
         RowNode(
           children: [
@@ -91,7 +82,6 @@ void main() {
 
       expect(built, hasLength(2), reason: 'one row, one plain block');
       expect(find.byType(RowNodeView), findsOneWidget);
-      // One direct ColumnNode, and one for each of the RowNode's two cells.
       expect(find.byType(ColumnNodeView), findsNWidgets(3));
       expect(find.byType(TextNodeView), findsNWidgets(4));
 
@@ -138,7 +128,6 @@ void main() {
           ),
         ]);
 
-        // 2 RowNodes + 1 plain block = 3 top-level widgets.
         expect(built.length, 3);
         expect(find.byType(RowNodeView), findsNWidgets(2));
         expect(find.byType(Row), findsNWidgets(2));

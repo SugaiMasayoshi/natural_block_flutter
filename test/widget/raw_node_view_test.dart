@@ -44,8 +44,6 @@ void main() {
     testWidgets('a region alone on its line is drawn as a code block', (
       tester,
     ) async {
-      // Same node either way -- where it was written is a question about
-      // appearance, so the renderer is what answers it.
       await tester.pumpWidget(
         wrap(const NaturalBlockView(source: '`cat a | grep b`')),
       );
@@ -77,8 +75,6 @@ void main() {
 
   group('long lines', () {
     testWidgets('wrap by default, adding no scroll view', (tester) async {
-      // The package otherwise never puts a scroll view in a caller's layout,
-      // so the default keeps that promise.
       await tester.pumpWidget(
         wrap(NaturalBlockView(source: '`${'word ' * 200}`')),
       );
@@ -89,8 +85,6 @@ void main() {
     });
 
     testWidgets('scroll sideways when the theme asks', (tester) async {
-      // Wrapping is wrong for code -- a broken line reads as a different
-      // program -- so this exists; it is opt-in because of what it costs.
       await tester.pumpWidget(
         wrap(
           NaturalBlockView(
@@ -133,8 +127,6 @@ void main() {
     testWidgets('renders where the available width is unbounded', (
       tester,
     ) async {
-      // The box is never stretched to the width, for the same reason
-      // ColumnNodeView uses Align rather than a width-filling SizedBox.
       await tester.pumpWidget(
         wrap(
           const Scaffold(
@@ -151,8 +143,6 @@ void main() {
     });
 
     testWidgets('a region inside a table cell renders', (tester) async {
-      // Only possible because the delimiter no longer involves `|`: a cell
-      // holds lines, so it could never have held a block-shaped region.
       await tester.pumpWidget(
         wrap(const NaturalBlockView(source: '~x^`a|b`|y^z~')),
       );
@@ -183,9 +173,6 @@ void main() {
           ),
         ),
       );
-      // None is a value, not null: the Container is still there, drawing
-      // nothing. One inert decoration per raw block is what buys a `copyWith`
-      // with no sentinel in it.
       expect(decoratedBoxes(tester).single.decoration, const BoxDecoration());
     });
 

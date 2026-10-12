@@ -88,16 +88,6 @@ void main() {
   });
 
   group('block alignment (end-to-end)', () {
-    // Measures real glyph geometry rather than just widget properties, to
-    // prove the block actually moved rather than only that the plumbing
-    // set the right enum value.
-    //
-    // `ColumnNodeView` is `mainAxisSize.min`, so it only visibly reacts to
-    // `crossAxisAlignment` when its parent actually offers width beyond its
-    // content -- a bare `pump()` lets the widget shrink-wrap and would leave
-    // this proving nothing. The `SizedBox` gives it a fixed 800-wide surface
-    // to align within, matching the geometry this feature was designed
-    // against.
     Future<void> pumpWide(WidgetTester tester, String source) =>
         tester.pumpWidget(
           MaterialApp(
@@ -157,8 +147,6 @@ void main() {
         const MaterialApp(home: NaturalBlockView(source: 'left|right')),
       );
 
-      // Every block is a ColumnNode now, so there is more than one Column;
-      // "unchanged" means none of them was given an alignment.
       final columns = tester.widgetList<Column>(find.byType(Column));
       expect(columns, isNotEmpty);
       for (final column in columns) {
@@ -168,10 +156,6 @@ void main() {
   });
 
   group('block alignment in an unbounded width', () {
-    // Align, not a width-filling SizedBox: a SizedBox of infinite width
-    // throws where the available width is itself unbounded, which would
-    // mean adding an alignment marker could stop a document rendering at
-    // all. Align degrades to hugging its content there instead.
     for (final source in ['|=A|', '|>A|']) {
       testWidgets(
         '"$source" renders inside a horizontal scroll view without throwing',

@@ -5,9 +5,6 @@ import 'package:natural_block_flutter/natural_block_flutter.dart';
 
 import '../rendered_spans.dart';
 
-/// A handler that draws any custom run as a box, for the selection
-/// tests: a WidgetSpan is what splits a paragraph's selection into
-/// segments.
 RunRendering? _boxed(String text, TextStyle style, NaturalBlockTheme theme) =>
     widgetRun(const SizedBox(width: 20, height: 10));
 
@@ -30,8 +27,6 @@ void main() {
   group('structural rendering', () {
     testWidgets('a multi-line row cell stacks its lines instead of splitting '
         'them into separate cells', (tester) async {
-      // Regression: RowNodeView used to flatten every RowNode's children into
-      // the Row, so a two-line left cell rendered as two side-by-side cells.
       await pump(tester, 'left line 1\nleft line 2^right');
 
       final row = tester.widget<Row>(find.byType(Row));
@@ -57,16 +52,12 @@ void main() {
     ) async {
       await pump(tester, 'first|second');
 
-      // One for the document, one for each of the two blocks it now holds.
       expect(find.byType(ColumnNodeView), findsNWidgets(3));
       expect(find.byType(TextNodeView), findsNWidgets(2));
     });
 
     testWidgets('"a^b|c^d" renders as two separate two-cell Rows, not one '
         'four-cell Row', (tester) async {
-      // Regression: RowNode boundaries used to be implicit in sibling
-      // adjacency, so a column of two row-blocks in a row could collapse
-      // into a single merged Row of every cell.
       await pump(tester, 'a^b|c^d');
 
       expect(find.byType(RowNodeView), findsNWidgets(2));
@@ -81,10 +72,6 @@ void main() {
   });
 
   group('the default theme', () {
-    // No constant can be right in both a light and a dark theme -- the same
-    // reason striping is offered only on `fromColorScheme`. So a view given
-    // no theme derives one from the surrounding ColorScheme rather than
-    // falling back to a fixed red.
     const error = Color(0xFF00AAFF);
 
     final themed = ThemeData(
@@ -125,14 +112,6 @@ void main() {
     testWidgets('markup in the source reaches the screen as style', (
       tester,
     ) async {
-      // The package's whole purpose, as one assertion: a cluster in a
-      // `source` comes out the far end of parse -> builders -> widget as the
-      // style the theme says it means. What any cluster means is the theme's
-      // own test; that each run gets its own is `TextNodeView`'s.
-      //
-      // Repeating the cluster shows the asymmetry between the markers, which
-      // only drawn text makes visible: `:!` and `:*` toggle off, `:+` is a
-      // step and stacks.
       const theme = NaturalBlockTheme();
       const ambientSize = 20.0;
 
@@ -203,10 +182,6 @@ void main() {
   });
 
   group('text selection', () {
-    // Built with Text.rich rather than a bare RichText specifically so the
-    // rendered text takes part in selection. A directly-constructed
-    // RichText never registers with the selection machinery, so wrapping it
-    // in a SelectionArea would silently do nothing.
     testWidgets('text registers for selection when wrapped in a SelectionArea, '
         'across every cell and row', (tester) async {
       await tester.pumpWidget(
@@ -227,10 +202,6 @@ void main() {
     testWidgets('a line containing a WidgetSpan still registers', (
       tester,
     ) async {
-      // A span a caller builds -- an image, say -- becomes a WidgetSpan,
-      // which splits the paragraph's selection into segments around it.
-      // That is the likeliest place a drag across a line breaks, and the
-      // other selection tests here use plain text only.
       await tester.pumpWidget(
         MaterialApp(
           home: SelectionArea(
@@ -246,8 +217,6 @@ void main() {
 
       final text = tester.widget<RichText>(find.byType(RichText));
       expect(text.selectionRegistrar, isNotNull);
-      // The placeholder shows up as U+FFFC, so a copied selection loses the
-      // text that named it -- the cost of replacing a run, noted in the docs.
       expect(text.text.toPlainText(), contains('￼'));
       expect(
         text.text.toPlainText(includePlaceholders: false),
@@ -266,13 +235,6 @@ void main() {
   });
 
   group('the document is drawn once per source, not once per frame', () {
-    // Nothing about the document depends on the BuildContext, but `build`
-    // runs whenever an ancestor rebuilds. Counting is the only way to see
-    // this: a rebuilt view renders identically whether or not it redrew, so
-    // no assertion about the widgets it produces would ever catch a
-    // regression.
-
-    /// Builders that count how many times a document reaches them.
     ({NaturalBlockBuilders builders, List<int> builds}) counting() {
       final builds = <int>[];
       return (
@@ -289,12 +251,6 @@ void main() {
     testWidgets('a handler reading an inherited widget sees it change', (
       tester,
     ) async {
-      // A handler is handed no context either, and for a sharper reason than
-      // a builder: a span cannot read one lazily, and the line compares what
-      // it was built from, which cannot say what a handler went and read. A
-      // handler that read a `MediaQuery` through a context it was given drew
-      // the first value and then never moved. Through `widgetRun` the
-      // dependency sits in an element of its own and Flutter tracks it.
       RunRendering? reads(
         String text,
         TextStyle style,
@@ -324,10 +280,6 @@ void main() {
     testWidgets('a builder reading an inherited widget sees it change', (
       tester,
     ) async {
-      // A builder is handed no context, so reading one goes through a
-      // `Builder` -- which puts the dependency in an element of its own, for
-      // Flutter to notify. The drawn tree is kept across the change and the
-      // text still updates, which is the whole point of doing it this way.
       final builders = NaturalBlockBuilders(
         text: (node, scope) => Builder(
           builder: (context) =>
@@ -352,10 +304,6 @@ void main() {
     testWidgets('editing one line leaves the other lines as they were', (
       tester,
     ) async {
-      // `buildSpan` is handed to the lines as it came rather than wrapped,
-      // so a line compares it against the same object and keeps its spans.
-      // Wrapping gave every line a fresh identity, and a one-line edit
-      // rebuilt every line's spans and recognizers.
       var calls = 0;
       RunRendering? counting(
         String text,
@@ -366,8 +314,6 @@ void main() {
         return null;
       }
 
-      // Held outside `view`, the way the docs ask: a list written afresh on
-      // every build never compares equal, and every line would redraw.
       final customs = <RunHandler>[counting];
 
       Widget view(String source) => MaterialApp(
@@ -386,11 +332,6 @@ void main() {
     testWidgets('every part of the scope reaches the comparison', (
       tester,
     ) async {
-      // The hazard one value exists to prevent: a field that reaches the
-      // drawing but not the comparison, so a change to it never redraws.
-      // The source never changes here, so only the scope can catch any of
-      // it -- drop a field from `NaturalBlockScope`'s equality and one of
-      // these stops holding.
       const inert = <RunHandler>[];
       const wired = <RunHandler>[_links];
 
@@ -417,8 +358,6 @@ void main() {
         reason: 'customs',
       );
 
-      // One change per step from here, or an earlier field's change redraws
-      // the document and hides whether the field under test was compared.
       const sized = NaturalBlockTheme(custom: TextStyle(fontSize: 33));
 
       await tester.pumpWidget(view(theme: sized));

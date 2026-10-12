@@ -44,7 +44,6 @@ void main() {
     });
 
     test('no step leaves the size unstated', () {
-      // So the run keeps whatever it would have drawn at anyway.
       expect(styleOf(const SpanDecoration()).fontSize, isNull);
     });
 
@@ -80,8 +79,6 @@ void main() {
     });
 
     test('null leaves a field alone, the way Flutter\'s copyWith does', () {
-      // No argument can set a field *to* null, and none needs to: "none" is
-      // a value in every type here that has one.
       const base = NaturalBlockTheme(tableStripe: Color(0xFFEEEEEE));
 
       expect(base.copyWith(tableBorder: null).tableBorder, base.tableBorder);
@@ -93,9 +90,6 @@ void main() {
     });
 
     test('none is written as a value', () {
-      // What replaced clearing. `const TableBorder()` has BorderSide.none on
-      // every side and measures the same as no border at all; a
-      // `const BoxDecoration()` names no colour, border or shadow.
       const base = NaturalBlockTheme();
 
       final unruled = base.copyWith(tableBorder: const TableBorder());
@@ -137,9 +131,6 @@ void main() {
   });
 
   group('equality covers every field', () {
-    // Checked field by field rather than with one differing value: with a
-    // hand-written `==`, a field added to the class but forgotten in the
-    // comparison ships green, and a single-field test would never see it.
     const base = NaturalBlockTheme();
 
     final differing = <String, NaturalBlockTheme>{
@@ -187,8 +178,6 @@ void main() {
       brightness: brightness,
     );
 
-    /// Perceived lightness, enough to tell "darker than" from "lighter
-    /// than" without pulling in a color-science dependency.
     double luminance(Color color) => color.computeLuminance();
 
     test('striping is off unless asked for', () {
@@ -201,11 +190,6 @@ void main() {
     });
 
     test('the band darkens a light surface and lightens a dark one', () {
-      // The entire reason this lives on `fromColorScheme` and not on the
-      // default constructor: the band has to move in opposite directions
-      // depending on the theme, so no single constant could serve both.
-      // A fixed translucent black shifts a light surface visibly and a
-      // dark one by about one step per channel -- invisible.
       for (final brightness in Brightness.values) {
         final scheme = schemeFor(brightness);
         final stripe = NaturalBlockTheme.fromColorScheme(
@@ -238,8 +222,6 @@ void main() {
     });
 
     test('striping replaces the horizontal rules but keeps the rest', () {
-      // Both answer "which cells belong to one row", so drawing both is
-      // noise; the vertical rules and the frame are doing another job.
       final theme = NaturalBlockTheme.fromColorScheme(
         schemeFor(Brightness.light),
         striped: true,

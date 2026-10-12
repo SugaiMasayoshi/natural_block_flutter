@@ -42,9 +42,6 @@ void main() {
     testWidgets('declining leaves the run as ordinary custom text', (
       tester,
     ) async {
-      // The property that makes the extension point safe: a builder never
-      // has to understand every payload it meets, and one it does not
-      // understand still reads as text rather than disappearing.
       await tester.pumpWidget(
         wrap(
           NaturalBlockView(
@@ -66,9 +63,6 @@ void main() {
     testWidgets('a handler that declines leaves the run to the next', (
       tester,
     ) async {
-      // What replaced "falling back": a handler of your own does not call
-      // this package's, it just sits in front of it and declines what is not
-      // its own.
       await tester.pumpWidget(
         wrap(
           const NaturalBlockView(
@@ -85,8 +79,6 @@ void main() {
     testWidgets(
       'with no tapping handler a run keeps its style and drops the tap',
       (tester) async {
-        // Tapping is a handler like any other, so an app that includes none
-        // gets none.
         await tester.pumpWidget(
           MaterialApp(
             home: NaturalBlockView(source: ':@リンク:@', customs: const []),
@@ -107,9 +99,6 @@ void main() {
     testWidgets(
       'a widget run answers a tap through Flutter, not a recognizer',
       (tester) async {
-        // What makes replacement and tappability independent: anything inside
-        // a WidgetSpan is Flutter's to manage, so this handler releases
-        // nothing.
         final tapped = <String>[];
         await tester.pumpWidget(
           MaterialApp(
@@ -169,10 +158,6 @@ void main() {
     testWidgets('the dispose a handler hands back is called, once', (
       tester,
     ) async {
-      // The whole of the contract: whatever a handler makes, the `dispose` it
-      // returns is the only thing that releases it. Called when the line's
-      // spans are replaced, and when the line leaves the tree -- and not
-      // twice for the same span.
       var released = 0;
       RunRendering? counting(
         String text,
@@ -181,9 +166,6 @@ void main() {
       ) =>
           (span: TextSpan(text: text, style: style), dispose: () => released++);
 
-      // Held outside `view`, the way the docs ask: a list written afresh on
-      // every build never compares equal, and the spans would be replaced on
-      // every frame.
       final customs = <RunHandler>[counting];
       Widget view(String source) => MaterialApp(
         home: NaturalBlockView(source: source, customs: customs),
