@@ -15,7 +15,6 @@ class RowNodeView extends StatelessWidget {
       final bounded = constraints.hasBoundedWidth;
       return Row(
         crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: bounded ? MainAxisSize.max : MainAxisSize.min,
         children: List.generate(
           cells.length,
           (i) => bounded ? Expanded(child: cells[i]) : cells[i],
