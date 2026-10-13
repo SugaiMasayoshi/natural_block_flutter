@@ -166,7 +166,7 @@ const builders = NaturalBlockBuilders(
 NaturalBlockView(source: source, builders: builders);
 ```
 
-**Which of the two extension points to reach for.** `builders` changes how a *kind of node* is drawn, everywhere it appears. `customs` decides how one *custom run* is drawn, and declines the rest by returning null. An custom run is not a node: `:@` is a decoration a run carries, like a tone or emphasis, so there is nothing for a builder to key on.
+**Which of the two extension points to reach for.** `builders` changes how a *kind of node* is drawn, everywhere it appears. `customs` decides how one *custom run* is drawn, and declines the rest by returning null. A custom run is not a node: `:@` is a decoration a run carries, like a tone or emphasis, so there is nothing for a builder to key on.
 
 A builder receives the node — already typed as the kind it was registered for, so there is no cast — and a `NaturalBlockScope`: the theme, the builders, the customs, which travel together the whole way down. Recurse into a node's own children with `buildLayouts(node.children, scope)` for the blocks and rows a document holds, or `buildContents(node.children, scope)` for the lines, raw blocks and tables a block or a table cell holds. Either keeps every child on the same theme, builders and handlers. Where the tree already names one kind -- a row's cells, a table's rows -- reach for that field directly (`scope.builders.column(cell, scope)`), since there is nothing to choose.
 
@@ -225,11 +225,13 @@ RunRendering? links(text, style, theme) =>
 NaturalBlockView(source: source, customs: const [links]);
 ```
 
+`onTap` is captured when the run is drawn, and a line is not redrawn just because the callback changed. Pass something that looks up what to do when it is called -- a top-level function like this one, or a method of your state -- rather than the current value of a callback that changes.
+
 With no handler (the default) custom runs are still drawn in `NaturalBlockTheme.custom`'s style, but they get no tap recognizer at all -- they read as tappable but aren't.
 
 #### Drawing a custom run yourself
 
-An custom run is offered to each handler in `customs` until one claims it, and a handler declines by returning `null` -- so it never has to understand every payload it might meet. Drawing a run as tappable text is what `tappableText` does, and since each handler decides what its own tap means, there is no one `onTap` for the whole view.
+A custom run is offered to each handler in `customs` until one claims it, and a handler declines by returning `null` -- so it never has to understand every payload it might meet. Drawing a run as tappable text is what `tappableText` does, and since each handler decides what its own tap means, there is no one `onTap` for the whole view.
 
 A handler answers with a span to put in the line and a `dispose` to release whatever that span carries:
 

@@ -47,8 +47,10 @@ typedef RunHandler = RunRendering? Function(
 ///     tappableText(text, style, onTap: openUrl);
 /// ```
 ///
-/// -- and keeps it stable (a top-level function, or a method of your state):
-/// a closure written afresh each build redraws every line.
+/// -- and passes something that reads the current callback when it is
+/// called, such as a method of your state. [onTap] is captured when the run
+/// is drawn and a line is not redrawn just because the callback changed, so
+/// passing a callback's value directly keeps calling the old one.
 RunRendering tappableText(
   String text,
   TextStyle style, {

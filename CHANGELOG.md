@@ -260,8 +260,9 @@ Initial release.
   so the default leaves the text hanging below what it sits beside. Of the
   alignments that cost the least line height -- `top`, `bottom` and `middle`
   all measure 20 against the baseline variants' 24 and 31 -- `middle` is the
-  one that lines the two centres up. It was a private helper in `NaturalBlockImages` while the same
-  three lines were being written by hand everywhere else -- the README's
+  one that lines the two centres up. It was a private helper in
+  `NaturalBlockImages` while the same three lines were being written by hand
+  everywhere else -- the README's
   example, four test handlers, both image handlers -- each needing the same
   sentence about why an empty `dispose` is right. The `WidgetSpan` lifecycle
   is not an image's business, so it moved to where handlers are defined.
@@ -271,8 +272,12 @@ Initial release.
   own `GestureDetector` without ever seeing it. `tappableText` reports a tap
   with the run's own text. Nothing here ever interprets that text — no URL is
   opened, and there is no `url_launcher` dependency. The cost is that the
-  callback is part of what is compared, which a view-wide `onTap` kept out
-  through a relay: a handler of one's own is stable, as above.
+  callback is captured when the run is drawn. Only the `customs` list is
+  compared, never the callback inside a handler, so a line is not redrawn
+  when the callback changes and a callback passed by value keeps calling the
+  old one. A view-wide `onTap` avoided that by reading the newest callback at
+  tap time; a handler now gets the same by passing something that does, such
+  as a method of its state.
 - `NaturalBlockImages.network` is the reference rendering for the
   conventional `image(<url>)` payload, off until included: drawing a remote
   image is a network request to a third party made by displaying a

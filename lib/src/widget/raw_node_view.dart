@@ -18,6 +18,8 @@ class RawNodeView extends StatelessWidget {
             .merge(theme.base)
             .merge(theme.raw),
       ),
+      // Not the block's alignment: centring each line would undo indentation.
+      textAlign: TextAlign.start,
       softWrap: !theme.rawScrollsHorizontally,
     );
 
