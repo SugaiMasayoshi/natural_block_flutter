@@ -56,13 +56,12 @@ void main() {
       expect(
         span.recognizer,
         isNotNull,
-        reason: 'a declined run keeps the default tap handling',
+        reason: 'the image handler declined, so the next one made it tappable',
       );
     });
 
-    testWidgets('a handler that declines leaves the run to the next', (
-      tester,
-    ) async {
+    testWidgets('a handler may rewrite a run, and one that declines leaves it '
+        'to the next', (tester) async {
       await tester.pumpWidget(
         wrap(
           const NaturalBlockView(
@@ -89,7 +88,7 @@ void main() {
         expect(
           span.style!.decoration,
           TextDecoration.underline,
-          reason: 'the document still says the run is actionable',
+          reason: 'the document still says the run is custom',
         );
         expect(span.recognizer, isNull);
         expect(span.semanticsLabel, isNull);
@@ -140,19 +139,6 @@ void main() {
 
       expect(renderedSpans(tester).single.text, 'first');
       expect(asked, 0, reason: 'the second is not asked once the first claims');
-    });
-
-    testWidgets('a text run may rewrite what is read', (tester) async {
-      await tester.pumpWidget(
-        MaterialApp(
-          home: NaturalBlockView(
-            source: ':@user(alice):@',
-            customs: const [_mentions],
-          ),
-        ),
-      );
-
-      expect(renderedSpans(tester).single.text, 'alice');
     });
 
     testWidgets('the dispose a handler hands back is called, once', (

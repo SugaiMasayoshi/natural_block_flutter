@@ -93,7 +93,7 @@ void main() {
         'C:/Users/sugai/a.png',
         r'D:\photos\My Pictures\a.png',
         r'c:\lower\a.png',
-        r'\server\share\a.png',
+        r'\\server\share\a.png',
         '/home/sugai/a.png',
         'file:///C:/Users/a.png',
       ],

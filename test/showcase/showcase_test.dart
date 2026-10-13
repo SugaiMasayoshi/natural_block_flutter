@@ -49,11 +49,6 @@ void main() {
     await _loadFont('monospace', _mono);
   });
 
-  // Skipped in the normal suite on purpose: it loads fonts from a hardcoded
-  // Windows path and compares against a golden, so it can only pass on the
-  // machine that generated it. Its job is to produce a picture to look at,
-  // not to guard behaviour -- that is what the other tests are for.
-  //
   // Regenerate with:
   //   flutter test test/showcase --update-goldens
   testWidgets('showcase', (tester) async {
@@ -94,10 +89,11 @@ void main() {
 
 /// Whether this machine has the fonts the picture was drawn with.
 ///
-/// Skipped everywhere else on purpose. Golden comparison is pixel-exact and
-/// these paths are Windows-only, so this test can only pass on the machine
-/// that produced the image -- its job is to produce something to look at,
-/// not to guard behaviour. Every other test in this package does that.
+/// The test runs only where it does, and is skipped everywhere else: golden
+/// comparison is pixel-exact and these paths are Windows-only, so it can only
+/// pass on a machine set up like the one that produced the image. Its job is
+/// to produce something to look at, not to guard behaviour -- every other
+/// test in this package does that.
 final bool _fontsAvailable =
     Platform.isWindows &&
     File(_japanese).existsSync() &&

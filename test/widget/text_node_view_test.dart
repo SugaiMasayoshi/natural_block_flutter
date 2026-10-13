@@ -305,17 +305,14 @@ void main() {
       final tapped = <String>[];
       final customs = _into(tapped);
 
-      Future<void> pump(String suffix) => pumpRuns(
+      Future<void> pump() => pumpRuns(
         tester,
         [custom('press')],
-        theme: NaturalBlockTheme(
-          base: TextStyle(letterSpacing: suffix.length * 0.0),
-        ),
         customs: customs,
         ambient: const TextStyle(fontSize: 14, color: Color(0xFF000000)),
       );
 
-      await pump('a');
+      await pump();
 
       final paragraph = tester.renderObject<RenderParagraph>(
         find.byType(RichText),
@@ -330,7 +327,7 @@ void main() {
       );
 
       final gesture = await tester.startGesture(target);
-      await pump('bb'); // rebuild while the pointer is still down
+      await pump(); // rebuild while the pointer is still down
       await gesture.up();
       await tester.pump();
 
