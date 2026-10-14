@@ -136,4 +136,27 @@ void main() {
       ),
     ]);
   });
+
+  testWidgets('everything nested in one document', (tester) async {
+    await _scene(tester, 'combined', [
+      (
+        '|=:++:*Combined::\n'
+            '|<:!left:!^=centre `raw`^>:%right:%\n'
+            '|\n'
+            '~|=:*Item::^>:*Price::\n'
+            '|:@apple:@^>200\n'
+            '|`banana`^>1\n'
+            '~\n'
+            '|a cell beside a table^~x^y|z^w~\n'
+            '|=~A^B~\n'
+            '|intro\n'
+            '`\n'
+            'if (x) {\n'
+            '    y();\n'
+            '}\n'
+            '`^>:-side note',
+        null,
+      ),
+    ]);
+  });
 }
