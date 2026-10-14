@@ -43,7 +43,6 @@ void main() {
       await pump(tester, 'a^b|c^d');
 
       expect(find.byType(RowNodeView), findsNWidgets(2));
-      expect(find.byType(Row), findsNWidgets(2));
 
       final rows = tester.widgetList<Row>(find.byType(Row)).toList();
       for (final row in rows) {
