@@ -80,6 +80,19 @@ void main() {
         'before  after',
       );
     });
+
+    testWidgets('a raw block registers', (tester) async {
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: SelectionArea(child: NaturalBlockView(source: '`copy me`')),
+        ),
+      );
+
+      expect(
+        tester.widget<RichText>(find.byType(RichText)).selectionRegistrar,
+        isNotNull,
+      );
+    });
   });
 
   group('the document is drawn once per source, not once per frame', () {
