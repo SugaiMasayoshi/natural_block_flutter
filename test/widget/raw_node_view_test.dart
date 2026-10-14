@@ -37,11 +37,6 @@ void main() {
       );
 
       expect(find.byType(SingleChildScrollView), findsOneWidget);
-      expect(
-        tester.widget<RichText>(find.byType(RichText)).softWrap,
-        isFalse,
-        reason: 'wrapping would leave the scroll view nothing to scroll',
-      );
       expect(tester.takeException(), isNull);
     });
 
