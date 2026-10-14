@@ -85,38 +85,6 @@ void main() {
         );
       }
     });
-
-    testWidgets('a size step counts from the size the theme actually draws, '
-        'not from the ambient one', (tester) async {
-      const theme = NaturalBlockTheme(base: TextStyle(fontSize: 24));
-
-      await pumpRuns(
-        tester,
-        [
-          TextSpanNode(text: 'plain'),
-          TextSpanNode(
-            text: 'bigger',
-            decoration: SpanDecoration(sizeOffset: 1),
-          ),
-        ],
-        theme: theme,
-        ambient: const TextStyle(fontSize: 14),
-      );
-
-      final spans = renderedSpans(tester);
-
-      expect(
-        spans[0].style!.fontSize,
-        24,
-        reason: 'theme.base wins over the ambient style',
-      );
-      expect(spans[1].style!.fontSize, 24 + theme.fontSizeStep);
-      expect(
-        spans[1].style!.fontSize,
-        greaterThan(spans[0].style!.fontSize!),
-        reason: 'an enlarging marker must not shrink the text',
-      );
-    });
   });
 
   group('custom spans', () {

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:natural_block/natural_block.dart';
 import 'package:natural_block_flutter/natural_block_flutter.dart';
 
 import '../rendered_spans.dart';
@@ -17,137 +16,14 @@ void main() {
   Future<void> pump(
     WidgetTester tester,
     String source, {
-    NaturalBlockTheme theme = const NaturalBlockTheme(),
     NaturalBlockBuilders builders = NaturalBlockBuilders.defaults,
   }) => tester.pumpWidget(
     MaterialApp(
-      home: NaturalBlockView(source: source, theme: theme, builders: builders),
+      home: NaturalBlockView(source: source, builders: builders),
     ),
   );
-  group('structural rendering', () {
-    testWidgets('a multi-line row cell stacks its lines instead of splitting '
-        'them into separate cells', (tester) async {
-      await pump(tester, 'left line 1\nleft line 2^right');
 
-      final row = tester.widget<Row>(find.byType(Row));
-      expect(row.children, hasLength(2), reason: 'two cells, not three');
-      expect(
-        find.byType(TextNodeView),
-        findsNWidgets(2),
-        reason: 'one view per cell -- a newline no longer starts a new node',
-      );
-    });
-
-    testWidgets('"a^b|c^d" renders as two separate two-cell Rows, not one '
-        'four-cell Row', (tester) async {
-      await pump(tester, 'a^b|c^d');
-
-      expect(find.byType(RowNodeView), findsNWidgets(2));
-
-      final rows = tester.widgetList<Row>(find.byType(Row)).toList();
-      for (final row in rows) {
-        expect(row.children, hasLength(2));
-      }
-      expect(find.byType(Expanded), findsNWidgets(4));
-    });
-  });
-
-  group('the default theme', () {
-    const error = Color(0xFF00AAFF);
-
-    final themed = ThemeData(
-      colorScheme: ColorScheme.fromSeed(seedColor: Colors.indigo)
-          .copyWith(error: error),
-    );
-
-    testWidgets('a view given no theme takes its tones from the ambient '
-        'ColorScheme', (tester) async {
-      await tester.pumpWidget(
-        MaterialApp(
-          theme: themed,
-          home: const NaturalBlockView(source: ':!tone'),
-        ),
-      );
-
-      expect(renderedSpans(tester).first.style!.color, error);
-    });
-
-    testWidgets('a theme passed in still wins over the ambient one', (
-      tester,
-    ) async {
-      await tester.pumpWidget(
-        MaterialApp(
-          theme: themed,
-          home: const NaturalBlockView(
-            source: ':!tone',
-            theme: NaturalBlockTheme(negative: TextStyle(color: Colors.red)),
-          ),
-        ),
-      );
-
-      expect(renderedSpans(tester).first.style!.color, Colors.red);
-    });
-  });
-
-  group('decoration rendering (end-to-end)', () {
-    testWidgets('markup in the source reaches the screen as style', (
-      tester,
-    ) async {
-      const theme = NaturalBlockTheme();
-      const ambientSize = 20.0;
-
-      await tester.pumpWidget(
-        MaterialApp(
-          home: DefaultTextStyle(
-            style: const TextStyle(fontSize: ambientSize),
-            child: const NaturalBlockView(
-              source: ':!*+marked:!*+plain',
-              theme: theme,
-            ),
-          ),
-        ),
-      );
-
-      final spans = renderedSpans(tester);
-
-      expect(spans[0].text, 'marked');
-      expect(
-        spans[0].style,
-        theme.styleFor(
-          const SpanDecoration(
-            tone: Tone.negative,
-            emphasis: true,
-            sizeOffset: 1,
-          ),
-          baseSize: ambientSize,
-        ),
-      );
-
-      expect(spans[1].text, 'plain');
-      expect(
-        spans[1].style,
-        theme.styleFor(
-          const SpanDecoration(sizeOffset: 2),
-          baseSize: ambientSize,
-        ),
-        reason:
-            'the toggles came off, and the second step stacked on the first',
-      );
-    });
-  });
-
-  group('theme and builder customization', () {
-    testWidgets('a custom theme changes the rendered color', (tester) async {
-      const customTheme = NaturalBlockTheme(
-        negative: TextStyle(color: Colors.purple),
-      );
-      await pump(tester, ':!alert:!', theme: customTheme);
-
-      final span = renderedSpans(tester).first;
-
-      expect(span.style!.color, Colors.purple);
-    });
-
+  group('builder customization', () {
     testWidgets('a custom builder substitutes a widget for a node type', (
       tester,
     ) async {

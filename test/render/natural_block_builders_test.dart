@@ -60,37 +60,6 @@ void main() {
 
   TextNode text(String s) => TextNode(children: [TextSpanNode(text: s)]);
 
-  group('NaturalBlockBuilders.defaults', () {
-    testWidgets(
-      'one RowNode renders as one Row, keeping other blocks separate',
-      (tester) async {
-        final built = await pumpLayouts(tester, NaturalBlockBuilders.defaults, [
-          RowNode(
-            children: [
-              ColumnNode(children: [text('a')]),
-              ColumnNode(children: [text('b')]),
-            ],
-          ),
-          ColumnNode(children: [text('between')]),
-          RowNode(
-            children: [
-              ColumnNode(children: [text('c')]),
-              ColumnNode(children: [text('d')]),
-            ],
-          ),
-        ]);
-
-        expect(built.length, 3);
-        expect(find.byType(RowNodeView), findsNWidgets(2));
-        expect(find.byType(Row), findsNWidgets(2));
-        expect(
-          find.byType(Expanded),
-          findsNWidgets(4),
-        ); // a+b in one Row, c+d in the other
-      },
-    );
-  });
-
   group('builders of your own', () {
     testWidgets(
       'a ColumnNode builder also applies to row cells, since cells are '

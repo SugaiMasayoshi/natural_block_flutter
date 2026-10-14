@@ -74,6 +74,7 @@ void main() {
       ('|<start', null),
       ('|=center', null),
       ('|>end', null),
+      ('|>a line, then a raw block\n`\nx\n`', null),
       ('|=a centred paragraph long enough to wrap onto a second line', null),
       ('|=intro\n`\nif (x) {\n    y();\n}\n`', null),
     ]);
