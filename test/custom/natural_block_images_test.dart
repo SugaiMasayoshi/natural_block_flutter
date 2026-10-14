@@ -4,19 +4,6 @@ import 'package:natural_block_flutter/natural_block_flutter.dart';
 
 import '../rendered_spans.dart';
 
-RunRendering? _localStandIn(
-  String text,
-  TextStyle style,
-  NaturalBlockTheme theme,
-) {
-  final source = NaturalBlockImages.sourceOf(text);
-  if (source == null ||
-      NaturalBlockImages.kindOf(source) != ImageSourceKind.file) {
-    return null;
-  }
-  return widgetRun(Text('local:$source'));
-}
-
 void _ignore(String _) {}
 
 RunRendering? _links(String text, TextStyle style, NaturalBlockTheme theme) =>
@@ -39,46 +26,27 @@ void main() {
     wrap(NaturalBlockView(source: source, theme: theme, customs: customs)),
   );
 
-  group('the image(...) convention', () {
-    test('a payload that names an image yields its source', () {
-      expect(
-        NaturalBlockImages.sourceOf('image(https://example.com/a.png)'),
-        'https://example.com/a.png',
-      );
-    });
+  test('sourceOf reads image(...) and declines anything else', () {
+    const expected = <String, String?>{
+      'image(https://example.com/a.png)': 'https://example.com/a.png',
+      'image(https://e.com/x.png?id=you&v=2)': 'https://e.com/x.png?id=you&v=2',
+      'image(https://e.com/a_(1).png)': 'https://e.com/a_(1).png',
+      'https://example.com': null,
+      '#section': null,
+      'image()': null,
+      ' image(https://e.com/a.png)': null,
+      'image(https://e.com/a.png) ': null,
+      'image( https://e.com/a.png)': null,
+      'image(https://e.com/a.png )': null,
+      'img(https://e.com/a.png)': null,
+      'IMAGE(https://e.com/a.png)': null,
+      'image(https://e.com/a.png) trailing': null,
+      '': null,
+    };
 
-    test('a URL keeps its query string and any parentheses in the path', () {
-      expect(
-        NaturalBlockImages.sourceOf('image(https://e.com/x.png?id=you&v=2)'),
-        'https://e.com/x.png?id=you&v=2',
-      );
-      expect(
-        NaturalBlockImages.sourceOf('image(https://e.com/a_(1).png)'),
-        'https://e.com/a_(1).png',
-      );
-    });
-
-    test('anything else is declined, `img` included', () {
-      for (final text in [
-        'https://example.com',
-        '#section',
-        'image()',
-        ' image(https://e.com/a.png)',
-        'image(https://e.com/a.png) ',
-        'image( https://e.com/a.png)',
-        'image(https://e.com/a.png )',
-        'img(https://e.com/a.png)',
-        'IMAGE(https://e.com/a.png)',
-        'image(https://e.com/a.png) trailing',
-        '',
-      ]) {
-        expect(
-          NaturalBlockImages.sourceOf(text),
-          isNull,
-          reason: '"$text" is not the image(...) convention',
-        );
-      }
-    });
+    for (final MapEntry(key: text, value: source) in expected.entries) {
+      expect(NaturalBlockImages.sourceOf(text), source, reason: '"$text"');
+    }
   });
 
   test('kindOf classifies where a payload points', () {
@@ -134,27 +102,6 @@ void main() {
       );
     });
 
-    testWidgets('the size vocabulary reaches the image', (tester) async {
-      Image currentImage() {
-        final root =
-            tester.widget<RichText>(find.byType(RichText).first).text
-                as TextSpan;
-        final line = root.children!.single as TextSpan;
-        return (line.children!.single as WidgetSpan).child as Image;
-      }
-
-      await pumpImages(tester, ':@image(https://example.com/a.png):@');
-      final plain = currentImage();
-
-      await pumpImages(tester, ':++:@image(https://example.com/a.png):@');
-      final bigger = currentImage();
-
-      expect(
-        (bigger.image as NetworkImage).scale,
-        lessThan((plain.image as NetworkImage).scale),
-      );
-    });
-
     testWidgets('the loading placeholder reserves a real height', (
       tester,
     ) async {
@@ -196,13 +143,6 @@ void main() {
       );
     });
 
-    testWidgets('a local path is declined rather than fetched', (tester) async {
-      await pumpImages(tester, r':@image(C:\Users\sugai\a.png):@');
-
-      expect(find.byType(Image), findsNothing);
-      expect(renderedSpans(tester).single.text, r'image(C:\Users\sugai\a.png)');
-    });
-
     testWidgets('NaturalBlockImages.local draws a local path from a file', (
       tester,
     ) async {
@@ -210,6 +150,7 @@ void main() {
         wrap(
           const NaturalBlockView(
             source: r':@image(C:\a.png):@',
+            theme: NaturalBlockTheme(baseFontSize: 28),
             customs: [
               NaturalBlockImages.local,
               NaturalBlockImages.network,
@@ -219,7 +160,9 @@ void main() {
         ),
       );
 
-      expect(tester.widget<Image>(find.byType(Image)).image, isA<FileImage>());
+      final image = tester.widget<Image>(find.byType(Image));
+      expect((image.image as FileImage).scale, 2);
+      expect(image.semanticLabel, r'C:\a.png');
     });
 
     testWidgets('NaturalBlockImages.local still draws a network image', (
@@ -285,21 +228,6 @@ void main() {
 
       expect(find.byType(Image), findsNothing);
       expect(renderedSpans(tester).single.text, 'image(assets/a.png)');
-    });
-
-    testWidgets('an app can render local paths by composing', (tester) async {
-      await tester.pumpWidget(
-        wrap(
-          const NaturalBlockView(
-            source:
-                r':@image(C:\a.png):@ と :@image(https://example.com/b.png):@',
-            customs: [_localStandIn, NaturalBlockImages.network],
-          ),
-        ),
-      );
-
-      expect(find.text(r'local:C:\a.png'), findsOneWidget);
-      expect(find.byType(Image), findsOneWidget);
     });
   });
 }

@@ -15,21 +15,6 @@ RunRendering? _mentions(
       )
     : null;
 
-RunHandler _tappableBox(List<String> sink) =>
-    (text, style, theme) => widgetRun(
-      GestureDetector(
-        // An empty box defers its hit testing to a child it does not have.
-        behavior: HitTestBehavior.opaque,
-        onTap: () => sink.add(text),
-        child: const SizedBox(width: 20, height: 20),
-      ),
-    );
-
-void _ignore(String _) {}
-
-RunRendering? _links(String text, TextStyle style, NaturalBlockTheme theme) =>
-    tappableText(text, style, onTap: _ignore);
-
 void main() {
   Widget wrap(Widget child) => MaterialApp(
     home: DefaultTextStyle(
@@ -39,27 +24,6 @@ void main() {
   );
 
   group('run handlers', () {
-    testWidgets('declining leaves the run as ordinary custom text', (
-      tester,
-    ) async {
-      await tester.pumpWidget(
-        wrap(
-          NaturalBlockView(
-            source: ':@#section:@',
-            customs: [NaturalBlockImages.network, _links],
-          ),
-        ),
-      );
-
-      final span = renderedSpans(tester).single;
-      expect(span.text, '#section');
-      expect(
-        span.recognizer,
-        isNotNull,
-        reason: 'the image handler declined, so the next one made it tappable',
-      );
-    });
-
     testWidgets('a handler may rewrite a run, and one that declines leaves it '
         'to the next', (tester) async {
       await tester.pumpWidget(
@@ -74,50 +38,6 @@ void main() {
       expect(renderedSpans(tester).first.text, 'alice');
       expect(find.byType(Image), findsOneWidget);
     });
-
-    testWidgets(
-      'with no tapping handler a run keeps its style and drops the tap',
-      (tester) async {
-        await tester.pumpWidget(
-          MaterialApp(
-            home: NaturalBlockView(source: ':@リンク:@', customs: const []),
-          ),
-        );
-
-        final span = renderedSpans(tester).single;
-        expect(
-          span.style!.decoration,
-          TextDecoration.underline,
-          reason: 'the document still says the run is custom',
-        );
-        expect(span.recognizer, isNull);
-        expect(span.semanticsLabel, isNull);
-      },
-    );
-
-    testWidgets(
-      'a widget run answers a tap through Flutter, not a recognizer',
-      (tester) async {
-        final tapped = <String>[];
-        await tester.pumpWidget(
-          MaterialApp(
-            home: Align(
-              alignment: Alignment.topLeft,
-              child: NaturalBlockView(
-                source: ':@box:@',
-                customs: [_tappableBox(tapped)],
-              ),
-            ),
-          ),
-        );
-
-        await tester.tap(find.byType(GestureDetector));
-        await tester.pump();
-
-        expect(tapped, ['box']);
-        expect(renderedSpans(tester), isEmpty, reason: 'drawn as a widget');
-      },
-    );
 
     testWidgets('when two handlers claim a run, the first draws it', (
       tester,

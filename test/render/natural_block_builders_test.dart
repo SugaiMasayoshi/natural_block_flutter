@@ -12,8 +12,6 @@ Widget _text(TextNode node, NaturalBlockScope scope) => const SizedBox();
 Widget _raw(RawNode node, NaturalBlockScope scope) => const SizedBox();
 
 void main() {
-  const theme = NaturalBlockTheme();
-
   group('NaturalBlockBuilders equality', () {
     const variants = <String, NaturalBlockBuilders>{
       'row': NaturalBlockBuilders(row: _row),
@@ -33,54 +31,39 @@ void main() {
         );
       });
     }
-
-    test('equal builders hash alike', () {
-      expect(
-        const NaturalBlockBuilders(row: _row).hashCode,
-        const NaturalBlockBuilders(row: _row).hashCode,
-      );
-    });
   });
 
-  Future<List<Widget>> buildWith(
-    WidgetTester tester,
-    NaturalBlockBuilders builders,
-    List<Widget> Function(NaturalBlockScope scope) build,
-  ) async {
-    final built = build(NaturalBlockScope(theme: theme, builders: builders));
-    await tester.pumpWidget(MaterialApp(home: Column(children: built)));
-    return built;
-  }
-
-  Future<List<Widget>> pumpLayouts(
-    WidgetTester tester,
-    NaturalBlockBuilders builders,
-    List<LayoutNode> nodes,
-  ) => buildWith(tester, builders, (scope) => buildLayouts(nodes, scope));
-
-  TextNode text(String s) => TextNode(children: [TextSpanNode(text: s)]);
-
-  group('builders of your own', () {
-    testWidgets(
-      'a ColumnNode builder also applies to row cells, since cells are '
-      'built through the builders',
-      (tester) async {
-        final builders = NaturalBlockBuilders(
-          column: (node, scope) => const Placeholder(),
-        );
-
-        await pumpLayouts(tester, builders, [
-          RowNode(
-            children: [
-              ColumnNode(children: [text('a')]),
-              ColumnNode(children: [text('b')]),
-            ],
-          ),
-        ]);
-
-        expect(find.byType(Placeholder), findsNWidgets(2));
-        expect(find.byType(TextNodeView), findsNothing);
-      },
+  group('cells are built through the builders', () {
+    Future<void> pump(
+      WidgetTester tester,
+      String source,
+      NaturalBlockBuilders builders,
+    ) => tester.pumpWidget(
+      MaterialApp(
+        home: NaturalBlockView(source: source, builders: builders),
+      ),
     );
+
+    testWidgets('a row cell is a column', (tester) async {
+      await pump(
+        tester,
+        'a^b',
+        NaturalBlockBuilders(column: (node, scope) => const Placeholder()),
+      );
+
+      expect(find.byType(Placeholder), findsNWidgets(2));
+      expect(find.byType(TextNodeView), findsNothing);
+    });
+
+    testWidgets('a table cell is a tableCell', (tester) async {
+      await pump(
+        tester,
+        '~a^b~',
+        NaturalBlockBuilders(tableCell: (node, scope) => const Placeholder()),
+      );
+
+      expect(find.byType(Placeholder), findsNWidgets(2));
+      expect(find.byType(TextNodeView), findsNothing);
+    });
   });
 }

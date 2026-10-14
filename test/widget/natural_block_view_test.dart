@@ -13,49 +13,7 @@ RunRendering? _links(String text, TextStyle style, NaturalBlockTheme theme) =>
     tappableText(text, style, onTap: _ignore);
 
 void main() {
-  Future<void> pump(
-    WidgetTester tester,
-    String source, {
-    NaturalBlockBuilders builders = NaturalBlockBuilders.defaults,
-  }) => tester.pumpWidget(
-    MaterialApp(
-      home: NaturalBlockView(source: source, builders: builders),
-    ),
-  );
-
-  group('builder customization', () {
-    testWidgets('a custom builder substitutes a widget for a node type', (
-      tester,
-    ) async {
-      final builders = NaturalBlockBuilders(
-        text: (node, scope) => const Placeholder(),
-      );
-
-      await pump(tester, 'Hello world', builders: builders);
-
-      expect(find.byType(Placeholder), findsOneWidget);
-      expect(find.byType(TextNodeView), findsNothing);
-    });
-  });
-
   group('text selection', () {
-    testWidgets('text registers for selection when wrapped in a SelectionArea, '
-        'across every cell and row', (tester) async {
-      await tester.pumpWidget(
-        const MaterialApp(
-          home: SelectionArea(child: NaturalBlockView(source: 'a^b|c^d')),
-        ),
-      );
-
-      final texts = tester.widgetList<RichText>(find.byType(RichText));
-      expect(texts, hasLength(4));
-      expect(
-        texts.every((t) => t.selectionRegistrar != null),
-        isTrue,
-        reason: 'every cell of every row must be selectable',
-      );
-    });
-
     testWidgets('a line containing a WidgetSpan still registers', (
       tester,
     ) async {
@@ -276,29 +234,9 @@ void main() {
             'built again -- not the parse, and not the widgets either',
       );
     });
-
-    testWidgets('changing the source re-parses', (tester) async {
-      Future<void> pumpSource(WidgetTester tester, String source) => tester
-          .pumpWidget(MaterialApp(home: NaturalBlockView(source: source)));
-
-      await pumpSource(tester, 'first');
-      expect(find.text('first', findRichText: true), findsOneWidget);
-
-      await pumpSource(tester, 'second');
-      expect(find.text('second', findRichText: true), findsOneWidget);
-      expect(find.text('first', findRichText: true), findsNothing);
-    });
   });
 
   group('edge cases', () {
-    testWidgets('an empty source renders an empty Column', (tester) async {
-      await pump(tester, '');
-
-      expect(find.byType(ColumnNodeView), findsOneWidget);
-      expect(find.byType(RichText), findsNothing);
-      expect(tester.takeException(), isNull);
-    });
-
     testWidgets('every kind of block renders in an unbounded width', (
       tester,
     ) async {

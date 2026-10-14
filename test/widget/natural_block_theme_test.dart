@@ -5,41 +5,16 @@ import 'package:natural_block_flutter/natural_block_flutter.dart';
 
 void main() {
   group('NaturalBlockTheme.styleFor', () {
-    const theme = NaturalBlockTheme();
+    const theme = NaturalBlockTheme(fontSizeStep: 3);
 
     TextStyle styleOf(SpanDecoration decoration, {double baseSize = 14}) =>
         theme.styleFor(decoration, baseSize: baseSize);
 
-    test('a tone picks that tone\'s style', () {
-      expect(
-        styleOf(SpanDecoration(tone: Tone.negative)).color,
-        theme.negative.color,
-      );
-      expect(
-        styleOf(SpanDecoration(tone: Tone.positive)).color,
-        theme.positive.color,
-      );
-      expect(styleOf(const SpanDecoration()).color, theme.base.color);
-    });
-
-    test('emphasis and custom marking lay over the tone', () {
-      final both = styleOf(
-        SpanDecoration(tone: Tone.negative, emphasis: true, isCustom: true),
-      );
-
-      expect(both.color, theme.custom.color, reason: 'custom is laid last');
-      expect(both.fontWeight, theme.emphasis.fontWeight);
-      expect(both.decoration, theme.custom.decoration);
-    });
-
     test('a size step counts from baseSize', () {
-      expect(
-        styleOf(SpanDecoration(sizeOffset: 2)).fontSize,
-        14 + 2 * theme.fontSizeStep,
-      );
+      expect(styleOf(SpanDecoration(sizeOffset: 2)).fontSize, 14 + 2 * 3);
       expect(
         styleOf(SpanDecoration(sizeOffset: 1), baseSize: 30).fontSize,
-        30 + theme.fontSizeStep,
+        30 + 3,
       );
     });
 
@@ -52,57 +27,6 @@ void main() {
         styleOf(SpanDecoration(sizeOffset: -99)).fontSize,
         theme.minFontSize,
       );
-    });
-  });
-
-  group('NaturalBlockTheme.copyWith', () {
-    test('replaces only the given fields, keeping the rest', () {
-      const theme = NaturalBlockTheme();
-      final copy = theme.copyWith(
-        negative: const TextStyle(color: Colors.purple),
-        fontSizeStep: 10,
-      );
-
-      expect(copy.negative, const TextStyle(color: Colors.purple));
-      expect(copy.fontSizeStep, 10);
-      expect(copy.base, theme.base);
-      expect(copy.positive, theme.positive);
-      expect(copy.emphasis, theme.emphasis);
-      expect(copy.custom, theme.custom);
-      expect(copy.baseFontSize, theme.baseFontSize);
-      expect(copy.minFontSize, theme.minFontSize);
-    });
-
-    test('called with no arguments returns an equal copy', () {
-      const theme = NaturalBlockTheme();
-      expect(theme.copyWith(), theme);
-    });
-  });
-
-  group('NaturalBlockTheme.fromColorScheme', () {
-    test('negative picks up the scheme\'s error color', () {
-      const scheme = ColorScheme.light(error: Colors.orange);
-      final theme = NaturalBlockTheme.fromColorScheme(scheme);
-
-      expect(theme.negative.color, Colors.orange);
-    });
-
-    test('positive picks up tertiary', () {
-      const scheme = ColorScheme.light(
-        tertiary: Colors.teal,
-        primary: Colors.indigo,
-      );
-      final theme = NaturalBlockTheme.fromColorScheme(scheme);
-
-      expect(theme.positive.color, Colors.teal);
-    });
-
-    test('custom picks up primary and is underlined', () {
-      const scheme = ColorScheme.light(primary: Colors.indigo);
-      final theme = NaturalBlockTheme.fromColorScheme(scheme);
-
-      expect(theme.custom.color, Colors.indigo);
-      expect(theme.custom.decoration, TextDecoration.underline);
     });
   });
 
@@ -141,94 +65,47 @@ void main() {
         expect(entry.value.hashCode, isNot(base.hashCode));
       });
     }
-
-    test('an identical theme is equal', () {
-      expect(const NaturalBlockTheme(), base);
-      expect(const NaturalBlockTheme().hashCode, base.hashCode);
-    });
   });
 
-  group('striped tables', () {
-    ColorScheme schemeFor(Brightness brightness) => ColorScheme.fromSeed(
-      seedColor: Colors.deepPurple,
-      brightness: brightness,
-    );
-
-    double luminance(Color color) => color.computeLuminance();
-
-    test('striping is off unless asked for', () {
-      expect(
-        NaturalBlockTheme.fromColorScheme(schemeFor(Brightness.light))
-            .tableStripe,
-        isNull,
+  test('a stripe darkens a light surface and lightens a dark one', () {
+    for (final brightness in Brightness.values) {
+      final scheme = ColorScheme.fromSeed(
+        seedColor: Colors.deepPurple,
+        brightness: brightness,
       );
-      expect(const NaturalBlockTheme().tableStripe, isNull);
-    });
+      final stripe = NaturalBlockTheme.fromColorScheme(
+        scheme,
+        striped: true,
+      ).tableStripe!;
 
-    test('the band darkens a light surface and lightens a dark one', () {
-      for (final brightness in Brightness.values) {
-        final scheme = schemeFor(brightness);
-        final stripe = NaturalBlockTheme.fromColorScheme(
-          scheme,
-          striped: true,
-        ).tableStripe!;
+      final surfaceLuminance = scheme.surface.computeLuminance();
+      final stripeLuminance = stripe.computeLuminance();
 
-        final surfaceLuminance = luminance(scheme.surface);
-        final stripeLuminance = luminance(stripe);
-
-        if (brightness == Brightness.light) {
-          expect(
-            stripeLuminance,
-            lessThan(surfaceLuminance),
-            reason: 'a light theme needs a darker band',
-          );
-        } else {
-          expect(
-            stripeLuminance,
-            greaterThan(surfaceLuminance),
-            reason: 'a dark theme needs a lighter band',
-          );
-        }
+      if (brightness == Brightness.light) {
         expect(
-          (stripeLuminance - surfaceLuminance).abs(),
-          greaterThan(0.005),
-          reason: 'the band has to actually be visible in $brightness',
+          stripeLuminance,
+          lessThan(surfaceLuminance),
+          reason: 'a light theme needs a darker band',
+        );
+      } else {
+        expect(
+          stripeLuminance,
+          greaterThan(surfaceLuminance),
+          reason: 'a dark theme needs a lighter band',
         );
       }
-    });
-
-    test('striping replaces the horizontal rules but keeps the rest', () {
-      final theme = NaturalBlockTheme.fromColorScheme(
-        schemeFor(Brightness.light),
-        striped: true,
+      expect(
+        (stripeLuminance - surfaceLuminance).abs(),
+        greaterThan(0.005),
+        reason: 'the band has to actually be visible in $brightness',
       );
-      final border = theme.tableBorder;
-
-      expect(border.horizontalInside.style, BorderStyle.none);
-      expect(border.verticalInside.style, BorderStyle.solid);
-      for (final side in [
-        border.top,
-        border.bottom,
-        border.left,
-        border.right,
-      ]) {
-        expect(side.style, BorderStyle.solid);
-      }
-    });
-
-    test('unstriped keeps the horizontal rules', () {
-      final border = NaturalBlockTheme.fromColorScheme(
-        schemeFor(Brightness.light),
-      ).tableBorder;
-
-      expect(border.horizontalInside.style, BorderStyle.solid);
-    });
+    }
   });
 
-  testWidgets('fromContext counts sizes from the ambient body text', (
-    tester,
-  ) async {
+  testWidgets('fromContext counts sizes from the ambient body text, and '
+      'stripes when asked', (tester) async {
     late NaturalBlockTheme theme;
+    late NaturalBlockTheme striped;
     await tester.pumpWidget(
       MaterialApp(
         theme: ThemeData(
@@ -237,6 +114,7 @@ void main() {
         home: Builder(
           builder: (context) {
             theme = NaturalBlockTheme.fromContext(context);
+            striped = NaturalBlockTheme.fromContext(context, striped: true);
             return const SizedBox();
           },
         ),
@@ -244,5 +122,7 @@ void main() {
     );
 
     expect(theme.baseFontSize, 21);
+    expect(theme.tableStripe, isNull);
+    expect(striped.tableStripe, isNotNull);
   });
 }

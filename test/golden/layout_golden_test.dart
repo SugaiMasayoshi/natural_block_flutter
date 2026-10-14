@@ -95,7 +95,7 @@ void main() {
   testWidgets('tables', (tester) async {
     await _scene(tester, 'tables', [
       ('~Item^Price|Apple^200|Banana^1~', null),
-      ('~|A^>B\n|C^DDDD\n~', null),
+      ('~|A^>BBBB\n|C^D\n|E^<F\n~', null),
       ('~a^b|c~', null),
       ('|=~A^B~', null),
       (
@@ -121,6 +121,7 @@ void main() {
       (long, const NaturalBlockTheme(rawScrollsHorizontally: true)),
       ('`no box`', const NaturalBlockTheme(rawDecoration: BoxDecoration())),
       ('`x`', const NaturalBlockTheme(base: TextStyle(fontSize: 24))),
+      ('`x`', const NaturalBlockTheme(raw: TextStyle(fontSize: 24))),
     ]);
   });
 
@@ -132,7 +133,7 @@ void main() {
       (':+one|:++two|:-down', null),
       (':!*+marked:!*+plain', null),
       (
-        ':+bigger plain',
+        ':!toned:! plain :+bigger',
         const NaturalBlockTheme(base: TextStyle(fontSize: 24)),
       ),
     ]);

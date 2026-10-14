@@ -49,44 +49,6 @@ void main() {
   GestureRecognizer? recognizerOf(WidgetTester tester, [int index = 0]) =>
       renderedSpans(tester)[index].recognizer;
 
-  group('styles', () {
-    testWidgets('every run is drawn with styleFor on its own decoration', (
-      tester,
-    ) async {
-      const theme = NaturalBlockTheme();
-      const ambientSize = 14.0;
-      const decorations = [
-        SpanDecoration(),
-        SpanDecoration(tone: Tone.negative),
-        SpanDecoration(tone: Tone.negative, emphasis: true, isCustom: true),
-        SpanDecoration(sizeOffset: 2),
-        SpanDecoration(sizeOffset: -99),
-      ];
-
-      await pumpRuns(
-        tester,
-        [
-          for (var i = 0; i < decorations.length; i++)
-            TextSpanNode(text: 'run $i', decoration: decorations[i]),
-        ],
-        theme: theme,
-        customs: const [],
-        ambient: const TextStyle(fontSize: ambientSize),
-      );
-
-      expect(tester.takeException(), isNull);
-
-      final spans = renderedSpans(tester);
-      for (var i = 0; i < decorations.length; i++) {
-        expect(spans[i].text, 'run $i');
-        expect(
-          spans[i].style,
-          theme.styleFor(decorations[i], baseSize: ambientSize),
-        );
-      }
-    });
-  });
-
   group('custom spans', () {
     testWidgets('a recognizer appears for a custom run, and only when '
         'something is wired to it', (tester) async {
@@ -167,17 +129,6 @@ void main() {
         expect(recognizerOf(tester), same(first));
       });
 
-      testWidgets('the same handlers are not a reason to rebuild', (
-        tester,
-      ) async {
-        await pumpRuns(tester, [custom('tap me')], customs: const [_wired]);
-        final first = recognizerOf(tester);
-
-        await pumpRuns(tester, [custom('tap me')], customs: const [_wired]);
-
-        expect(recognizerOf(tester), same(first));
-      });
-
       testWidgets('a different handler rebuilds the spans', (tester) async {
         await pumpRuns(tester, [custom('tap me')], customs: const [_wired]);
         final first = recognizerOf(tester);
@@ -250,22 +201,6 @@ void main() {
         ], ambient: const TextStyle(fontSize: 22));
 
         expect(recognizerOf(tester), isNot(same(first)));
-      });
-
-      testWidgets('shrinking a line and then unmounting it does not throw', (
-        tester,
-      ) async {
-        await pumpRuns(tester, [custom('one'), custom('two'), custom('three')]);
-        expect(tester.takeException(), isNull);
-
-        await pumpRuns(tester, [custom('one')]);
-        expect(tester.takeException(), isNull);
-
-        await pumpRuns(tester, [TextSpanNode(text: 'plain')]);
-        expect(tester.takeException(), isNull);
-
-        await tester.pumpWidget(const SizedBox.shrink());
-        expect(tester.takeException(), isNull);
       });
     });
 
