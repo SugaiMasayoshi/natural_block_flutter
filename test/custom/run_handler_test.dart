@@ -23,7 +23,7 @@ void main() {
     ),
   );
 
-  group('run handlers', () {
+  group('Drawing a custom run yourself', () {
     testWidgets('a handler may rewrite a run, and one that declines leaves it '
         'to the next', (tester) async {
       await tester.pumpWidget(

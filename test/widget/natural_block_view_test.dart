@@ -13,7 +13,7 @@ RunRendering? _links(String text, TextStyle style, NaturalBlockTheme theme) =>
     tappableText(text, style, onTap: _ignore);
 
 void main() {
-  group('text selection', () {
+  group('Selectable text', () {
     testWidgets('a line containing a WidgetSpan still registers', (
       tester,
     ) async {
@@ -236,7 +236,7 @@ void main() {
     });
   });
 
-  group('edge cases', () {
+  group('Tables', () {
     testWidgets('every kind of block renders in an unbounded width', (
       tester,
     ) async {

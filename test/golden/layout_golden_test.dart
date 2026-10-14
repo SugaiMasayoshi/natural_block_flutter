@@ -97,6 +97,7 @@ void main() {
       ('~Item^Price|Apple^200|Banana^1~', null),
       ('~|A^>BBBB\n|C^D\n|E^<F\n~', null),
       ('~a^b|c~', null),
+      ('~one cell~', null),
       ('|=~A^B~', null),
       (
         '~a^b|c^d|e^f~',

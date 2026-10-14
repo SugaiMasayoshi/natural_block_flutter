@@ -3,6 +3,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:natural_block/natural_block.dart';
 import 'package:natural_block_flutter/natural_block_flutter.dart';
 
+import '../rendered_spans.dart';
+
 Widget _row(RowNode node, NaturalBlockScope scope) => const SizedBox();
 Widget _column(ColumnNode node, NaturalBlockScope scope) => const SizedBox();
 Widget _table(TableNode node, NaturalBlockScope scope) => const SizedBox();
@@ -33,7 +35,7 @@ void main() {
     }
   });
 
-  group('cells are built through the builders', () {
+  group('nested nodes are drawn through the scope', () {
     Future<void> pump(
       WidgetTester tester,
       String source,
@@ -53,6 +55,29 @@ void main() {
 
       expect(find.byType(Placeholder), findsNWidgets(2));
       expect(find.byType(TextNodeView), findsNothing);
+    });
+
+    testWidgets('the handlers reach a run in a row cell and a table cell', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: NaturalBlockView(
+            source: '|x^:@a:@|~:@b:@^c~',
+            customs: [
+              (text, style, theme) => tappableText(text, style, onTap: (_) {}),
+            ],
+          ),
+        ),
+      );
+
+      final paragraphs = find.byType(RichText).evaluate().length;
+      final tappable = [
+        for (var i = 0; i < paragraphs; i++)
+          for (final span in renderedSpans(tester, index: i))
+            if (span.recognizer != null) span.text,
+      ];
+      expect(tappable, ['a', 'b']);
     });
 
     testWidgets('a table cell is a tableCell', (tester) async {

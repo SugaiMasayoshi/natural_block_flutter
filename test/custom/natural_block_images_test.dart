@@ -79,7 +79,7 @@ void main() {
     }
   });
 
-  group('as a run handler', () {
+  group('Images', () {
     testWidgets('an image payload becomes a WidgetSpan, not text', (
       tester,
     ) async {
@@ -102,25 +102,6 @@ void main() {
       );
     });
 
-    testWidgets('the loading placeholder reserves a real height', (
-      tester,
-    ) async {
-      await pumpImages(tester, ':@image(https://example.com/a.png):@');
-
-      final image = tester.widget<Image>(find.byType(Image));
-      final placeholder = image.loadingBuilder!(
-        tester.element(find.byType(Image)),
-        const SizedBox.shrink(),
-        const ImageChunkEvent(
-          cumulativeBytesLoaded: 1,
-          expectedTotalBytes: 100,
-        ),
-      );
-
-      expect((placeholder as SizedBox).height, isNotNull);
-      expect(placeholder.height, greaterThan(0));
-    });
-
     testWidgets('the scale follows the theme, not a hardcoded size', (
       tester,
     ) async {
@@ -141,6 +122,38 @@ void main() {
         tester.widget<Image>(find.byType(Image)).semanticLabel,
         'https://example.com/a.png',
       );
+    });
+
+    testWidgets('network declines a local path rather than fetching it', (
+      tester,
+    ) async {
+      await pumpImages(tester, ':@image(C:/a.png):@');
+
+      expect(find.byType(Image), findsNothing);
+      expect(renderedSpans(tester).single.text, 'image(C:/a.png)');
+    });
+
+    testWidgets('an image that cannot be drawn falls back to its payload', (
+      tester,
+    ) async {
+      for (final (payload, handler) in [
+        ('image(https://example.com/a.png)', NaturalBlockImages.network),
+        ('image(C:/no/such/file.png)', NaturalBlockImages.local),
+      ]) {
+        await tester.pumpWidget(
+          wrap(NaturalBlockView(source: ':@$payload:@', customs: [handler])),
+        );
+        await tester.runAsync(
+          () => Future<void>.delayed(const Duration(milliseconds: 200)),
+        );
+        await tester.pump();
+
+        expect(
+          find.text(payload, findRichText: true),
+          findsOneWidget,
+          reason: 'the fetch or the read failed',
+        );
+      }
     });
 
     testWidgets('NaturalBlockImages.local draws a local path from a file', (

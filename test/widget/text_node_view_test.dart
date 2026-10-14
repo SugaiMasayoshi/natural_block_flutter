@@ -49,7 +49,7 @@ void main() {
   GestureRecognizer? recognizerOf(WidgetTester tester, [int index = 0]) =>
       renderedSpans(tester)[index].recognizer;
 
-  group('custom spans', () {
+  group('Custom text', () {
     testWidgets('a recognizer appears for a custom run, and only when '
         'something is wired to it', (tester) async {
       await pumpRuns(tester, [custom('tap me')]);
@@ -185,7 +185,7 @@ void main() {
           spans[0].style!.fontSize,
           reason: 'the raw run moves with the line or not at all',
         );
-        expect(spans[1].style!.fontFamily, theme.raw.fontFamily);
+        expect(spans[1].style!.fontFamily, 'monospace');
       });
 
       testWidgets('a changed ambient text style rebuilds the spans', (
