@@ -85,6 +85,9 @@ void main() {
       ('a\nb\nc^d', null),
       ('a^^c', null),
       ('|<left^>right', null),
+      ('|<a^=b^>c', null),
+      ('|=a^bb^ccc', null),
+      ('|=centred cells that wrap^>end', null),
     ]);
   });
 
