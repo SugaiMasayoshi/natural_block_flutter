@@ -40,16 +40,14 @@ Future<void> _scene(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   mainAxisSize: MainAxisSize.min,
+                  spacing: 8,
                   children: [
                     for (final (source, theme) in samples)
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 8),
-                        child: DecoratedBox(
-                          decoration: BoxDecoration(
-                            border: Border.all(color: Colors.black26),
-                          ),
-                          child: NaturalBlockView(source: source, theme: theme),
+                      DecoratedBox(
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.black26),
                         ),
+                        child: NaturalBlockView(source: source, theme: theme),
                       ),
                   ],
                 ),
