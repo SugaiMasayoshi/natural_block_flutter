@@ -14,7 +14,7 @@ RunRendering? _links(String text, TextStyle style, NaturalBlockTheme theme) =>
 
 void main() {
   group('Selectable text', () {
-    testWidgets('a line containing a WidgetSpan still registers', (
+    testWidgets('a line registers, a WidgetSpan in it included', (
       tester,
     ) async {
       await tester.pumpWidget(
@@ -32,7 +32,10 @@ void main() {
 
       final text = tester.widget<RichText>(find.byType(RichText));
       expect(text.selectionRegistrar, isNotNull);
-      expect(text.text.toPlainText(), contains('￼'));
+      expect(
+        text.text.toPlainText(),
+        contains(String.fromCharCode(PlaceholderSpan.placeholderCodeUnit)),
+      );
       expect(
         text.text.toPlainText(includePlaceholders: false),
         'before  after',
