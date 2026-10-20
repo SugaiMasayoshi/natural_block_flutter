@@ -1,4 +1,6 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:natural_block_flutter/natural_block_flutter.dart';
 
@@ -14,45 +16,35 @@ RunRendering? _links(String text, TextStyle style, NaturalBlockTheme theme) =>
 
 void main() {
   group('Selectable text', () {
-    testWidgets('a line registers, a WidgetSpan in it included', (
+    testWidgets('a drag selects across cells, rows, a box and a raw block', (
       tester,
     ) async {
+      SelectedContent? selected;
       await tester.pumpWidget(
         MaterialApp(
           home: SelectionArea(
-            child: NaturalBlockView(
-              source: 'before :@boxed:@ after',
-              customs: const [_boxed],
+            onSelectionChanged: (content) => selected = content,
+            child: const NaturalBlockView(
+              source: 'a^b|c :@x:@ d\n`raw`\ne',
+              customs: [_boxed],
             ),
           ),
         ),
       );
 
+      final paragraphs = find.byType(RichText);
+      final drag = await tester.startGesture(
+        tester.getTopLeft(paragraphs.first) + const Offset(1, 1),
+        kind: PointerDeviceKind.mouse,
+      );
+      await drag.moveTo(
+        tester.getBottomRight(paragraphs.last) - const Offset(1, 1),
+      );
+      await drag.up();
+      await tester.pump();
+
       expect(tester.takeException(), isNull);
-
-      final text = tester.widget<RichText>(find.byType(RichText));
-      expect(text.selectionRegistrar, isNotNull);
-      expect(
-        text.text.toPlainText(),
-        contains(String.fromCharCode(PlaceholderSpan.placeholderCodeUnit)),
-      );
-      expect(
-        text.text.toPlainText(includePlaceholders: false),
-        'before  after',
-      );
-    });
-
-    testWidgets('a raw block registers', (tester) async {
-      await tester.pumpWidget(
-        const MaterialApp(
-          home: SelectionArea(child: NaturalBlockView(source: '`copy me`')),
-        ),
-      );
-
-      expect(
-        tester.widget<RichText>(find.byType(RichText)).selectionRegistrar,
-        isNotNull,
-      );
+      expect(selected!.plainText.replaceAll(RegExp(r'\s'), ''), 'abcdrawe');
     });
   });
 
