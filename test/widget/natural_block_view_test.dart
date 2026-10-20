@@ -49,19 +49,6 @@ void main() {
   });
 
   group('the document is drawn once per source, not once per frame', () {
-    ({NaturalBlockBuilders builders, List<int> builds}) counting() {
-      final builds = <int>[];
-      return (
-        builds: builds,
-        builders: NaturalBlockBuilders(
-          text: (node, scope) {
-            builds.add(1);
-            return const SizedBox.shrink();
-          },
-        ),
-      );
-    }
-
     testWidgets('a handler reading an inherited widget sees it change', (
       tester,
     ) async {
@@ -189,7 +176,13 @@ void main() {
     });
 
     testWidgets('an ancestor rebuild does not re-parse', (tester) async {
-      final counter = counting();
+      var builds = 0;
+      final builders = NaturalBlockBuilders(
+        text: (node, scope) {
+          builds++;
+          return const SizedBox.shrink();
+        },
+      );
       final rebuild = ValueNotifier<int>(0);
       addTearDown(rebuild.dispose);
 
@@ -200,18 +193,14 @@ void main() {
             builder: (context, value, _) => Column(
               children: [
                 Text('rebuild $value'),
-                NaturalBlockView(
-                  source: 'one|two|three',
-                  builders: counter.builders,
-                ),
+                NaturalBlockView(source: 'one|two|three', builders: builders),
               ],
             ),
           ),
         ),
       );
 
-      final afterFirst = counter.builds.length;
-      expect(afterFirst, 3, reason: 'three blocks on the first build');
+      expect(builds, 3, reason: 'three blocks on the first build');
 
       for (var i = 1; i <= 5; i++) {
         rebuild.value = i;
@@ -224,8 +213,8 @@ void main() {
         reason: 'the ancestor really did rebuild',
       );
       expect(
-        counter.builds.length,
-        afterFirst,
+        builds,
+        3,
         reason:
             'the view hands back the very same tree, so nothing below it is '
             'built again -- not the parse, and not the widgets either',
