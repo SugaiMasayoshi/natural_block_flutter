@@ -197,12 +197,14 @@ void main() {
         MaterialApp(
           home: ValueListenableBuilder<int>(
             valueListenable: rebuild,
-            builder: (context, value, _) => Padding(
-              padding: EdgeInsets.all(value.toDouble()),
-              child: NaturalBlockView(
-                source: 'one|two|three',
-                builders: counter.builders,
-              ),
+            builder: (context, value, _) => Column(
+              children: [
+                Text('rebuild $value'),
+                NaturalBlockView(
+                  source: 'one|two|three',
+                  builders: counter.builders,
+                ),
+              ],
             ),
           ),
         ),
@@ -217,8 +219,8 @@ void main() {
       }
 
       expect(
-        tester.widget<Padding>(find.byType(Padding).first).padding,
-        const EdgeInsets.all(5),
+        find.text('rebuild 5'),
+        findsOneWidget,
         reason: 'the ancestor really did rebuild',
       );
       expect(
