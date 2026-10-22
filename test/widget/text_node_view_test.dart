@@ -8,13 +8,18 @@ import '../rendered_spans.dart';
 
 // 【解説】カスタム run をそのまま文字の span にするだけのハンドラ2つ。中身は同じだが別の関数なので、
 // 【解説】「ハンドラが変わった」状態を作れる。認識器は持たない。
-RunRendering? _plain(String text, TextStyle style, NaturalBlockTheme theme) =>
-    (span: TextSpan(text: text, style: style), dispose: () {});
+RunRendering? _plain(
+  String text,
+  TextStyle style,
+  NaturalBlockTheme theme,
+  SpanDecoration decoration,
+) => (span: TextSpan(text: text, style: style), dispose: () {});
 
 RunRendering? _plainElsewhere(
   String text,
   TextStyle style,
   NaturalBlockTheme theme,
+  SpanDecoration decoration,
 ) => (span: TextSpan(text: text, style: style), dispose: () {});
 
 void main() {
@@ -164,7 +169,8 @@ void main() {
   testWidgets('a tap interrupted by a rebuild still fires', (tester) async {
     final tapped = <String>[];
     final customs = <RunHandler>[
-      (text, style, theme) => tappableText(text, style, onTap: tapped.add),
+      (text, style, theme, decoration) =>
+          tappableText(text, style, onTap: tapped.add),
     ];
 
     // 【解説】pumpRuns は毎回新しい TextNodeView を作るので、呼ぶたびに再構築が起きる。

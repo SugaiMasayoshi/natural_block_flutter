@@ -1,6 +1,7 @@
 // 【解説】読む順番 7/9：画像ハンドラ。ハンドラの決まりを知ってから読むと分かりやすい。
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:natural_block/natural_block.dart';
 import 'package:natural_block_flutter/natural_block_flutter.dart';
 
 import '../rendered_spans.dart';
@@ -8,8 +9,12 @@ import '../rendered_spans.dart';
 void _ignore(String _) {}
 
 // 【解説】どんなカスタム run でも押せる文字にするハンドラ（画像が辞退したときの受け皿）。
-RunRendering? _links(String text, TextStyle style, NaturalBlockTheme theme) =>
-    tappableText(text, style, onTap: _ignore);
+RunRendering? _links(
+  String text,
+  TextStyle style,
+  NaturalBlockTheme theme,
+  SpanDecoration decoration,
+) => tappableText(text, style, onTap: _ignore);
 
 void main() {
   Widget wrap(Widget child) => MaterialApp(
@@ -115,19 +120,17 @@ void main() {
       );
     });
 
-    // 【解説】scale はテーマの基準の大きさから決まること。基準 28、周りの文字 14 なら、
-    // 【解説】28 / 14 = 2（画像は半分の大きさで描かれる）。
-    testWidgets('the scale follows the theme, not a hardcoded size', (
-      tester,
-    ) async {
-      await pumpImages(
-        tester,
-        ':@image(https://example.com/a.png):@',
-        theme: const NaturalBlockTheme(baseFontSize: 28),
-      );
+    // 【解説】画像は段が無ければ自分の大きさ（scale 1）で描かれ、周りの文字の大きさには左右されない。
+    // 【解説】段1つごとに fontSizeStep ÷ baseFontSize の割合で大きくなる（14 と 4 なら 14/18）。
+    // 【解説】scale は割り算に使われるので、1 より小さいと画像は大きく描かれる。
+    test('the scale follows only the steps', () {
+      const theme = NaturalBlockTheme(baseFontSize: 14, fontSizeStep: 4);
 
-      final image = tester.widget<Image>(find.byType(Image).first);
-      expect((image.image as NetworkImage).scale, 2);
+      expect(NaturalBlockImages.scaleOf(const SpanDecoration(), theme), 1);
+      expect(
+        NaturalBlockImages.scaleOf(SpanDecoration(sizeOffset: 1), theme),
+        14 / 18,
+      );
     });
 
     // 【解説】画像に読み上げ用のラベル（元の URL）が付くこと。
@@ -197,7 +200,7 @@ void main() {
       );
 
       final image = tester.widget<Image>(find.byType(Image));
-      expect((image.image as FileImage).scale, 2);
+      expect((image.image as FileImage).scale, 1);
       expect(image.semanticLabel, r'C:\a.png');
     });
 

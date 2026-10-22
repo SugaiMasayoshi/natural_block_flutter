@@ -121,7 +121,7 @@ Passing a theme at all is opting out of the ambient one. A `NaturalBlockView` gi
 
 Three more fields control what a size step is *worth*, since `natural_block` only reports a relative offset and never an absolute size:
 
-* `baseFontSize` — the size to scale from when no ambient `DefaultTextStyle` supplies one. Defaults to `14`.
+* `baseFontSize` — the size to scale from when no ambient `DefaultTextStyle` supplies one, and what an image's size steps are measured against. Defaults to `14`.
 * `fontSizeStep` — logical pixels added per `:+` (or removed per `:-`). Defaults to `4`.
 * `minFontSize` — the floor. `:-----` would otherwise be able to drive the size to zero or below, which Flutter asserts on. Defaults to `1`.
 
@@ -219,7 +219,7 @@ void onCustomTap(String text) {
   }
 }
 
-RunRendering? links(text, style, theme) =>
+RunRendering? links(text, style, theme, decoration) =>
     tappableText(text, style, onTap: onCustomTap);
 
 NaturalBlockView(source: source, customs: const [links]);
@@ -236,7 +236,7 @@ A custom run is offered to each handler in `customs` until one claims it, and a 
 A handler answers with a span to put in the line and a `dispose` to release whatever that span carries:
 
 ```dart
-RunRendering? mentions(text, style, theme) {
+RunRendering? mentions(text, style, theme, decoration) {
   if (!text.startsWith('@')) return null; // not mine -- offer it to the next
 
   final recognizer = TapGestureRecognizer()..onTap = () => openProfile(text);
@@ -264,7 +264,7 @@ Returning a `TextSpan` rather than a widget is what keeps a long run wrapping: a
 
 **Keep the list, and what it holds, stable.** A `const` list of named handlers compares equal across builds; one written out afresh inside a `build` never does, which redraws every line and loses a tap held across the redraw. A handler of your own should be a top-level function or a method of your state for the same reason.
 
-The `style` you receive is what the span *would* have been drawn with, including everything the surrounding markup asked for, and with its `fontSize` always resolved to a concrete value -- reading it is what lets `:++` / `:--` reach content that is not text at all. `theme` comes along so you can work out what that size means relative to an unmarked run (`theme.baseFontSize`, `theme.fontSizeStep`) rather than hardcoding a reference.
+The `style` you receive is what the span *would* have been drawn with, including everything the surrounding markup asked for, and with its `fontSize` always resolved to a concrete value. `decoration` is what the source said about the run -- its size steps, tone, emphasis -- so content that is not text can follow `:++` / `:--` without knowing the size of the text around it: `NaturalBlockImages.scaleOf(decoration, theme)` is 1 with no step and moves by `fontSizeStep` against `baseFontSize` for each one.
 
 A `WidgetSpan` you return is laid out with the paragraph's width but an **unbounded height**, so give its child a bounded height -- a vertically greedy one throws from inside the paragraph. Block alignment (`|^`, `=>`) reaches it for free, since that moves the whole block.
 
@@ -308,7 +308,7 @@ The convention does not fork — it is still `image(...)`, and only the *resolut
 A relative payload (`image(assets/a.png)`) is declined by both, since resolving one needs an asset bundle or a base that only the app has. Write a handler for those and put it in front; the ones behind take whatever it declines:
 
 ```dart
-RunRendering? assets(text, style, theme) {
+RunRendering? assets(text, style, theme, decoration) {
   final source = NaturalBlockImages.sourceOf(text);
   if (source == null ||
       NaturalBlockImages.kindOf(source) != ImageSourceKind.relative) {

@@ -3,20 +3,29 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:natural_block/natural_block.dart';
 import 'package:natural_block_flutter/natural_block_flutter.dart';
 
 import '../rendered_spans.dart';
 
 // 【解説】カスタム run を 20×10 の箱（ウィジェット）として描くハンドラ。選択のテストで使う。
-RunRendering? _boxed(String text, TextStyle style, NaturalBlockTheme theme) =>
-    widgetRun(const SizedBox(width: 20, height: 10));
+RunRendering? _boxed(
+  String text,
+  TextStyle style,
+  NaturalBlockTheme theme,
+  SpanDecoration decoration,
+) => widgetRun(const SizedBox(width: 20, height: 10));
 
 // 【解説】押されても何もしないタップ処理。
 void _ignore(String _) {}
 
 // 【解説】どんなカスタム run でも押せる文字にするハンドラ。
-RunRendering? _links(String text, TextStyle style, NaturalBlockTheme theme) =>
-    tappableText(text, style, onTap: _ignore);
+RunRendering? _links(
+  String text,
+  TextStyle style,
+  NaturalBlockTheme theme,
+  SpanDecoration decoration,
+) => tappableText(text, style, onTap: _ignore);
 
 void main() {
   // 【解説】README の「Selectable text」の約束。SelectionArea で包むと文字を選択・コピーできること。
@@ -71,6 +80,7 @@ void main() {
         String text,
         TextStyle style,
         NaturalBlockTheme theme,
+        SpanDecoration decoration,
       ) => widgetRun(
         Builder(
           builder: (context) =>
@@ -129,6 +139,7 @@ void main() {
         String text,
         TextStyle style,
         NaturalBlockTheme theme,
+        SpanDecoration decoration,
       ) {
         calls++;
         return null;

@@ -1,4 +1,5 @@
 import 'package:flutter/widgets.dart';
+import 'package:natural_block/natural_block.dart';
 
 import '../widget/natural_block_theme.dart';
 import 'local_file_image_stub.dart'
@@ -16,6 +17,7 @@ abstract final class NaturalBlockImages {
     String text,
     TextStyle style,
     NaturalBlockTheme theme,
+    SpanDecoration decoration,
   ) {
     final source = sourceOf(text);
     if (source == null || kindOf(source) != ImageSourceKind.network) {
@@ -26,9 +28,7 @@ abstract final class NaturalBlockImages {
     return widgetRun(
       Image.network(
         source,
-        // `Image.scale` says how many of the image's own pixels go in a
-        // logical one, so it divides: less than 1 draws the image larger.
-        scale: theme.baseFontSize / runSize,
+        scale: scaleOf(decoration, theme),
         semanticLabel: source,
         errorBuilder: (_, _, _) => Text(text, style: style),
         loadingBuilder: (context, child, progress) =>
@@ -43,17 +43,25 @@ abstract final class NaturalBlockImages {
     String text,
     TextStyle style,
     NaturalBlockTheme theme,
+    SpanDecoration decoration,
   ) {
     final source = sourceOf(text);
     if (source == null || kindOf(source) != ImageSourceKind.file) return null;
 
     final image = localFileImage(
       source,
-      scale: theme.baseFontSize / (style.fontSize ?? theme.baseFontSize),
+      scale: scaleOf(decoration, theme),
       errorBuilder: (_, _, _) => Text(text, style: style),
     );
     return image == null ? null : widgetRun(image);
   }
+
+  /// `Image.scale` for a run: 1 with no step, so an image keeps its own size,
+  /// and each `:+` or `:-` moves it by `fontSizeStep` against `baseFontSize`.
+  /// It divides, so less than 1 draws the image larger.
+  static double scaleOf(SpanDecoration decoration, NaturalBlockTheme theme) =>
+      theme.baseFontSize /
+      theme.styleFor(decoration, baseSize: theme.baseFontSize).fontSize!;
 
   static const String _prefix = 'image(';
 

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widget_previews.dart';
+import 'package:natural_block/natural_block.dart';
 import 'package:natural_block_flutter/natural_block_flutter.dart';
 
 /// Reached by key rather than by a `BuildContext`: a handler has none, and what
@@ -10,8 +11,12 @@ void _announce(String text) => _messenger.currentState?.showSnackBar(
   SnackBar(content: Text('タップされたアクション: $text')),
 );
 
-RunRendering? _links(String text, TextStyle style, NaturalBlockTheme theme) =>
-    tappableText(text, style, onTap: _announce);
+RunRendering? _links(
+  String text,
+  TextStyle style,
+  NaturalBlockTheme theme,
+  SpanDecoration decoration,
+) => tappableText(text, style, onTap: _announce);
 
 /// Held as a const list so it compares equal across builds: one written out
 /// afresh each time would redraw every line, and lose a tap held across it.

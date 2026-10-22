@@ -98,7 +98,7 @@ typedef _SpanInputs = ({
         RunRendering? claimed;
         if (run.decoration.isCustom) {
           for (final handler in from.customs) {
-            claimed = handler(text, style, theme);
+            claimed = handler(text, style, theme, run.decoration);
             if (claimed != null) break;
           }
         }

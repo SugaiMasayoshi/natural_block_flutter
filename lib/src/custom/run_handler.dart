@@ -1,5 +1,6 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/widgets.dart';
+import 'package:natural_block/natural_block.dart';
 
 import '../widget/natural_block_theme.dart';
 
@@ -30,11 +31,13 @@ RunRendering widgetRun(
 
 /// Answers how one custom run is drawn, or null to leave it to the next
 /// handler. [style] is what the run would have been drawn with, its
-/// `fontSize` always resolved.
+/// `fontSize` always resolved, and [decoration] is what the source said about
+/// the run.
 typedef RunHandler = RunRendering? Function(
   String text,
   TextStyle style,
   NaturalBlockTheme theme,
+  SpanDecoration decoration,
 );
 
 /// [text] drawn as tappable text, which is what a URL wants.
@@ -43,7 +46,7 @@ typedef RunHandler = RunRendering? Function(
 /// your own supplies it --
 ///
 /// ```dart
-/// RunRendering? links(String text, TextStyle style, NaturalBlockTheme theme) =>
+/// RunRendering? links(String text, TextStyle style, NaturalBlockTheme theme, SpanDecoration decoration) =>
 ///     tappableText(text, style, onTap: openUrl);
 /// ```
 ///

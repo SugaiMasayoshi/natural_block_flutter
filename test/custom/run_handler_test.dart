@@ -2,6 +2,7 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:natural_block/natural_block.dart';
 import 'package:natural_block_flutter/natural_block_flutter.dart';
 
 import '../rendered_spans.dart';
@@ -14,6 +15,7 @@ RunRendering? _mentions(
   String text,
   TextStyle style,
   NaturalBlockTheme theme,
+  SpanDecoration decoration,
 ) => text.startsWith('user(') && text.endsWith(')')
     ? (
         span: TextSpan(text: text.substring(5, text.length - 1), style: style),
@@ -43,7 +45,7 @@ void main() {
           NaturalBlockView(
             source: ':@tap me:@ plain',
             customs: [
-              (text, style, theme) =>
+              (text, style, theme, decoration) =>
                   tappableText(text, style, onTap: tapped.add),
             ],
           ),
@@ -98,13 +100,22 @@ void main() {
       tester,
     ) async {
       var asked = 0;
-      RunRendering? second(String text, TextStyle style, NaturalBlockTheme _) {
+      RunRendering? second(
+        String text,
+        TextStyle style,
+        NaturalBlockTheme _,
+        SpanDecoration decoration,
+      ) {
         asked++;
         return (span: TextSpan(text: 'second'), dispose: () {});
       }
 
-      RunRendering? first(String text, TextStyle style, NaturalBlockTheme _) =>
-          (span: TextSpan(text: 'first'), dispose: () {});
+      RunRendering? first(
+        String text,
+        TextStyle style,
+        NaturalBlockTheme _,
+        SpanDecoration decoration,
+      ) => (span: TextSpan(text: 'first'), dispose: () {});
 
       await tester.pumpWidget(
         MaterialApp(
@@ -127,6 +138,7 @@ void main() {
         String text,
         TextStyle style,
         NaturalBlockTheme theme,
+        SpanDecoration decoration,
       ) =>
           (span: TextSpan(text: text, style: style), dispose: () => released++);
 
