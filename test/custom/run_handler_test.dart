@@ -1,4 +1,5 @@
 // 【解説】読む順番 6/9：カスタム run のハンドラの決まり（順番・辞退・解放）。
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:natural_block_flutter/natural_block_flutter.dart';
@@ -27,6 +28,48 @@ void main() {
       child: child,
     ),
   );
+
+  // 【解説】README の「Custom text」と「Semantics」の約束。tappableText で描いた run だけが押せて
+  // 【解説】読み上げられ、押すとその run の文字が onTap に渡る。ハンドラが無ければ下線は付くが、押せず
+  // 【解説】読み上げもされない（押せないものを押せると伝えないため）。
+  // 【解説】`.onTap!()` は認識器のタップ処理を直接呼ぶ（実際の指の操作は通さない）。
+  group('tappableText', () {
+    testWidgets('makes only the custom run tappable, and reports its text', (
+      tester,
+    ) async {
+      final tapped = <String>[];
+      await tester.pumpWidget(
+        wrap(
+          NaturalBlockView(
+            source: ':@tap me:@ plain',
+            customs: [
+              (text, style, theme) =>
+                  tappableText(text, style, onTap: tapped.add),
+            ],
+          ),
+        ),
+      );
+
+      final spans = renderedSpans(tester);
+      expect(spans.last.recognizer, isNull, reason: 'not custom');
+      expect(spans.first.semanticsLabel, 'tap me');
+
+      (spans.first.recognizer! as TapGestureRecognizer).onTap!();
+      expect(tapped, ['tap me']);
+    });
+
+    testWidgets('with no handler a custom run is neither tappable nor '
+        'announced', (tester) async {
+      await tester.pumpWidget(
+        wrap(const NaturalBlockView(source: ':@tap me:@')),
+      );
+
+      final span = renderedSpans(tester).single;
+      expect(span.style!.decoration, TextDecoration.underline);
+      expect(span.recognizer, isNull);
+      expect(span.semanticsLabel, isNull);
+    });
+  });
 
   // 【解説】README の「Drawing a custom run yourself」の約束。ハンドラは順に聞かれ、null で辞退し、
   // 【解説】最初に答えたものが描き、返した dispose は一度だけ呼ばれる。
