@@ -181,10 +181,16 @@ void main() {
         reason: 'customs',
       );
 
-      const sized = NaturalBlockTheme(custom: TextStyle(fontSize: 33));
+      const sized = NaturalBlockTheme(
+        custom: TextStyle(color: Color(0xFF123456)),
+      );
 
       await tester.pumpWidget(view(theme: sized));
-      expect(renderedSpans(tester).single.style!.fontSize, 33, reason: 'theme');
+      expect(
+        renderedSpans(tester).single.style!.color,
+        const Color(0xFF123456),
+        reason: 'theme',
+      );
 
       await tester.pumpWidget(
         view(

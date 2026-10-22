@@ -24,9 +24,10 @@ void main() {
       );
     });
 
-    // 【解説】段が0なら大きさを決めない（null）こと。周りの大きさがそのまま使われる。
-    test('no step leaves the size unstated', () {
-      expect(styleOf(const SpanDecoration()).fontSize, isNull);
+    // 【解説】段が0なら baseSize そのままの大きさで描くこと（null にして周りに任せない）。
+    test('no step draws at baseSize', () {
+      expect(styleOf(const SpanDecoration()).fontSize, 14);
+      expect(styleOf(const SpanDecoration(), baseSize: 30).fontSize, 30);
     });
 
     // 【解説】`:-` を何段重ねても minFontSize より小さくならないこと（0やマイナスにならない）。

@@ -112,8 +112,9 @@ class NaturalBlockTheme {
   }
 
   /// The style one run draws with: its tone, then emphasis, then custom
-  /// marking, at the size its `:+` and `:-` ask for. [baseSize] is what the
-  /// sizes count from.
+  /// marking, at [baseSize] moved by its `:+` and `:-` steps. The size comes
+  /// only from these: a `fontSize` in the tone, emphasis or custom styles is
+  /// not used.
   TextStyle styleFor(SpanDecoration decoration, {required double baseSize}) =>
       switch (decoration.tone) {
             Tone.negative => negative,
@@ -123,13 +124,11 @@ class NaturalBlockTheme {
           .merge(decoration.emphasis ? emphasis : null)
           .merge(decoration.isCustom ? custom : null)
           .copyWith(
-            // Unstated without a step; clamped so `:-` never reaches zero.
-            fontSize: decoration.sizeOffset == 0
-                ? null
-                : max(
-                    minFontSize,
-                    baseSize + decoration.sizeOffset * fontSizeStep,
-                  ),
+            // Clamped so `:-` never reaches zero.
+            fontSize: max(
+              minFontSize,
+              baseSize + decoration.sizeOffset * fontSizeStep,
+            ),
           );
 
   /// This theme with the given fields replaced. An omitted argument keeps the

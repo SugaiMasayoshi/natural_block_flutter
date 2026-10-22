@@ -97,10 +97,8 @@ typedef _SpanInputs = ({
 
         RunRendering? claimed;
         if (run.decoration.isCustom) {
-          // `styleFor` leaves the size unstated when the source asked for no step.
-          final offered = style.copyWith(fontSize: style.fontSize ?? baseSize);
           for (final handler in from.customs) {
-            claimed = handler(text, offered, theme);
+            claimed = handler(text, style, theme);
             if (claimed != null) break;
           }
         }
