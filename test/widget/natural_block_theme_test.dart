@@ -1,4 +1,6 @@
 // 【解説】読む順番 4/9：テーマ。装飾がどの書式になるか（styleFor）。次の行のテストの前提。
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:natural_block/natural_block.dart';
@@ -80,7 +82,7 @@ void main() {
     }
   });
 
-  // 【解説】縞の色が、明るいテーマでは背景より暗く、暗いテーマでは背景より明るいこと。差が小さすぎて
+  // 【解説】縞の色が、明るいテーマでは背景より暗く、暗いテーマでは背景より明るいこと。コントラスト比が小さすぎて
   // 【解説】見えない、ということもないこと。ゴールデンは明るいテーマしか描かないので、ここで両方を見る。
   // 【解説】`computeLuminance` は色の明るさを 0（黒）〜1（白）で返す。
   test('a stripe darkens a light surface and lightens a dark one', () {
@@ -110,9 +112,13 @@ void main() {
           reason: 'a dark theme needs a lighter band',
         );
       }
+      // 【解説】WCAG のコントラスト比 (明るい方 + 0.05) / (暗い方 + 0.05)。1 なら同じ色で、大きいほど見分けやすい。
+      final ratio =
+          (max(stripeLuminance, surfaceLuminance) + 0.05) /
+          (min(stripeLuminance, surfaceLuminance) + 0.05);
       expect(
-        (stripeLuminance - surfaceLuminance).abs(),
-        greaterThan(0.005),
+        ratio,
+        greaterThan(1.1),
         reason: 'the band has to actually be visible in $brightness',
       );
     }
