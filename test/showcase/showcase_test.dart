@@ -1,3 +1,4 @@
+// 【解説】読む順番 9/9：見本画像を作るだけで、振る舞いは守らない。最後に。
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -5,6 +6,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:natural_block_flutter/natural_block_flutter.dart';
 
+// 【解説】見本画像に描く文書。`'''…'''` は複数行の文字列。記法のほぼ全部（大きさ・色・強調・
+// 【解説】行・raw・表・寄せ）を1枚に入れている。
 const _source = '''
 :++:*:%natural_block:: 見本
 
@@ -33,16 +36,21 @@ cat file.txt | grep foo | wc -l
 |更新日^^>2026-09-02|
 ''';
 
+// 【解説】テストでは標準のフォントが使えない（文字が四角になる）ので、Windows のフォントファイルを
+// 【解説】読み込んで名前を付けて登録する。`..addFont` は「loader に対して addFont を呼ぶ」書き方
+// 【解説】（cascade）。ファイルを読んだ bytes を ByteData に変えて渡している。
 Future<void> _loadFont(String family, String path) async {
   final loader = FontLoader(family)
     ..addFont(File(path).readAsBytes().then((b) => b.buffer.asByteData()));
   await loader.load();
 }
 
+// 【解説】使うフォントの場所（日本語：游ゴシック、等幅：Consolas）。
 const _japanese = r'C:\Windows\Fonts\YuGothR.ttc';
 const _mono = r'C:\Windows\Fonts\consola.ttf';
 
 void main() {
+  // 【解説】このファイルのテストの前に1回だけ、フォントを読み込む。
   setUpAll(() async {
     if (!_fontsAvailable) return;
     await _loadFont('YuGothic', _japanese);
@@ -51,6 +59,10 @@ void main() {
 
   // Regenerate with:
   //   flutter test test/showcase --update-goldens
+  // 【解説】振る舞いを守るテストではなく、見本の画像を作って見比べるためのもの。
+  // 【解説】画面の大きさと倍率を決めて描き、保存してある showcase.png と1画素ずつ比べる（golden テスト）。
+  // 【解説】フォントがある Windows でだけ動き、それ以外では最後の `skip:` で飛ばされる。
+  // 【解説】`addTearDown(tester.view.reset)` で、変えた画面の大きさをテスト後に戻す。
   testWidgets('showcase', (tester) async {
     tester.view.physicalSize = const Size(760, 1180);
     tester.view.devicePixelRatio = 2.0;
@@ -78,6 +90,7 @@ void main() {
         ),
       ),
     );
+    // 【解説】動きが止まるまで描画を進める（画像の読み込みなどを待つ）。
     await tester.pumpAndSettle();
 
     await expectLater(
@@ -87,6 +100,7 @@ void main() {
   }, skip: !_fontsAvailable);
 }
 
+// 【解説】Windows で、2つのフォントファイルが両方あるときだけ true。
 /// Whether this machine has the fonts the picture was drawn with.
 ///
 /// The test runs only where it does, and is skipped everywhere else: golden

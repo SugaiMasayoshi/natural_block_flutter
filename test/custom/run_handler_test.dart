@@ -1,9 +1,14 @@
+// 【解説】読む順番 6/9：カスタム run のハンドラの決まり（順番・辞退・解放）。
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:natural_block_flutter/natural_block_flutter.dart';
 
 import '../rendered_spans.dart';
 
+// 【解説】`user(名前)` の形だけを引き受け、名前だけの文字に描き直すハンドラ。
+// 【解説】それ以外の形なら null を返して辞退する（次のハンドラに回る）。
+// 【解説】`条件 ? (…) : null` の `(span: …, dispose: …)` は record（名前付きの組）。
+// 【解説】`substring(5, length - 1)` で先頭の `user(` と最後の `)` を落としている。
 RunRendering? _mentions(
   String text,
   TextStyle style,
@@ -23,7 +28,12 @@ void main() {
     ),
   );
 
+  // 【解説】README の「Drawing a custom run yourself」の約束。ハンドラは順に聞かれ、null で辞退し、
+  // 【解説】最初に答えたものが描き、返した dispose は一度だけ呼ばれる。
   group('Drawing a custom run yourself', () {
+    // 【解説】1行に2つのカスタム run。`user(alice)` は _mentions が引き受けて「alice」に描き直す
+    // 【解説】（ハンドラは表示する文字そのものを変えられる）。画像の方は _mentions が辞退し、
+    // 【解説】次の画像ハンドラが Image にする。
     testWidgets('a handler may rewrite a run, and one that declines leaves it '
         'to the next', (tester) async {
       await tester.pumpWidget(
@@ -39,6 +49,8 @@ void main() {
       expect(find.byType(Image), findsOneWidget);
     });
 
+    // 【解説】2つとも引き受けるハンドラなら、先のものが描き、後のものは呼ばれもしないこと
+    // 【解説】（呼ばれた回数 asked が0のまま）。
     testWidgets('when two handlers claim a run, the first draws it', (
       tester,
     ) async {
@@ -61,6 +73,9 @@ void main() {
       expect(asked, 0, reason: 'the second is not asked once the first claims');
     });
 
+    // 【解説】ハンドラが返した dispose が、ちょうど良いときに1回ずつ呼ばれること。
+    // 【解説】同じ中身で描き直しても呼ばれない(0)、行の中身が変わると前の span の分が呼ばれる(1)、
+    // 【解説】画面から外れると今の span の分が呼ばれる(2)。released++ で回数を数えている。
     testWidgets('the dispose a handler hands back is called, once', (
       tester,
     ) async {

@@ -288,27 +288,27 @@ class _BuildersDemo extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'builders で描画を差し替える',
-            style: Theme.of(context).textTheme.titleMedium,
-          ),
-          const SizedBox(height: 8),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: NaturalBlockView(source: _source, theme: theme),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: NaturalBlockView(
-                  source: _source,
-                  theme: theme,
-                  builders: builders,
-                ),
-              ),
-            ],
-          ),
+          // Text(
+          //   'builders で描画を差し替える',
+          //   style: Theme.of(context).textTheme.titleMedium,
+          // ),
+          // const SizedBox(height: 8),
+          // Row(
+          //   crossAxisAlignment: CrossAxisAlignment.start,
+          //   children: [
+          //     Expanded(
+          //       child: NaturalBlockView(source: _source, theme: theme),
+          //     ),
+          //     const SizedBox(width: 16),
+          //     Expanded(
+          //       child: NaturalBlockView(
+          //         source: _source,
+          //         theme: theme,
+          //         builders: builders,
+          //       ),
+          //     ),
+          //   ],
+          // ),
         ],
       ),
     );
