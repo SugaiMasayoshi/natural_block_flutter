@@ -3,6 +3,7 @@
 // sample that stopped rendering would otherwise be invisible until someone
 // scrolled to it by hand.
 
+import 'package:example/custom_runs.dart';
 import 'package:example/main.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -42,6 +43,36 @@ void main() {
       findsNothing,
       reason: 'a SelectionArea takes the up and down arrows from the input',
     );
+  });
+
+  testWidgets('a quiz choice says whether it was right once tapped', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(
+          body: NaturalBlockView(
+            source: 'Q|:@wrong(A → no):@ :@correct(B → yes):@',
+            customs: appCustoms,
+          ),
+        ),
+      ),
+    );
+
+    expect(find.text('A'), findsOneWidget);
+    expect(find.text('no'), findsNothing);
+    expect(find.byIcon(Icons.close), findsNothing);
+
+    await tester.tap(find.text('A'));
+    await tester.pump();
+    expect(find.text('no'), findsOneWidget);
+    expect(find.byIcon(Icons.close), findsOneWidget);
+    expect(find.text('yes'), findsNothing, reason: 'only the tapped choice');
+
+    await tester.tap(find.text('B'));
+    await tester.pump();
+    expect(find.text('yes'), findsOneWidget);
+    expect(find.byIcon(Icons.check), findsOneWidget);
   });
 
   testWidgets('the up arrow moves the cursor in the playground', (

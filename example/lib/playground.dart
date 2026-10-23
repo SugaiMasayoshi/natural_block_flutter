@@ -18,7 +18,8 @@ class _PlaygroundState extends State<Playground> {
         ':!*自由に書き換えて試してみよう:!:*\n'
         ':+++大きく:--標準に戻す\n'
         '左のセル^右のセル\n'
-        ':@ここをタップ:@ するとSnackBarが出る',
+        ':@ここをタップ:@ するとSnackBarが出る\n'
+        '1 + 1 は？|:@wrong(1 → ちがいます):@|:@correct(2 → 正解):@',
   );
 
   @override
