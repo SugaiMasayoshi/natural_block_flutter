@@ -42,33 +42,51 @@ class _QuizChoiceState extends State<_QuizChoice> {
 
   @override
   Widget build(BuildContext context) {
+    final size = widget.fontSize;
     final verdict = widget.correct
         ? Colors.green
         : Theme.of(context).colorScheme.error;
 
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        ChoiceChip(
-          label: Text(
-            widget.label,
-            style: TextStyle(fontSize: widget.fontSize),
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: size / 4),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          ChoiceChip(
+            label: ConstrainedBox(
+              constraints: BoxConstraints(minWidth: size * 4),
+              child: Text(
+                widget.label,
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: size),
+              ),
+            ),
+            padding: EdgeInsets.symmetric(
+              horizontal: size / 2,
+              vertical: size / 4,
+            ),
+            selected: _open,
+            onSelected: (open) => setState(() => _open = open),
+            selectedColor: verdict.withValues(alpha: 0.15),
+            showCheckmark: false,
+            avatar: _open
+                ? Icon(
+                    widget.correct ? Icons.check : Icons.close,
+                    color: verdict,
+                  )
+                : null,
           ),
-          selected: _open,
-          onSelected: (open) => setState(() => _open = open),
-          selectedColor: verdict.withValues(alpha: 0.15),
-          showCheckmark: false,
-          avatar: _open
-              ? Icon(widget.correct ? Icons.check : Icons.close, color: verdict)
-              : null,
-        ),
-        if (_open && widget.message != null)
-          Text(
-            widget.message!,
-            style: TextStyle(color: verdict, fontSize: widget.fontSize * 0.7),
-          ),
-      ],
+          if (_open && widget.message != null)
+            Padding(
+              padding: EdgeInsets.only(top: size / 4, left: size / 2),
+              child: Text(
+                widget.message!,
+                style: TextStyle(color: verdict, fontSize: size * 0.7),
+              ),
+            ),
+        ],
+      ),
     );
   }
 }
