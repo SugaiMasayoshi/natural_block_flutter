@@ -221,12 +221,11 @@ void main() {
     testWidgets('an ancestor rebuild does not re-parse', (tester) async {
       // 【解説】text ビルダが呼ばれた回数を数える。ビルダは文書の行ごとに呼ばれるので、3行なら最初は3。
       var builds = 0;
-      final builders = NaturalBlockBuilders(
-        text: (node, scope) {
-          builds++;
-          return const SizedBox.shrink();
-        },
-      );
+      Widget countingText(TextNode node, NaturalBlockScope scope) {
+        builds++;
+        return const SizedBox.shrink();
+      }
+
       final rebuild = ValueNotifier<int>(0);
       addTearDown(rebuild.dispose);
 
@@ -237,7 +236,10 @@ void main() {
             builder: (context, value, _) => Column(
               children: [
                 Text('rebuild $value'),
-                NaturalBlockView(source: 'one|two|three', builders: builders),
+                NaturalBlockView(
+                  source: 'one|two|three',
+                  builders: NaturalBlockBuilders(text: countingText),
+                ),
               ],
             ),
           ),
