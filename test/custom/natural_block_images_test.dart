@@ -34,7 +34,7 @@ void main() {
     wrap(NaturalBlockView(source: source, theme: theme, customs: customs)),
   );
 
-  // 【解説】`image(...)` の中身を取り出せること、それ以外（前後の空白、`img`、大文字など）は null。
+  // 【解説】`image(...)` の中身を取り出せること、それ以外（`img`、中や後ろの空白、空の中身）は null。
   // 【解説】Map の値が String なら取り出せる中身、null なら辞退。URL の ? や () はそのまま残る。
   test('sourceOf reads image(...) and declines anything else', () {
     const expected = <String, String?>{
