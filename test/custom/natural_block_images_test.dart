@@ -169,9 +169,12 @@ void main() {
         await tester.pump();
 
         expect(
-          find.text(payload, findRichText: true),
+          find.descendant(
+            of: find.byType(Image),
+            matching: find.text(payload, findRichText: true),
+          ),
           findsOneWidget,
-          reason: 'the fetch or the read failed',
+          reason: 'the image was tried, and its error shows the payload',
         );
       }
     });
