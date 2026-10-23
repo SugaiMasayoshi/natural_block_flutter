@@ -38,6 +38,7 @@ class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       scaffoldMessengerKey: _messenger,
       title: 'natural_block_flutter example',
       theme: ThemeData(
@@ -187,13 +188,13 @@ class NaturalBlockDemoPage extends StatelessWidget {
         ],
       ),
       body: SelectionArea(
-        child: Column(
-          children: [
-            _Playground(theme: theme),
-            const Divider(height: 1),
-            Expanded(
-              child: ListView.separated(
-                padding: const EdgeInsets.all(16),
+        child: CustomScrollView(
+          slivers: [
+            SliverToBoxAdapter(child: _Playground(theme: theme)),
+            const SliverToBoxAdapter(child: Divider(height: 1)),
+            SliverPadding(
+              padding: const EdgeInsets.all(16),
+              sliver: SliverList.separated(
                 itemCount: _samples.length,
                 separatorBuilder: (context, index) => const Divider(height: 32),
                 itemBuilder: (context, index) {
