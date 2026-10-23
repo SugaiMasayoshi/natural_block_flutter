@@ -1,7 +1,5 @@
 import 'package:flutter/widgets.dart';
-import 'package:natural_block/natural_block.dart';
 
-import '../widget/natural_block_theme.dart';
 import 'local_file_image_stub.dart'
     if (dart.library.io) 'local_file_image_io.dart';
 import 'run_handler.dart';
@@ -13,55 +11,47 @@ enum ImageSourceKind { network, file, relative }
 /// cannot be drawn falls back to its payload as text.
 abstract final class NaturalBlockImages {
   /// Draws `image(<url>)` by fetching it.
-  static RunRendering? network(
-    String text,
-    TextStyle style,
-    NaturalBlockTheme theme,
-    SpanDecoration decoration,
-  ) {
-    final source = sourceOf(text);
+  static RunRendering? network(CustomRun run) {
+    final source = sourceOf(run.text);
     if (source == null || kindOf(source) != ImageSourceKind.network) {
       return null;
     }
 
-    final runSize = style.fontSize!;
     return widgetRun(
       Image.network(
         source,
-        scale: scaleOf(decoration, theme),
+        scale: scaleOf(run),
         semanticLabel: source,
-        errorBuilder: (_, _, _) => Text(text, style: style),
-        loadingBuilder: (context, child, progress) =>
-            progress == null ? child : SizedBox.square(dimension: runSize),
+        errorBuilder: (_, _, _) => Text(run.text, style: run.style),
+        loadingBuilder: (context, child, progress) => progress == null
+            ? child
+            : SizedBox.square(dimension: run.style.fontSize),
       ),
     );
   }
 
   /// Draws `image(<path>)` or `image(file:...)` by reading the file. Declines
   /// where there is no `dart:io`, the web.
-  static RunRendering? local(
-    String text,
-    TextStyle style,
-    NaturalBlockTheme theme,
-    SpanDecoration decoration,
-  ) {
-    final source = sourceOf(text);
+  static RunRendering? local(CustomRun run) {
+    final source = sourceOf(run.text);
     if (source == null || kindOf(source) != ImageSourceKind.file) return null;
 
     final image = localFileImage(
       source,
-      scale: scaleOf(decoration, theme),
-      errorBuilder: (_, _, _) => Text(text, style: style),
+      scale: scaleOf(run),
+      errorBuilder: (_, _, _) => Text(run.text, style: run.style),
     );
     return image == null ? null : widgetRun(image);
   }
 
-  /// `Image.scale` for a run: 1 with no step, so an image keeps its own size,
+  /// `Image.scale` for [run]: 1 with no step, so an image keeps its own size,
   /// and each `:+` or `:-` moves it by `fontSizeStep` against `baseFontSize`.
   /// It divides, so less than 1 draws the image larger.
-  static double scaleOf(SpanDecoration decoration, NaturalBlockTheme theme) =>
-      theme.baseFontSize /
-      theme.styleFor(decoration, baseSize: theme.baseFontSize).fontSize!;
+  static double scaleOf(CustomRun run) {
+    final theme = run.theme;
+    return theme.baseFontSize /
+        theme.styleFor(run.decoration, baseSize: theme.baseFontSize).fontSize!;
+  }
 
   static const String _prefix = 'image(';
 

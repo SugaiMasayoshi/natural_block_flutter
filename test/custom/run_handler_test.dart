@@ -1,19 +1,17 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:natural_block/natural_block.dart';
 import 'package:natural_block_flutter/natural_block_flutter.dart';
 
 import '../rendered_spans.dart';
 
-RunRendering? _mentions(
-  String text,
-  TextStyle style,
-  NaturalBlockTheme theme,
-  SpanDecoration decoration,
-) => text.startsWith('user(') && text.endsWith(')')
+RunRendering? _mentions(CustomRun run) =>
+    run.text.startsWith('user(') && run.text.endsWith(')')
     ? (
-        span: TextSpan(text: text.substring(5, text.length - 1), style: style),
+        span: TextSpan(
+          text: run.text.substring(5, run.text.length - 1),
+          style: run.style,
+        ),
         dispose: () {},
       )
     : null;
@@ -36,8 +34,7 @@ void main() {
           NaturalBlockView(
             source: ':@tap me:@ plain',
             customs: [
-              (text, style, theme, decoration) =>
-                  tappableText(text, style, onTap: tapped.add),
+              (run) => tappableText(run.text, run.style, onTap: tapped.add),
             ],
           ),
         ),
@@ -85,22 +82,13 @@ void main() {
       tester,
     ) async {
       var asked = 0;
-      RunRendering? second(
-        String text,
-        TextStyle style,
-        NaturalBlockTheme _,
-        SpanDecoration decoration,
-      ) {
+      RunRendering? second(CustomRun run) {
         asked++;
         return (span: TextSpan(text: 'second'), dispose: () {});
       }
 
-      RunRendering? first(
-        String text,
-        TextStyle style,
-        NaturalBlockTheme _,
-        SpanDecoration decoration,
-      ) => (span: TextSpan(text: 'first'), dispose: () {});
+      RunRendering? first(CustomRun run) =>
+          (span: TextSpan(text: 'first'), dispose: () {});
 
       await tester.pumpWidget(
         MaterialApp(
@@ -116,13 +104,10 @@ void main() {
       tester,
     ) async {
       var released = 0;
-      RunRendering? counting(
-        String text,
-        TextStyle style,
-        NaturalBlockTheme theme,
-        SpanDecoration decoration,
-      ) =>
-          (span: TextSpan(text: text, style: style), dispose: () => released++);
+      RunRendering? counting(CustomRun run) => (
+        span: TextSpan(text: run.text, style: run.style),
+        dispose: () => released++,
+      );
 
       final customs = <RunHandler>[counting];
       Widget view(String source) => MaterialApp(

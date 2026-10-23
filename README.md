@@ -184,7 +184,7 @@ Every field defaults to the builder that draws that kind the usual way, so a set
 
 **The node types are sealed**, so this set is the whole set: a field per kind rather than a map keyed by type, which is what keeps each builder's node type exact and makes a builder written for the wrong kind a compile error. The two entry points are narrowed the same way: `buildLayouts` takes only `LayoutNode`s and `buildContents` only `ContentNode`s, so `DocumentNode`, `TableRowNode` and the two run types — which are never drawn on their own, the view and the table and the line drawing them instead — cannot be handed to the builders at all. A table's cells skip the dispatch entirely, since `TableCellNode` is the only kind a cell can be.
 
-The widgets the default builders use are exported as well, so a custom builder can wrap or reuse one rather than reimplementing it. `TextNodeView`, `TableNodeView` and `RawNodeView` take the node, because each reads more of one than its children; `RowNodeView(cells:)` and `ColumnNodeView(children:)` take widgets, so you can compose them out of anything. So are the types a builder signature needs: `NodeBuilder`, `NaturalBlockScope`, `RunHandler`, `RunRendering`, `widgetRun`, `OnCustomTap`, and `ImageSourceKind`.
+The widgets the default builders use are exported as well, so a custom builder can wrap or reuse one rather than reimplementing it. `TextNodeView`, `TableNodeView` and `RawNodeView` take the node, because each reads more of one than its children; `RowNodeView(cells:)` and `ColumnNodeView(children:)` take widgets, so you can compose them out of anything. So are the types a builder signature needs: `NodeBuilder`, `NaturalBlockScope`, `RunHandler`, `CustomRun`, `RunRendering`, `widgetRun`, `OnCustomTap`, and `ImageSourceKind`.
 
 ### Selectable text
 
@@ -219,8 +219,8 @@ void onCustomTap(String text) {
   }
 }
 
-RunRendering? links(text, style, theme, decoration) =>
-    tappableText(text, style, onTap: onCustomTap);
+RunRendering? links(CustomRun run) =>
+    tappableText(run.text, run.style, onTap: onCustomTap);
 
 NaturalBlockView(source: source, customs: const [links]);
 ```
@@ -236,14 +236,15 @@ A custom run is offered to each handler in `customs` until one claims it, and a 
 A handler answers with a span to put in the line and a `dispose` to release whatever that span carries:
 
 ```dart
-RunRendering? mentions(text, style, theme, decoration) {
-  if (!text.startsWith('@')) return null; // not mine -- offer it to the next
+RunRendering? mentions(CustomRun run) {
+  if (!run.text.startsWith('@')) return null; // not mine -- offer it to the next
 
-  final recognizer = TapGestureRecognizer()..onTap = () => openProfile(text);
+  final recognizer = TapGestureRecognizer()
+    ..onTap = () => openProfile(run.text);
   return (
     span: TextSpan(
-      text: text.substring(1),
-      style: style,
+      text: run.text.substring(1),
+      style: run.style,
       recognizer: recognizer,
     ),
     dispose: recognizer.dispose,
@@ -264,7 +265,7 @@ Returning a `TextSpan` rather than a widget is what keeps a long run wrapping: a
 
 **Keep the list, and what it holds, stable.** A `const` list of named handlers compares equal across builds; one written out afresh inside a `build` never does, which redraws every line and loses a tap held across the redraw. A handler of your own should be a top-level function or a method of your state for the same reason.
 
-The `style` you receive is what the span *would* have been drawn with, including everything the surrounding markup asked for, and with its `fontSize` always resolved to a concrete value. `decoration` is what the source said about the run -- its size steps, tone, emphasis -- so content that is not text can follow `:++` / `:--` without knowing the size of the text around it: `NaturalBlockImages.scaleOf(decoration, theme)` is 1 with no step and moves by `fontSizeStep` against `baseFontSize` for each one.
+A handler receives the run as one `CustomRun`, so a later addition to what it is told does not break the handlers already written. `run.style` is what the span *would* have been drawn with, including everything the surrounding markup asked for, and with its `fontSize` always resolved to a concrete value. `run.decoration` is what the source said about the run -- its size steps, tone, emphasis -- so content that is not text can follow `:++` / `:--` without knowing the size of the text around it: `NaturalBlockImages.scaleOf(run)` is 1 with no step and moves by `fontSizeStep` against `baseFontSize` for each one.
 
 A `WidgetSpan` you return is laid out with the paragraph's width but an **unbounded height**, so give its child a bounded height -- a vertically greedy one throws from inside the paragraph. Block alignment (`|^`, `=>`) reaches it for free, since that moves the whole block.
 
@@ -308,8 +309,8 @@ The convention does not fork — it is still `image(...)`, and only the *resolut
 A relative payload (`image(assets/a.png)`) is declined by both, since resolving one needs an asset bundle or a base that only the app has. Write a handler for those and put it in front; the ones behind take whatever it declines:
 
 ```dart
-RunRendering? assets(text, style, theme, decoration) {
-  final source = NaturalBlockImages.sourceOf(text);
+RunRendering? assets(CustomRun run) {
+  final source = NaturalBlockImages.sourceOf(run.text);
   if (source == null ||
       NaturalBlockImages.kindOf(source) != ImageSourceKind.relative) {
     return null;

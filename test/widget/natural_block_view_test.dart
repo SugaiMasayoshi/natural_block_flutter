@@ -7,21 +7,13 @@ import 'package:natural_block_flutter/natural_block_flutter.dart';
 
 import '../rendered_spans.dart';
 
-RunRendering? _boxed(
-  String text,
-  TextStyle style,
-  NaturalBlockTheme theme,
-  SpanDecoration decoration,
-) => widgetRun(const SizedBox(width: 20, height: 10));
+RunRendering? _boxed(CustomRun run) =>
+    widgetRun(const SizedBox(width: 20, height: 10));
 
 void _ignore(String _) {}
 
-RunRendering? _links(
-  String text,
-  TextStyle style,
-  NaturalBlockTheme theme,
-  SpanDecoration decoration,
-) => tappableText(text, style, onTap: _ignore);
+RunRendering? _links(CustomRun run) =>
+    tappableText(run.text, run.style, onTap: _ignore);
 
 void main() {
   group('Selectable text', () {
@@ -61,12 +53,7 @@ void main() {
     testWidgets('a handler reading an inherited widget sees it change', (
       tester,
     ) async {
-      RunRendering? reads(
-        String text,
-        TextStyle style,
-        NaturalBlockTheme theme,
-        SpanDecoration decoration,
-      ) => widgetRun(
+      RunRendering? reads(CustomRun run) => widgetRun(
         Builder(
           builder: (context) =>
               Text('${MediaQuery.sizeOf(context).width.round()}'),
@@ -116,12 +103,7 @@ void main() {
       tester,
     ) async {
       var calls = 0;
-      RunRendering? counting(
-        String text,
-        TextStyle style,
-        NaturalBlockTheme theme,
-        SpanDecoration decoration,
-      ) {
+      RunRendering? counting(CustomRun run) {
         calls++;
         return null;
       }

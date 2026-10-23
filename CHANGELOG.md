@@ -228,6 +228,12 @@ Initial release.
   order, until one claims it. The default list is empty: tappable text and
   each kind of image are things an app includes, so replacing a run and
   making it tappable are not the same switch.
+- A handler is given the run as one `CustomRun` -- its text, the style it
+  would have been drawn with, the theme, and the decoration the source gave
+  it -- rather than as four arguments. Telling a handler one more thing is
+  then a new field, which the handlers already written simply do not read,
+  instead of a new parameter that every one of them must be edited to accept.
+  `NaturalBlockImages.scaleOf` takes the run for the same reason.
 - A handler answers with a `RunRendering`: the `InlineSpan` to put in the
   line, and the `dispose` that releases whatever that span carries. Returning
   a span rather than a description of one is what makes the extension point

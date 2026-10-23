@@ -61,8 +61,7 @@ void main() {
           home: NaturalBlockView(
             source: '|x^:@a:@|~:@b:@^c~',
             customs: [
-              (text, style, theme, decoration) =>
-                  tappableText(text, style, onTap: (_) {}),
+              (run) => tappableText(run.text, run.style, onTap: (_) {}),
             ],
           ),
         ),

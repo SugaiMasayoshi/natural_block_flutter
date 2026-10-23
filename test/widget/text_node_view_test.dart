@@ -5,19 +5,11 @@ import 'package:natural_block_flutter/natural_block_flutter.dart';
 
 import '../rendered_spans.dart';
 
-RunRendering? _plain(
-  String text,
-  TextStyle style,
-  NaturalBlockTheme theme,
-  SpanDecoration decoration,
-) => (span: TextSpan(text: text, style: style), dispose: () {});
+RunRendering? _plain(CustomRun run) =>
+    (span: TextSpan(text: run.text, style: run.style), dispose: () {});
 
-RunRendering? _plainElsewhere(
-  String text,
-  TextStyle style,
-  NaturalBlockTheme theme,
-  SpanDecoration decoration,
-) => (span: TextSpan(text: text, style: style), dispose: () {});
+RunRendering? _plainElsewhere(CustomRun run) =>
+    (span: TextSpan(text: run.text, style: run.style), dispose: () {});
 
 void main() {
   TextSpanNode custom(String text) =>
@@ -143,8 +135,7 @@ void main() {
   testWidgets('a tap interrupted by a rebuild still fires', (tester) async {
     final tapped = <String>[];
     final customs = <RunHandler>[
-      (text, style, theme, decoration) =>
-          tappableText(text, style, onTap: tapped.add),
+      (run) => tappableText(run.text, run.style, onTap: tapped.add),
     ];
 
     Future<void> pump() =>

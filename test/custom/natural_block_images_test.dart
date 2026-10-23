@@ -99,13 +99,16 @@ void main() {
     });
 
     test('the scale follows only the steps', () {
-      const theme = NaturalBlockTheme(baseFontSize: 14, fontSizeStep: 4);
+      double scaleWith(SpanDecoration decoration) =>
+          NaturalBlockImages.scaleOf((
+            text: 'image(https://example.invalid/a.png)',
+            style: const TextStyle(fontSize: 30),
+            theme: const NaturalBlockTheme(baseFontSize: 14, fontSizeStep: 4),
+            decoration: decoration,
+          ));
 
-      expect(NaturalBlockImages.scaleOf(const SpanDecoration(), theme), 1);
-      expect(
-        NaturalBlockImages.scaleOf(SpanDecoration(sizeOffset: 1), theme),
-        14 / 18,
-      );
+      expect(scaleWith(const SpanDecoration()), 1);
+      expect(scaleWith(SpanDecoration(sizeOffset: 1)), 14 / 18);
     });
 
     testWidgets('an image carries a semantic label', (tester) async {

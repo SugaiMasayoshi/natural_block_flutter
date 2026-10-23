@@ -29,16 +29,18 @@ RunRendering widgetRun(
   PlaceholderAlignment alignment = PlaceholderAlignment.middle,
 }) => (span: WidgetSpan(alignment: alignment, child: child), dispose: () {});
 
-/// Answers how one custom run is drawn, or null to leave it to the next
-/// handler. [style] is what the run would have been drawn with, its
-/// `fontSize` always resolved, and [decoration] is what the source said about
-/// the run.
-typedef RunHandler = RunRendering? Function(
+/// One custom run as a handler receives it: its own `text`, the `style` it
+/// would have been drawn with (`fontSize` always resolved), and the
+/// `decoration` the source gave it.
+typedef CustomRun = ({
   String text,
   TextStyle style,
   NaturalBlockTheme theme,
   SpanDecoration decoration,
-);
+});
+
+/// Answers how [run] is drawn, or null to leave it to the next handler.
+typedef RunHandler = RunRendering? Function(CustomRun run);
 
 /// [text] drawn as tappable text, which is what a URL wants.
 ///
@@ -46,8 +48,8 @@ typedef RunHandler = RunRendering? Function(
 /// your own supplies it --
 ///
 /// ```dart
-/// RunRendering? links(String text, TextStyle style, NaturalBlockTheme theme, SpanDecoration decoration) =>
-///     tappableText(text, style, onTap: openUrl);
+/// RunRendering? links(CustomRun run) =>
+///     tappableText(run.text, run.style, onTap: openUrl);
 /// ```
 ///
 /// -- and passes something that reads the current callback when it is
