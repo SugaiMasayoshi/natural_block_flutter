@@ -24,7 +24,7 @@ abstract final class NaturalBlockImages {
       return null;
     }
 
-    final runSize = style.fontSize ?? theme.baseFontSize;
+    final runSize = style.fontSize!;
     return widgetRun(
       Image.network(
         source,
