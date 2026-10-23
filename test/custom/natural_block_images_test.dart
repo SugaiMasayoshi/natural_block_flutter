@@ -6,16 +6,6 @@ import 'package:natural_block_flutter/natural_block_flutter.dart';
 
 import '../rendered_spans.dart';
 
-void _ignore(String _) {}
-
-// 【解説】どんなカスタム run でも押せる文字にするハンドラ（画像が辞退したときの受け皿）。
-RunRendering? _links(
-  String text,
-  TextStyle style,
-  NaturalBlockTheme theme,
-  SpanDecoration decoration,
-) => tappableText(text, style, onTap: _ignore);
-
 void main() {
   Widget wrap(Widget child) => MaterialApp(
     home: DefaultTextStyle(
@@ -24,14 +14,19 @@ void main() {
     ),
   );
 
-  // 【解説】記法から描く補助。ハンドラの既定は「ネットワーク画像 → 押せる文字」の順。
+  // 【解説】記法から、ネットワーク画像のハンドラだけを入れて描く補助。
   Future<void> pumpImages(
     WidgetTester tester,
     String source, {
     NaturalBlockTheme theme = const NaturalBlockTheme(),
-    List<RunHandler> customs = const [NaturalBlockImages.network, _links],
   }) => tester.pumpWidget(
-    wrap(NaturalBlockView(source: source, theme: theme, customs: customs)),
+    wrap(
+      NaturalBlockView(
+        source: source,
+        theme: theme,
+        customs: const [NaturalBlockImages.network],
+      ),
+    ),
   );
 
   // 【解説】`image(...)` の中身を取り出せること、それ以外（`img`、中や後ろの空白、空の中身）は null。
@@ -188,11 +183,7 @@ void main() {
           const NaturalBlockView(
             source: r':@image(C:\a.png):@',
             theme: NaturalBlockTheme(baseFontSize: 28),
-            customs: [
-              NaturalBlockImages.local,
-              NaturalBlockImages.network,
-              _links,
-            ],
+            customs: [NaturalBlockImages.local, NaturalBlockImages.network],
           ),
         ),
       );
@@ -210,11 +201,7 @@ void main() {
         wrap(
           const NaturalBlockView(
             source: ':@image(https://example.invalid/a.png):@',
-            customs: [
-              NaturalBlockImages.local,
-              NaturalBlockImages.network,
-              _links,
-            ],
+            customs: [NaturalBlockImages.local, NaturalBlockImages.network],
           ),
         ),
       );
@@ -234,11 +221,7 @@ void main() {
           wrap(
             const NaturalBlockView(
               source: ':@image(file:///a.png?v=1):@',
-              customs: [
-                NaturalBlockImages.local,
-                NaturalBlockImages.network,
-                _links,
-              ],
+              customs: [NaturalBlockImages.local, NaturalBlockImages.network],
             ),
           ),
         );
@@ -257,11 +240,7 @@ void main() {
         wrap(
           const NaturalBlockView(
             source: ':@image(assets/a.png):@',
-            customs: [
-              NaturalBlockImages.local,
-              NaturalBlockImages.network,
-              _links,
-            ],
+            customs: [NaturalBlockImages.local, NaturalBlockImages.network],
           ),
         ),
       );
