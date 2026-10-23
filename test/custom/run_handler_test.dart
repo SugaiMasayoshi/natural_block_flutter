@@ -84,7 +84,8 @@ void main() {
       await tester.pumpWidget(
         wrap(
           const NaturalBlockView(
-            source: ':@user(alice):@ and :@image(https://example.com/a.png):@',
+            source:
+                ':@user(alice):@ and :@image(https://example.invalid/a.png):@',
             customs: [_mentions, NaturalBlockImages.network],
           ),
         ),

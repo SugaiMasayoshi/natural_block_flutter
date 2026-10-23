@@ -38,12 +38,14 @@ void main() {
   // 【解説】Map の値が String なら取り出せる中身、null なら辞退。URL の ? や () はそのまま残る。
   test('sourceOf reads image(...) and declines anything else', () {
     const expected = <String, String?>{
-      'image(https://example.com/a.png)': 'https://example.com/a.png',
-      'image(https://e.com/x.png?id=you&v=2)': 'https://e.com/x.png?id=you&v=2',
-      'image(https://e.com/a_(1).png)': 'https://e.com/a_(1).png',
-      'img(https://e.com/a.png)': null,
-      'image( https://e.com/a.png )': null,
-      'image(https://e.com/a.png) ': null,
+      'image(https://example.invalid/a.png)': 'https://example.invalid/a.png',
+      'image(https://example.invalid/x.png?id=you&v=2)':
+          'https://example.invalid/x.png?id=you&v=2',
+      'image(https://example.invalid/a_(1).png)':
+          'https://example.invalid/a_(1).png',
+      'img(https://example.invalid/a.png)': null,
+      'image( https://example.invalid/a.png )': null,
+      'image(https://example.invalid/a.png) ': null,
       'image()': null,
     };
 
@@ -58,9 +60,9 @@ void main() {
   test('kindOf classifies where a payload points', () {
     const expected = <ImageSourceKind, List<String>>{
       ImageSourceKind.network: [
-        'https://example.com/a.png',
-        'http://example.com/a.png',
-        'https://e.com/x.png?id=you',
+        'https://example.invalid/a.png',
+        'http://example.invalid/a.png',
+        'https://example.invalid/x.png?id=you',
       ],
       ImageSourceKind.file: [
         r'C:\Users\sugai\a.png',
@@ -94,7 +96,7 @@ void main() {
     testWidgets('an image payload becomes a WidgetSpan, not text', (
       tester,
     ) async {
-      await pumpImages(tester, ':@image(https://example.com/a.png):@');
+      await pumpImages(tester, ':@image(https://example.invalid/a.png):@');
 
       final richText = tester.widget<RichText>(find.byType(RichText));
       final child = (richText.text as TextSpan).children!.single as TextSpan;
@@ -128,11 +130,11 @@ void main() {
 
     // 【解説】画像に読み上げ用のラベル（元の URL）が付くこと。
     testWidgets('an image carries a semantic label', (tester) async {
-      await pumpImages(tester, ':@image(https://example.com/a.png):@');
+      await pumpImages(tester, ':@image(https://example.invalid/a.png):@');
 
       expect(
         tester.widget<Image>(find.byType(Image)).semanticLabel,
-        'https://example.com/a.png',
+        'https://example.invalid/a.png',
       );
     });
 
@@ -155,7 +157,7 @@ void main() {
       tester,
     ) async {
       for (final (payload, handler) in [
-        ('image(https://example.com/a.png)', NaturalBlockImages.network),
+        ('image(https://example.invalid/a.png)', NaturalBlockImages.network),
         ('image(C:/no/such/file.png)', NaturalBlockImages.local),
       ]) {
         await tester.pumpWidget(
@@ -204,7 +206,7 @@ void main() {
       await tester.pumpWidget(
         wrap(
           const NaturalBlockView(
-            source: ':@image(https://example.com/a.png):@',
+            source: ':@image(https://example.invalid/a.png):@',
             customs: [
               NaturalBlockImages.local,
               NaturalBlockImages.network,
