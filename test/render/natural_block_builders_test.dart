@@ -33,13 +33,8 @@ void main() {
     // 【解説】Map を回して種類ごとに test を1つずつ作る（テスト名に種類名が入る）。
     for (final entry in variants.entries) {
       test('${entry.key} is part of equality', () {
-        // 【解説】既定とも、他の種類を差し替えた組とも等しくないこと。
-        // 【解説】`firstWhere((v) => v != entry.value)` は「自分以外で最初に見つかる組」。
+        // 【解説】既定と等しくないこと。その項目が比較に入っていなければ、既定と等しくなってしまう。
         expect(entry.value, isNot(NaturalBlockBuilders.defaults));
-        expect(
-          entry.value,
-          isNot(variants.values.firstWhere((v) => v != entry.value)),
-        );
       });
     }
   });
