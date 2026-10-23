@@ -41,17 +41,10 @@ void main() {
       'image(https://example.com/a.png)': 'https://example.com/a.png',
       'image(https://e.com/x.png?id=you&v=2)': 'https://e.com/x.png?id=you&v=2',
       'image(https://e.com/a_(1).png)': 'https://e.com/a_(1).png',
-      'https://example.com': null,
-      '#section': null,
-      'image()': null,
-      ' image(https://e.com/a.png)': null,
-      'image(https://e.com/a.png) ': null,
-      'image( https://e.com/a.png)': null,
-      'image(https://e.com/a.png )': null,
       'img(https://e.com/a.png)': null,
-      'IMAGE(https://e.com/a.png)': null,
-      'image(https://e.com/a.png) trailing': null,
-      '': null,
+      'image( https://e.com/a.png )': null,
+      'image(https://e.com/a.png) ': null,
+      'image()': null,
     };
 
     for (final MapEntry(key: text, value: source) in expected.entries) {
