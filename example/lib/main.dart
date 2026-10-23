@@ -27,6 +27,7 @@ class _MyAppState extends State<MyApp> {
       seedColor: Colors.deepPurple,
       brightness: brightness,
     ),
+    textTheme: const TextTheme(bodyMedium: TextStyle(fontSize: 28)),
   );
 
   @override
