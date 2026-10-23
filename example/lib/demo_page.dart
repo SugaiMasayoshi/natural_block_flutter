@@ -33,22 +33,20 @@ class NaturalBlockDemoPage extends StatelessWidget {
           _Toggle(label: 'ダーク', value: dark, onChanged: onDarkChanged),
         ],
       ),
-      body: SelectionArea(
-        child: CustomScrollView(
-          slivers: [
-            SliverToBoxAdapter(child: Playground(theme: theme)),
-            const SliverToBoxAdapter(child: Divider(height: 1)),
-            SliverPadding(
-              padding: const EdgeInsets.all(16),
-              sliver: SliverList.separated(
-                itemCount: samples.length,
-                separatorBuilder: (context, index) => const Divider(height: 32),
-                itemBuilder: (context, index) =>
-                    _SampleCard(sample: samples[index], theme: theme),
-              ),
+      body: CustomScrollView(
+        slivers: [
+          SliverToBoxAdapter(child: Playground(theme: theme)),
+          const SliverToBoxAdapter(child: Divider(height: 1)),
+          SliverPadding(
+            padding: const EdgeInsets.all(16),
+            sliver: SliverList.separated(
+              itemCount: samples.length,
+              separatorBuilder: (context, index) => const Divider(height: 32),
+              itemBuilder: (context, index) =>
+                  _SampleCard(sample: samples[index], theme: theme),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -64,30 +62,34 @@ class _SampleCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(sample.title, style: textTheme.titleMedium),
-        const SizedBox(height: 4),
-        Text(
-          sample.source,
-          style: textTheme.bodySmall?.copyWith(fontFamily: 'monospace'),
-        ),
-        const SizedBox(height: 8),
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            border: Border.all(color: Theme.of(context).dividerColor),
-            borderRadius: BorderRadius.circular(8),
+    // One selection per sample rather than one for the page: a SelectionArea
+    // takes the up and down arrows, which the playground's input needs.
+    return SelectionArea(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(sample.title, style: textTheme.titleMedium),
+          const SizedBox(height: 4),
+          Text(
+            sample.source,
+            style: textTheme.bodySmall?.copyWith(fontFamily: 'monospace'),
           ),
-          child: NaturalBlockView(
-            source: sample.source,
-            theme: theme,
-            customs: appCustoms,
+          const SizedBox(height: 8),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              border: Border.all(color: Theme.of(context).dividerColor),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: NaturalBlockView(
+              source: sample.source,
+              theme: theme,
+              customs: appCustoms,
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

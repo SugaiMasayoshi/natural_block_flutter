@@ -5,6 +5,7 @@
 
 import 'package:example/main.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:natural_block_flutter/natural_block_flutter.dart';
 
@@ -19,14 +20,46 @@ void main() {
     expect(find.byType(NaturalBlockView), findsWidgets);
   });
 
-  testWidgets('everything is inside a SelectionArea so text is selectable', (
+  testWidgets('every rendered document is selectable, and the input is not', (
     tester,
   ) async {
-    // TextNodeView is built with Text.rich specifically so this works; the
-    // app wraps its content to demonstrate it.
     await tester.pumpWidget(const MyApp());
 
-    expect(find.byType(SelectionArea), findsOneWidget);
+    for (final view in find.byType(NaturalBlockView).evaluate()) {
+      expect(
+        find.ancestor(
+          of: find.byWidget(view.widget),
+          matching: find.byType(SelectionArea),
+        ),
+        findsOneWidget,
+      );
+    }
+    expect(
+      find.ancestor(
+        of: find.byType(TextField),
+        matching: find.byType(SelectionArea),
+      ),
+      findsNothing,
+      reason: 'a SelectionArea takes the up and down arrows from the input',
+    );
+  });
+
+  testWidgets('the up arrow moves the cursor in the playground', (
+    tester,
+  ) async {
+    await tester.pumpWidget(const MyApp());
+    await tester.tap(find.byType(TextField));
+    await tester.pump();
+
+    final field = tester.widget<TextField>(find.byType(TextField));
+    final end = field.controller!.text.length;
+    field.controller!.selection = TextSelection.collapsed(offset: end);
+    await tester.pump();
+
+    await tester.sendKeyEvent(LogicalKeyboardKey.arrowUp);
+    await tester.pump();
+
+    expect(field.controller!.selection.baseOffset, lessThan(end));
   });
 
   testWidgets('both theme toggles work and nothing throws', (tester) async {

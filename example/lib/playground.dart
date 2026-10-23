@@ -60,12 +60,14 @@ class _PlaygroundState extends State<Playground> {
               border: Border.all(color: Theme.of(context).dividerColor),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: ListenableBuilder(
-              listenable: _controller,
-              builder: (context, _) => NaturalBlockView(
-                source: _controller.text,
-                theme: widget.theme,
-                customs: appCustoms,
+            child: SelectionArea(
+              child: ListenableBuilder(
+                listenable: _controller,
+                builder: (context, _) => NaturalBlockView(
+                  source: _controller.text,
+                  theme: widget.theme,
+                  customs: appCustoms,
+                ),
               ),
             ),
           ),
