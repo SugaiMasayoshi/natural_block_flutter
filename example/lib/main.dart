@@ -232,7 +232,6 @@ class NaturalBlockDemoPage extends StatelessWidget {
                 },
               ),
             ),
-            _BuildersDemo(theme: theme),
           ],
         ),
       ),
@@ -259,58 +258,6 @@ class _Toggle extends StatelessWidget {
         Switch(value: value, onChanged: onChanged),
         const SizedBox(width: 8),
       ],
-    );
-  }
-}
-
-class _BuildersDemo extends StatelessWidget {
-  final NaturalBlockTheme theme;
-
-  const _BuildersDemo({required this.theme});
-
-  static const _source = '通常の行|:!注意の行:!|もう一行';
-
-  @override
-  Widget build(BuildContext context) {
-    final builders = NaturalBlockBuilders(
-      text: (node, scope) => Padding(
-        padding: const EdgeInsets.symmetric(vertical: 2),
-        child: Chip(
-          label: TextNodeView(node: node, scope: scope),
-        ),
-      ),
-    );
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      color: Theme.of(context).colorScheme.surfaceContainerHighest,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Text(
-          //   'builders で描画を差し替える',
-          //   style: Theme.of(context).textTheme.titleMedium,
-          // ),
-          // const SizedBox(height: 8),
-          // Row(
-          //   crossAxisAlignment: CrossAxisAlignment.start,
-          //   children: [
-          //     Expanded(
-          //       child: NaturalBlockView(source: _source, theme: theme),
-          //     ),
-          //     const SizedBox(width: 16),
-          //     Expanded(
-          //       child: NaturalBlockView(
-          //         source: _source,
-          //         theme: theme,
-          //         builders: builders,
-          //       ),
-          //     ),
-          //   ],
-          // ),
-        ],
-      ),
     );
   }
 }

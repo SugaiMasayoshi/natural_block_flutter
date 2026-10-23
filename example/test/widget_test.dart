@@ -29,14 +29,6 @@ void main() {
     expect(find.byType(SelectionArea), findsOneWidget);
   });
 
-  testWidgets('the registry demo really substitutes a widget', (tester) async {
-    // The same source is rendered twice, once with a builder registered for
-    // TextNode. Chips are what that builder produces.
-    await tester.pumpWidget(const MyApp());
-
-    expect(find.byType(Chip), findsWidgets);
-  });
-
   testWidgets('both theme toggles work and nothing throws', (tester) async {
     // The theme comes from the app's own ColorScheme, so brightness and
     // striping change what NaturalBlockView renders rather than only the
