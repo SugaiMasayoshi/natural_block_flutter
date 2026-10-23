@@ -73,6 +73,11 @@ void main() {
     await tester.pump();
     expect(find.text('yes'), findsOneWidget);
     expect(find.byIcon(Icons.check), findsOneWidget);
+
+    await tester.tap(find.text('A'));
+    await tester.pump();
+    expect(find.text('no'), findsNothing, reason: 'a second tap closes it');
+    expect(find.byIcon(Icons.close), findsNothing);
   });
 
   testWidgets('the up arrow moves the cursor in the playground', (

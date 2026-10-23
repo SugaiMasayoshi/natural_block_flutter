@@ -4,7 +4,7 @@ import 'package:natural_block_flutter/natural_block_flutter.dart';
 final _choice = RegExp(r'^(correct|wrong)\((.+?)(?:\s*→\s*(.+))?\)$');
 
 /// Draws `correct(<label> → <message>)` and `wrong(<label> → <message>)` as a
-/// choice that, once tapped, says whether it was right. The message is
+/// choice that says whether it was right while it is open. The message is
 /// optional. Unrendered, the payload still reads as the answer it marks.
 RunRendering? quizChoice(CustomRun run) {
   final match = _choice.firstMatch(run.text);
@@ -15,7 +15,7 @@ RunRendering? quizChoice(CustomRun run) {
       correct: match[1] == 'correct',
       label: match[2]!,
       message: match[3],
-      style: run.style,
+      fontSize: run.style.fontSize!,
     ),
   );
 }
@@ -24,13 +24,13 @@ class _QuizChoice extends StatefulWidget {
   final bool correct;
   final String label;
   final String? message;
-  final TextStyle style;
+  final double fontSize;
 
   const _QuizChoice({
     required this.correct,
     required this.label,
     required this.message,
-    required this.style,
+    required this.fontSize,
   });
 
   @override
@@ -38,68 +38,37 @@ class _QuizChoice extends StatefulWidget {
 }
 
 class _QuizChoiceState extends State<_QuizChoice> {
-  var _answered = false;
+  var _open = false;
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
-    final size = widget.style.fontSize!;
-    final verdict = widget.correct ? Colors.green : colors.error;
-    final tint = _answered ? verdict : colors.outline;
-    // A choice is not a link: keep the run's size and weight, not the custom
-    // marking's colour and underline.
-    final text = TextStyle(
-      fontSize: size,
-      fontWeight: widget.style.fontWeight,
-      color: colors.onSurface,
-    );
+    final verdict = widget.correct
+        ? Colors.green
+        : Theme.of(context).colorScheme.error;
 
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: size / 8, vertical: size / 8),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Material(
-            color: _answered
-                ? verdict.withValues(alpha: 0.15)
-                : Colors.transparent,
-            shape: StadiumBorder(side: BorderSide(color: tint, width: 1.5)),
-            child: InkWell(
-              customBorder: const StadiumBorder(),
-              onTap: () => setState(() => _answered = true),
-              child: Padding(
-                padding: EdgeInsets.symmetric(
-                  horizontal: size / 2,
-                  vertical: size / 6,
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    if (_answered) ...[
-                      Icon(
-                        widget.correct ? Icons.check : Icons.close,
-                        size: size,
-                        color: verdict,
-                      ),
-                      SizedBox(width: size / 4),
-                    ],
-                    Flexible(child: Text(widget.label, style: text)),
-                  ],
-                ),
-              ),
-            ),
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        ChoiceChip(
+          label: Text(
+            widget.label,
+            style: TextStyle(fontSize: widget.fontSize),
           ),
-          if (_answered && widget.message != null)
-            Padding(
-              padding: EdgeInsets.only(top: size / 6, left: size / 2),
-              child: Text(
-                widget.message!,
-                style: text.copyWith(color: verdict, fontSize: size * 0.7),
-              ),
-            ),
-        ],
-      ),
+          selected: _open,
+          onSelected: (open) => setState(() => _open = open),
+          selectedColor: verdict.withValues(alpha: 0.15),
+          showCheckmark: false,
+          avatar: _open
+              ? Icon(widget.correct ? Icons.check : Icons.close, color: verdict)
+              : null,
+        ),
+        if (_open && widget.message != null)
+          Text(
+            widget.message!,
+            style: TextStyle(color: verdict, fontSize: widget.fontSize * 0.7),
+          ),
+      ],
     );
   }
 }
