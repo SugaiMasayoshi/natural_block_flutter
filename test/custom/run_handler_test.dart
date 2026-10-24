@@ -175,5 +175,30 @@ void main() {
       expect(released, 2, reason: 'the line left the tree');
       expect(tester.takeException(), isNull);
     });
+
+    testWidgets('a dispose that throws is reported, and the rest still run', (
+      tester,
+    ) async {
+      final released = <String>[];
+      RunRendering? handler(CustomRun run) => (
+        span: TextSpan(text: run.text),
+        dispose: () {
+          released.add(run.text);
+          if (run.text == 'a') throw StateError('broken');
+        },
+      );
+      final customs = <RunHandler>[handler];
+      Widget view(String source) => MaterialApp(
+        // ignore: non_const_argument_for_const_parameter
+        home: NaturalBlockView(source: source, customs: customs),
+      );
+
+      await tester.pumpWidget(view(':@a:@ :@b:@'));
+      await tester.pumpWidget(view(':@c:@'));
+
+      expect(tester.takeException(), isStateError);
+      expect(released, ['a', 'b'], reason: 'each released once');
+      expect(renderedSpans(tester).single.text, 'c');
+    });
   });
 }

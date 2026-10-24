@@ -47,11 +47,23 @@ class _TextNodeViewState extends State<TextNodeView> {
   }
 
   void _release() {
-    for (final dispose in _disposes) {
-      dispose();
-    }
+    final disposes = _disposes;
     _disposes = const [];
     _paragraph = const TextSpan();
+    for (final dispose in disposes) {
+      try {
+        dispose();
+      } catch (exception, stack) {
+        FlutterError.reportError(
+          FlutterErrorDetails(
+            exception: exception,
+            stack: stack,
+            library: 'natural_block_flutter',
+            context: ErrorDescription('while releasing what a RunHandler drew'),
+          ),
+        );
+      }
+    }
   }
 
   @override
