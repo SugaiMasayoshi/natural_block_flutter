@@ -7,6 +7,10 @@ Initial release.
 - `natural_block` is re-exported. Builders and handlers are written against
   its types -- `NodeBuilder<RowNode>`, `CustomRun.decoration` -- so one
   import covers them, with no second dependency to add.
+- A `NaturalBlockScope` is made by the view and handed to builders, never
+  built by hand: its constructor is `@internal`. The view is where `customs`
+  and `builders` are held to `const`, so a scope made elsewhere could carry
+  a list that is new on every build.
 - `NaturalBlockView` parses a `natural_block` `source` string and renders it.
   It parses once per source, not once per build: the tree owes nothing to the
   `BuildContext`, so an ancestor rebuilding -- a theme change, an animating

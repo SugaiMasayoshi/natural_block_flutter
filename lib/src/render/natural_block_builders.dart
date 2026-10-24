@@ -24,19 +24,13 @@ class NaturalBlockScope {
   /// The handlers a custom run is offered to, in order.
   final List<RunHandler> customs;
 
+  @internal
   const NaturalBlockScope({
     this.theme = const NaturalBlockTheme(),
     this.builders = NaturalBlockBuilders.defaults,
     this.customs = const [],
   });
 
-  /// What a document is drawn from, which is therefore also what decides
-  /// whether the one already drawn still holds.
-  ///
-  /// One list for both: a second one, kept for comparing, is a place for a
-  /// field to reach the drawing and not the comparison -- and then a change
-  /// never redraws. `customs` compares as a list does, by identity, which is
-  /// why a view's `customs` asks for a stable one.
   List<Object?> get _fields => [theme, builders, customs];
 
   @override
