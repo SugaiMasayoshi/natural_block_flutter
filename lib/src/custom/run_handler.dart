@@ -44,10 +44,8 @@ final class CustomRun {
     required this.style,
     required this.theme,
     required this.decoration,
-    this.withContext = _noContext,
+    required this.withContext,
   });
-
-  static void _noContext(void Function(BuildContext context) action) {}
 }
 
 /// Answers how [run] is drawn, or null to leave it to the next handler.

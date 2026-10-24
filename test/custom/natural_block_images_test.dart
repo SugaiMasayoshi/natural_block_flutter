@@ -104,6 +104,7 @@ void main() {
           style: const TextStyle(fontSize: 30),
           theme: const NaturalBlockTheme(baseFontSize: 14, fontSizeStep: 4),
           decoration: decoration,
+          withContext: (_) {},
         ),
       );
 
