@@ -4,6 +4,9 @@ Initial release.
 
 ### Rendering
 
+- `natural_block` is re-exported. Builders and handlers are written against
+  its types -- `NodeBuilder<RowNode>`, `CustomRun.decoration` -- so one
+  import covers them, with no second dependency to add.
 - `NaturalBlockView` parses a `natural_block` `source` string and renders it.
   It parses once per source, not once per build: the tree owes nothing to the
   `BuildContext`, so an ancestor rebuilding -- a theme change, an animating

@@ -68,7 +68,7 @@ dependencies:
   natural_block_flutter: ^0.0.1
 ```
 
-Add `natural_block` too if you plan to register your own `NodeBuilder`s -- naming the AST node types (`TextNode`, `RowNode`, ...) requires importing the parser package directly.
+`natural_block` is re-exported, so the one import also names the AST node types (`TextNode`, `RowNode`, ...) and `SpanDecoration` that builders and handlers work with.
 
 ## Usage
 

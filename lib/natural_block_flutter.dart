@@ -1,5 +1,7 @@
 library;
 
+export 'package:natural_block/natural_block.dart';
+
 export 'src/custom/natural_block_images.dart';
 export 'src/custom/run_handler.dart';
 export 'src/render/default_builders.dart';
