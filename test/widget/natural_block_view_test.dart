@@ -282,4 +282,29 @@ void main() {
       }
     });
   });
+
+  testWidgets('right to left, < is the right edge and > the left', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Directionality(
+          textDirection: TextDirection.rtl,
+          child: Align(
+            alignment: Alignment.topLeft,
+            child: SizedBox(
+              width: 400,
+              child: NaturalBlockView(source: '|<A|>B|'),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    Rect rectOf(String text) =>
+        tester.getRect(find.text(text, findRichText: true));
+
+    expect(rectOf('A').right, closeTo(400, 1));
+    expect(rectOf('B').left, closeTo(0, 1));
+  });
 }
