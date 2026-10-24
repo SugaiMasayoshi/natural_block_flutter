@@ -43,7 +43,7 @@ class _TextNodeViewState extends State<TextNodeView> {
       !_drawing,
       'withContext is for later, such as a tap, not while drawing',
     );
-    action(context);
+    if (mounted) action(context);
   }
 
   void _release() {
