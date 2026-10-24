@@ -50,6 +50,34 @@ void main() {
   });
 
   group('the document is drawn once per source, not once per frame', () {
+    testWidgets('a hot reload draws it again', (tester) async {
+      // Stands in for handler and builder code a hot reload replaces.
+      var drawnAs = 'old';
+      RunRendering? handler(CustomRun run) =>
+          (span: TextSpan(text: '$drawnAs ${run.text}'), dispose: () {});
+      Widget raw(RawNode node, NaturalBlockScope scope) =>
+          Text('$drawnAs ${node.text}');
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: NaturalBlockView(
+            source: ':@x:@|`\nr\n`',
+            builders: NaturalBlockBuilders(raw: raw),
+            customs: [handler],
+          ),
+        ),
+      );
+      expect(renderedSpans(tester).first.text, 'old x');
+      expect(find.text('old r'), findsOneWidget);
+
+      drawnAs = 'new';
+      tester.binding.buildOwner!.reassemble(tester.binding.rootElement!);
+      await tester.pump();
+
+      expect(renderedSpans(tester).first.text, 'new x', reason: 'a handler');
+      expect(find.text('new r'), findsOneWidget, reason: 'a builder');
+    });
+
     testWidgets('a handler reading an inherited widget sees it change', (
       tester,
     ) async {

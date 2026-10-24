@@ -50,6 +50,14 @@ class _NaturalBlockViewState extends State<NaturalBlockView> {
   DocumentNode? _drawnDocument;
   NaturalBlockScope? _drawnScope;
 
+  // Hot reload changes code, not inputs, so nothing drawn is kept.
+  @override
+  void reassemble() {
+    super.reassemble();
+    _document = NaturalBlockParser.parse(widget.source);
+    _cached = null;
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = widget.theme ?? NaturalBlockTheme.fromContext(context);

@@ -30,6 +30,12 @@ class _TextNodeViewState extends State<TextNodeView> {
     super.dispose();
   }
 
+  @override
+  void reassemble() {
+    super.reassemble();
+    _builtFrom = null;
+  }
+
   void _release() {
     for (final dispose in _disposes) {
       dispose();
