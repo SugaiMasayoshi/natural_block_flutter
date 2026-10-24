@@ -124,7 +124,6 @@ class NaturalBlockTheme {
           .merge(decoration.emphasis ? emphasis : null)
           .merge(decoration.isCustom ? custom : null)
           .copyWith(
-            // Clamped so `:-` never reaches zero.
             fontSize: max(
               minFontSize,
               baseSize + decoration.sizeOffset * fontSizeStep,
@@ -168,7 +167,6 @@ class NaturalBlockTheme {
         rawScrollsHorizontally ?? this.rawScrollsHorizontally,
   );
 
-  // One list for `==` and `hashCode`, so they cannot disagree.
   List<Object?> get _fields => [
     base,
     negative,

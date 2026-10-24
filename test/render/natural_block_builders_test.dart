@@ -38,6 +38,7 @@ void main() {
       NaturalBlockBuilders builders,
     ) => tester.pumpWidget(
       MaterialApp(
+        // ignore: non_const_argument_for_const_parameter
         home: NaturalBlockView(source: source, builders: builders),
       ),
     );

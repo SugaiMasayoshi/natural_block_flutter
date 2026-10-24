@@ -58,6 +58,7 @@ void main() {
         MaterialApp(
           home: NaturalBlockView(
             source: ':@x:@|`\nr\n`',
+            // ignore: non_const_argument_for_const_parameter
             builders: NaturalBlockBuilders(raw: raw),
             // ignore: non_const_argument_for_const_parameter
             customs: [handler],
@@ -114,6 +115,7 @@ void main() {
       Widget view(double width) => MediaQuery(
         data: MediaQueryData(size: Size(width, 600)),
         child: MaterialApp(
+          // ignore: non_const_argument_for_const_parameter
           home: NaturalBlockView(source: 'anything', builders: builders),
         ),
       );
@@ -164,6 +166,7 @@ void main() {
         home: NaturalBlockView(
           source: ':@tap:@',
           theme: theme,
+          // ignore: non_const_argument_for_const_parameter
           builders: builders,
           // ignore: non_const_argument_for_const_parameter
           customs: customs ?? wired,
@@ -221,6 +224,7 @@ void main() {
                 Text('rebuild $value'),
                 NaturalBlockView(
                   source: 'one|two|three',
+                  // ignore: non_const_argument_for_const_parameter
                   builders: NaturalBlockBuilders(text: countingText),
                 ),
               ],

@@ -73,14 +73,6 @@ class NaturalBlockBuilders {
 
   static const NaturalBlockBuilders defaults = NaturalBlockBuilders();
 
-  /// Two registries are equal when they name the same builder for every kind.
-  ///
-  /// Worth having because the view compares registries to decide whether the
-  /// tree it drew is still good. A function written out as a literal is never
-  /// equal to another, so builders built inline in a `build` compare as
-  /// changed every time -- which costs a rebuild, never correctness. Naming
-  /// the builders (a top-level function, or a method on your state) makes
-  /// this hold.
   List<Object?> get _fields => [row, column, table, tableCell, text, raw];
 
   @override

@@ -14,6 +14,8 @@ class NaturalBlockView extends StatefulWidget {
   /// Null takes the theme from the ambient one.
   final NaturalBlockTheme? theme;
 
+  /// Must be `const`: a builder that reads your state would draw it once and
+  /// keep it.
   final NaturalBlockBuilders builders;
 
   /// The handlers a custom run is offered to, in order, until one claims it.
@@ -29,7 +31,7 @@ class NaturalBlockView extends StatefulWidget {
     super.key,
     required this.source,
     this.theme,
-    this.builders = NaturalBlockBuilders.defaults,
+    @mustBeConst this.builders = NaturalBlockBuilders.defaults,
     @mustBeConst this.customs = const [],
   });
 
