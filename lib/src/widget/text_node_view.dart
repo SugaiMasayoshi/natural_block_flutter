@@ -24,6 +24,8 @@ class _TextNodeViewState extends State<TextNodeView> {
 
   _SpanInputs? _builtFrom;
 
+  bool _drawing = false;
+
   @override
   void dispose() {
     _release();
@@ -34,6 +36,14 @@ class _TextNodeViewState extends State<TextNodeView> {
   void reassemble() {
     super.reassemble();
     _builtFrom = null;
+  }
+
+  void _withContext(void Function(BuildContext context) action) {
+    assert(
+      !_drawing,
+      'withContext is for later, such as a tap, not while drawing',
+    );
+    action(context);
   }
 
   void _release() {
@@ -61,7 +71,9 @@ class _TextNodeViewState extends State<TextNodeView> {
     if (from != _builtFrom) {
       _builtFrom = from;
       _release();
-      final drawn = _runSpans(from);
+      _drawing = true;
+      final drawn = _runSpans(from, _withContext);
+      _drawing = false;
       _disposes = drawn.disposes;
       _paragraph = TextSpan(style: rootStyle, children: drawn.spans);
     }
@@ -80,6 +92,7 @@ typedef _SpanInputs = ({
 
 ({List<InlineSpan> spans, List<VoidCallback> disposes}) _runSpans(
   _SpanInputs from,
+  void Function(void Function(BuildContext context) action) withContext,
 ) {
   final theme = from.theme;
   final runs = from.line.children;
@@ -108,6 +121,7 @@ typedef _SpanInputs = ({
             style: style,
             theme: theme,
             decoration: run.decoration,
+            withContext: withContext,
           );
           for (final handler in from.customs) {
             try {

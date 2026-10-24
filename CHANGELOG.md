@@ -254,9 +254,7 @@ Initial release.
   widget of its own (flutter#91600 is open), so the package is not standing
   in front of something better.
 - `tappableText` is written through that public API, recognizer and
-  `dispose` included, so it is also the worked example. It is a function
-  taking the `onTap` rather than a handler, since a handler has no way to be
-  handed one.
+  `dispose` included, so it is also the worked example.
 - `widgetRun(child)` is the other answer written down: a run drawn as a
   widget, centred on the text beside it, with the `dispose` that is correct
   for one. It is not a wrapper around `WidgetSpan`, because it disagrees with
@@ -274,16 +272,16 @@ Initial release.
   is not an image's business, so it moved to where handlers are defined.
 - What a tap means belongs to the handler that drew the run, so there is no
   `onTap` on the view. One for the whole view could only receive a string and
-  guess which handler it came from, and a widget run answers a tap through its
-  own `GestureDetector` without ever seeing it. `tappableText` reports a tap
-  with the run's own text. Nothing here ever interprets that text — no URL is
-  opened, and there is no `url_launcher` dependency. The cost is that the
-  callback is captured when the run is drawn. Only the `customs` list is
-  compared, never the callback inside a handler, so a line is not redrawn
-  when the callback changes and a callback passed by value keeps calling the
-  old one. A view-wide `onTap` avoided that by reading the newest callback at
-  tap time; a handler now gets the same by passing something that does, such
-  as a method of its state.
+  guess which handler it came from. `tappableText` calls its `onTap` with the
+  line's `BuildContext` when the run is tapped, through
+  `CustomRun.withContext`, so a handler stays a top-level function -- its
+  list `const` -- yet answers a tap with what is current then. The context
+  reaches a handler only for later: calling `withContext` while drawing
+  asserts, since what is read then would be baked into a line nothing
+  redraws when it changes. It replaced an `onTap` taking only the text,
+  which a handler needing the app's state had to capture as a method of
+  that state, keeping its list out of `const`. Nothing here ever interprets
+  the text: no URL is opened, and there is no `url_launcher` dependency.
 - `NaturalBlockImages.network` is the reference rendering for the
   conventional `image(<url>)` payload, off until included: drawing a remote
   image is a network request to a third party made by displaying a

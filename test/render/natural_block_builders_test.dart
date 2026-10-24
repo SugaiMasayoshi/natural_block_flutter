@@ -60,9 +60,7 @@ void main() {
         MaterialApp(
           home: NaturalBlockView(
             source: '|x^:@a:@|~:@b:@^c~',
-            customs: [
-              (run) => tappableText(run.text, run.style, onTap: (_) {}),
-            ],
+            customs: [(run) => tappableText(run, onTap: (_) {})],
           ),
         ),
       );

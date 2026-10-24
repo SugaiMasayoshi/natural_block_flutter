@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widget_previews.dart';
 
-import 'custom_runs.dart';
 import 'demo_page.dart';
 
 void main() {
@@ -34,7 +33,6 @@ class _MyAppState extends State<MyApp> {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      scaffoldMessengerKey: messenger,
       title: 'natural_block_flutter example',
       theme: _themed(Brightness.light),
       darkTheme: _themed(Brightness.dark),

@@ -150,9 +150,7 @@ void main() {
       tester,
     ) async {
       const inert = <RunHandler>[];
-      final wired = <RunHandler>[
-        (run) => tappableText(run.text, run.style, onTap: (_) {}),
-      ];
+      final wired = <RunHandler>[(run) => tappableText(run, onTap: (_) {})];
 
       Widget view({
         NaturalBlockTheme? theme,

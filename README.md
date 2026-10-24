@@ -184,7 +184,7 @@ Every field defaults to the builder that draws that kind the usual way, so a set
 
 **The node types are sealed**, so this set is the whole set: a field per kind rather than a map keyed by type, which is what keeps each builder's node type exact and makes a builder written for the wrong kind a compile error. The two entry points are narrowed the same way: `buildLayouts` takes only `LayoutNode`s and `buildContents` only `ContentNode`s, so `DocumentNode`, `TableRowNode` and the two run types — which are never drawn on their own, the view and the table and the line drawing them instead — cannot be handed to the builders at all. A table's cells skip the dispatch entirely, since `TableCellNode` is the only kind a cell can be.
 
-The widgets the default builders use are exported as well, so a custom builder can wrap or reuse one rather than reimplementing it. `TextNodeView`, `TableNodeView` and `RawNodeView` take the node, because each reads more of one than its children; `RowNodeView(cells:)` and `ColumnNodeView(children:)` take widgets, so you can compose them out of anything. So are the types a builder signature needs: `NodeBuilder`, `NaturalBlockScope`, `RunHandler`, `CustomRun`, `RunRendering`, `widgetRun`, `OnCustomTap`, and `ImageSourceKind`.
+The widgets the default builders use are exported as well, so a custom builder can wrap or reuse one rather than reimplementing it. `TextNodeView`, `TableNodeView` and `RawNodeView` take the node, because each reads more of one than its children; `RowNodeView(cells:)` and `ColumnNodeView(children:)` take widgets, so you can compose them out of anything. So are the types a builder signature needs: `NodeBuilder`, `NaturalBlockScope`, `RunHandler`, `CustomRun`, `RunRendering`, `widgetRun`, and `ImageSourceKind`.
 
 ### Selectable text
 
@@ -206,32 +206,31 @@ const source = ':@https://example.com:@ 参照';
 
 This package deliberately does not call it a "link". `natural_block` only records that a run of text is tappable; the run's own `text` is the payload, and what tapping it *means* -- opening a URL, jumping to a section, resolving a mention, running a command -- is entirely the consuming app's decision. Neither the parser nor this package ever opens a URL, validates one, or otherwise interprets the text; there is no `url_launcher` dependency here and never will be.
 
-Tapping is a handler's job, and each handler brings its own `onTap`. `tappableText` draws the run as tappable text; give it the function that says what a tap means, from a handler of your own:
+A tap is answered by the handler that drew the run. `tappableText` draws the run as tappable text and calls `onTap` with the line's `BuildContext` when it is tapped, so navigation, a snack bar or anything read from an inherited widget is current at that moment:
 
 ```dart
-void onCustomTap(String text) {
-  // `text` is exactly the custom run's own text -- see the
-  // convention table below for the shapes it commonly takes.
-  if (text.startsWith('https://') || text.startsWith('http://')) {
-    // openUrl(text); -- e.g. via url_launcher, in your own app code.
-  } else {
-    // Any other shape is app-defined; ignore what you don't handle.
-  }
-}
-
-RunRendering? links(CustomRun run) =>
-    tappableText(run.text, run.style, onTap: onCustomTap);
+RunRendering? links(CustomRun run) => tappableText(
+  run,
+  onTap: (context) {
+    // `run.text` is exactly the custom run's own text -- see the
+    // convention table below for the shapes it commonly takes.
+    if (run.text.startsWith('https://')) {
+      // openUrl(run.text); -- e.g. via url_launcher, in your own app code.
+    }
+  },
+);
 
 NaturalBlockView(source: source, customs: const [links]);
 ```
 
-`onTap` is captured when the run is drawn, and a line is not redrawn just because the callback changed. Pass something that looks up what to do when it is called -- a top-level function like this one, or a method of your state -- rather than the current value of a callback that changes.
+A handler stays a top-level function, so its list can be `const`, and what the tap does lives beside how the run is drawn. The context is for the tap only: `run.withContext`, which `tappableText` uses, asserts if it is called while the run is being drawn.
+
 
 With no handler (the default) custom runs are still drawn in `NaturalBlockTheme.custom`'s style, but they get no tap recognizer at all -- they read as tappable but aren't.
 
 #### Drawing a custom run yourself
 
-A custom run is offered to each handler in `customs` until one claims it, and a handler declines by returning `null` -- so it never has to understand every payload it might meet. Drawing a run as tappable text is what `tappableText` does, and since each handler decides what its own tap means, there is no one `onTap` for the whole view.
+A custom run is offered to each handler in `customs` until one claims it, and a handler declines by returning `null` -- so it never has to understand every payload it might meet.
 
 A handler answers with a span to put in the line and a `dispose` to release whatever that span carries:
 
@@ -240,7 +239,7 @@ RunRendering? mentions(CustomRun run) {
   if (!run.text.startsWith('@')) return null; // not mine -- offer it to the next
 
   final recognizer = TapGestureRecognizer()
-    ..onTap = () => openProfile(run.text);
+    ..onTap = () => run.withContext((context) => openProfile(context, run.text));
   return (
     span: TextSpan(
       text: run.text.substring(1),

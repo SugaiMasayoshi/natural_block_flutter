@@ -23,7 +23,7 @@ void main() {
           NaturalBlockView(
             source: ':@tap me:@ plain',
             customs: [
-              (run) => tappableText(run.text, run.style, onTap: tapped.add),
+              (run) => tappableText(run, onTap: (_) => tapped.add(run.text)),
             ],
           ),
         ),
@@ -35,6 +35,48 @@ void main() {
 
       (spans.first.recognizer! as TapGestureRecognizer).onTap!();
       expect(tapped, ['tap me']);
+    });
+
+    testWidgets('a tap gets the context as it is when tapped', (tester) async {
+      int? maxLines;
+      final customs = <RunHandler>[
+        (run) => tappableText(
+          run,
+          onTap: (context) => maxLines = DefaultTextStyle.of(context).maxLines,
+        ),
+      ];
+      Widget view(int lines) => MaterialApp(
+        home: DefaultTextStyle.merge(
+          maxLines: lines,
+          child: NaturalBlockView(source: ':@x:@', customs: customs),
+        ),
+      );
+
+      await tester.pumpWidget(view(1));
+      final first = renderedSpans(tester).single;
+      await tester.pumpWidget(view(2));
+      expect(renderedSpans(tester).single, same(first), reason: 'not redrawn');
+
+      (first.recognizer! as TapGestureRecognizer).onTap!();
+      expect(maxLines, 2);
+    });
+
+    testWidgets('withContext while drawing is an error', (tester) async {
+      await tester.pumpWidget(
+        wrap(
+          NaturalBlockView(
+            source: ':@x:@',
+            customs: [
+              (run) {
+                run.withContext((_) {});
+                return null;
+              },
+            ],
+          ),
+        ),
+      );
+
+      expect(tester.takeException(), isAssertionError);
     });
 
     testWidgets('with no handler a custom run is neither tappable nor '

@@ -150,7 +150,7 @@ void main() {
   testWidgets('a tap interrupted by a rebuild still fires', (tester) async {
     final tapped = <String>[];
     final customs = <RunHandler>[
-      (run) => tappableText(run.text, run.style, onTap: tapped.add),
+      (run) => tappableText(run, onTap: (_) => tapped.add(run.text)),
     ];
 
     Future<void> pump() =>
