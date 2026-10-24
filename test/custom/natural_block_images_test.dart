@@ -98,14 +98,14 @@ void main() {
     });
 
     test('the scale follows only the steps', () {
-      double scaleWith(SpanDecoration decoration) =>
-          NaturalBlockImages.scaleOf((
-            text: 'image(https://example.invalid/a.png)',
-            style: const TextStyle(fontSize: 30),
-            theme: const NaturalBlockTheme(baseFontSize: 14, fontSizeStep: 4),
-            decoration: decoration,
-            withContext: (_) {},
-          ));
+      double scaleWith(SpanDecoration decoration) => NaturalBlockImages.scaleOf(
+        CustomRun(
+          text: 'image(https://example.invalid/a.png)',
+          style: const TextStyle(fontSize: 30),
+          theme: const NaturalBlockTheme(baseFontSize: 14, fontSizeStep: 4),
+          decoration: decoration,
+        ),
+      );
 
       expect(scaleWith(const SpanDecoration()), 1);
       expect(scaleWith(SpanDecoration(sizeOffset: 1)), 14 / 18);

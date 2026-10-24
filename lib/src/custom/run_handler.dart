@@ -25,17 +25,30 @@ RunRendering widgetRun(
   PlaceholderAlignment alignment = PlaceholderAlignment.middle,
 }) => (span: WidgetSpan(alignment: alignment, child: child), dispose: () {});
 
-/// One custom run as a handler receives it: its own `text`, the `style` it
-/// would have been drawn with (`fontSize` always resolved), the `decoration`
-/// the source gave it, and `withContext`, which calls an action with the
-/// line's `BuildContext` -- for later, such as a tap, not while drawing.
-typedef CustomRun = ({
-  String text,
-  TextStyle style,
-  NaturalBlockTheme theme,
-  SpanDecoration decoration,
-  void Function(void Function(BuildContext context) action) withContext,
-});
+final class CustomRun {
+  final String text;
+
+  /// What the run would have been drawn with, `fontSize` always resolved.
+  final TextStyle style;
+
+  final NaturalBlockTheme theme;
+
+  final SpanDecoration decoration;
+
+  /// Calls an action with the line's `BuildContext` -- for later, such as a
+  /// tap, not while drawing.
+  final void Function(void Function(BuildContext context) action) withContext;
+
+  const CustomRun({
+    required this.text,
+    required this.style,
+    required this.theme,
+    required this.decoration,
+    this.withContext = _noContext,
+  });
+
+  static void _noContext(void Function(BuildContext context) action) {}
+}
 
 /// Answers how [run] is drawn, or null to leave it to the next handler.
 typedef RunHandler = RunRendering? Function(CustomRun run);

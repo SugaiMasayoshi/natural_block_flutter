@@ -128,7 +128,7 @@ typedef _SpanInputs = ({
 
         RunRendering? claimed;
         if (run.decoration.isCustom) {
-          final custom = (
+          final custom = CustomRun(
             text: text,
             style: style,
             theme: theme,

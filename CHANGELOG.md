@@ -237,6 +237,9 @@ Initial release.
   it -- rather than as four arguments. Telling a handler one more thing is
   then a new field, which the handlers already written simply do not read,
   instead of a new parameter that every one of them must be edited to accept.
+  It is a class rather than a record: a record's shape is its type, so one
+  more field would break every record literal and pattern of it, where a
+  class takes a new field with a default and breaks nothing.
   `NaturalBlockImages.scaleOf` takes the run for the same reason.
 - A handler answers with a `RunRendering`: the `InlineSpan` to put in the
   line, and the `dispose` that releases whatever that span carries. Returning
