@@ -25,6 +25,17 @@ void main() {
       expect(styleOf(const SpanDecoration(), baseSize: 30).fontSize, 30);
     });
 
+    test('base lies under every tone', () {
+      const based = NaturalBlockTheme(base: TextStyle(fontFamily: 'Serif'));
+      for (final tone in Tone.values) {
+        expect(
+          based.styleFor(SpanDecoration(tone: tone), baseSize: 14).fontFamily,
+          'Serif',
+          reason: '$tone',
+        );
+      }
+    });
+
     test('a step cannot drive the size below minFontSize', () {
       expect(
         styleOf(SpanDecoration(sizeOffset: -99)).fontSize,

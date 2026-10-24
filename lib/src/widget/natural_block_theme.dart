@@ -111,16 +111,17 @@ class NaturalBlockTheme {
     ).copyWith(baseFontSize: theme.textTheme.bodyMedium?.fontSize);
   }
 
-  /// The style one run draws with: its tone, then emphasis, then custom
+  /// The style one run draws with: [base], then its tone, emphasis and custom
   /// marking, at [baseSize] moved by its `:+` and `:-` steps. The size comes
   /// only from these: a `fontSize` in the tone, emphasis or custom styles is
   /// not used.
   TextStyle styleFor(SpanDecoration decoration, {required double baseSize}) =>
-      switch (decoration.tone) {
+      base
+          .merge(switch (decoration.tone) {
             Tone.negative => negative,
             Tone.positive => positive,
-            Tone.none => base,
-          }
+            Tone.none => null,
+          })
           .merge(decoration.emphasis ? emphasis : null)
           .merge(decoration.isCustom ? custom : null)
           .copyWith(
