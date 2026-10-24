@@ -122,7 +122,7 @@ class NaturalBlockTheme {
             Tone.positive => positive,
             Tone.none => null,
           })
-          .merge(decoration.emphasis ? emphasis : null)
+          .merge(decoration.isEmphasized ? emphasis : null)
           .merge(decoration.isCustom ? custom : null)
           .copyWith(
             fontSize: max(
