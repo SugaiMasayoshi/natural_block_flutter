@@ -131,7 +131,7 @@ Three more fields control what a size step is *worth*, since `natural_block` onl
 
 A `` ` ``-fenced region is text the parser stopped reading, so rendering only has to avoid undoing that: monospaced, whitespace and newlines exactly as written, no styling per run.
 
-**Where it was written decides how it is drawn.** The parser makes no distinction — a region is one node either way — so `TextNodeView` answers it: a region that is a line's *only* content is that line, and is drawn as a padded code block; a region sitting among other text is a monospaced run inside the line.
+**What it holds decides how it is drawn.** The parser makes a region that spans lines a `RawNode`, drawn by `builders.raw` as a padded code block, and one on a single line a `RawSpanNode`, drawn by `TextNodeView` as a monospaced run inside the line.
 
 ```dart
 const inline = '比較は`a == b`です';   // a run, no box

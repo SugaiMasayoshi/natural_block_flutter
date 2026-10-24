@@ -132,15 +132,15 @@ void main() {
   });
 
   testWidgets('raw regions', (tester) async {
-    final long = '`${'word ' * 30}`';
+    final long = '`\n${'word ' * 30}\n`';
     await _scene(tester, 'raw', [
       ('`\nif (x) {\n    y();\n}\n`', null),
       ('inline `a ^^ b` run', null),
       (long, null),
       (long, const NaturalBlockTheme(rawScrollsHorizontally: true)),
-      ('`no box`', const NaturalBlockTheme(rawDecoration: BoxDecoration())),
-      ('`x`', const NaturalBlockTheme(base: TextStyle(fontSize: 24))),
-      ('`x`', const NaturalBlockTheme(raw: TextStyle(fontSize: 24))),
+      ('`\nno box\n`', const NaturalBlockTheme(rawDecoration: BoxDecoration())),
+      ('`\nx\n`', const NaturalBlockTheme(base: TextStyle(fontSize: 24))),
+      ('`\nx\n`', const NaturalBlockTheme(raw: TextStyle(fontSize: 24))),
     ]);
   });
 
