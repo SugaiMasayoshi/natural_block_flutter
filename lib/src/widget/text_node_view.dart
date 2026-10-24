@@ -104,7 +104,19 @@ typedef _SpanInputs = ({
             decoration: run.decoration,
           );
           for (final handler in from.customs) {
-            claimed = handler(custom);
+            try {
+              claimed = handler(custom);
+            } catch (exception, stack) {
+              FlutterError.reportError(
+                FlutterErrorDetails(
+                  exception: exception,
+                  stack: stack,
+                  library: 'natural_block_flutter',
+                  context: ErrorDescription('while a RunHandler drew "$text"'),
+                ),
+              );
+              claimed = null;
+            }
             if (claimed != null) break;
           }
         }

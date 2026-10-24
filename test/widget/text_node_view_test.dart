@@ -132,6 +132,22 @@ void main() {
     expect(spans[1].style!.fontFamily, 'monospace');
   });
 
+  testWidgets('a handler that throws is reported and leaves the run to the '
+      'next', (tester) async {
+    final customs = <RunHandler>[
+      (run) => run.text == 'b' ? throw StateError('broken') : null,
+      (run) => (span: TextSpan(text: 'next ${run.text}'), dispose: () {}),
+    ];
+
+    await pumpRuns(tester, [custom('a'), custom('b')], customs: customs);
+
+    expect(tester.takeException(), isStateError);
+    expect(renderedSpans(tester).map((span) => span.text), [
+      'next a',
+      'next b',
+    ]);
+  });
+
   testWidgets('a tap interrupted by a rebuild still fires', (tester) async {
     final tapped = <String>[];
     final customs = <RunHandler>[
