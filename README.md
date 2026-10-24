@@ -2,7 +2,7 @@
 
 Flutter widgets that render the AST produced by [`natural_block`](https://github.com/SugaiMasayoshi/natural_block), a lightweight markup language for structured text layout with semantic decoration.
 
-`natural_block` does the parsing; this package turns its `DocumentNode` / `ColumnNode` / `RowNode` / `TableNode` / `TextNode` / `TextSpanNode` / `RawNode` tree into `Column`, `Row`, `Table`, and `RichText` widgets -- with your own colors, and your own widgets substituted per node type if you want them.
+`natural_block` does the parsing; this package turns its `DocumentNode` / `ColumnNode` / `RowNode` / `TableNode` / `TextNode` / `TextSpanNode` / `RawNode` tree into `Column`, `Row`, `Table`, and `Text.rich` widgets -- with your own colors, and your own widgets substituted per node type if you want them.
 
 ## A taste of the syntax
 
@@ -63,9 +63,12 @@ Striping is offered there rather than on the default constructor because it is o
 
 ## Getting started
 
+Not published yet. Clone this repository beside [`natural_block`](https://github.com/SugaiMasayoshi/natural_block), which it depends on by path, and depend on it the same way:
+
 ```yaml
 dependencies:
-  natural_block_flutter: ^0.0.1
+  natural_block_flutter:
+    path: ../natural_block_flutter
 ```
 
 `natural_block` is re-exported, so the one import also names the AST node types (`TextNode`, `RowNode`, ...) and `SpanDecoration` that builders and handlers work with.
@@ -204,7 +207,7 @@ Text wrapped in `:@...:@` is parsed as *custom* -- `TextSpanNode.decoration.isCu
 const source = ':@https://example.com:@ 参照';
 ```
 
-This package deliberately does not call it a "link". `natural_block` only records that a run of text is tappable; the run's own `text` is the payload, and what tapping it *means* -- opening a URL, jumping to a section, resolving a mention, running a command -- is entirely the consuming app's decision. Neither the parser nor this package ever opens a URL, validates one, or otherwise interprets the text; there is no `url_launcher` dependency here and never will be.
+This package deliberately does not call it a "link". `natural_block` only records that a run is custom; the run's own `text` is the payload, and what tapping it *means* -- opening a URL, jumping to a section, resolving a mention, running a command -- is entirely the consuming app's decision. Neither the parser nor this package ever opens a URL, validates one, or otherwise interprets the text; there is no `url_launcher` dependency here and never will be.
 
 A tap is answered by the handler that drew the run. `tappableText` draws the run as tappable text and calls `onTap` with the line's `BuildContext` when it is tapped, so navigation, a snack bar or anything read from an inherited widget is current at that moment:
 

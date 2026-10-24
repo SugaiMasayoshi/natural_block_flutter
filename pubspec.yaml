@@ -1,5 +1,5 @@
 name: natural_block_flutter
-description: "Flutter widgets that render the natural_block markup AST as Column, Row, and RichText, with pluggable theming and per-node-type widget overrides."
+description: "Flutter widgets that render the natural_block markup AST as Column, Row, Table, and Text.rich, with pluggable theming and per-node-type widget overrides."
 version: 0.0.1
 repository: https://github.com/SugaiMasayoshi/natural_block_flutter
 issue_tracker: https://github.com/SugaiMasayoshi/natural_block_flutter/issues

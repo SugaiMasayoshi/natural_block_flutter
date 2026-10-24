@@ -90,13 +90,15 @@ Initial release.
   every row. It also does the two things the tree deliberately leaves undone:
   it squares short rows off to the table's width (Flutter's `TableRow`
   requires every row to hold the same number of children) and resolves each
-  cell's alignment against its column (`cell.align ?? table.columns[i]`).
+  cell's alignment against its column: a cell that states none takes its
+  column's.
   Both are questions about drawing, asked of a tree that records only what
   the author wrote. Cells still go through the builders, so a caller's own
   `ColumnNode` builder applies inside a table.
 
 - The mapping from `HorizontalAlign` to Flutter layout lives in one
-  extension. Both views used to hold a copy of it, one written as a `switch`
+  `switch` in `ColumnNodeView`, which blocks and table cells both draw
+  through. Both views used to hold a copy of it, one written as a `switch`
   statement and one as a switch expression, which made the duplication easy
   to miss.
 - Every run of a line starts from one expression: the ambient style with the
