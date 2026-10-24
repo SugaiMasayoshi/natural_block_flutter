@@ -174,8 +174,7 @@ Initial release.
 - Default builders (`buildRowNode`, `buildColumnNode`, `buildTableNode`,
   `buildTableCellNode`, `buildTextNode`, `buildRawNode`) are exported so a
   builder of your own can delegate back. Naming one that way also keeps
-  `NaturalBlockBuilders` comparable: a builder written as a closure literal
-  is never equal to another, which costs a redraw but never correctness.
+  `NaturalBlockBuilders` const, which the view asks for.
 - Choosing between the fields is `buildLayouts` / `buildContents`' job, and
   they are the only places the tree says merely that one of several kinds is
   there. Each switches over a sealed set small enough to be exhaustive, so

@@ -153,7 +153,7 @@ A region also works inside a table cell, which a `|`-based marker could never ha
 
 ### Semantics
 
-Custom runs are announced to a screen reader only when something is actually wired to them: the custom *style* follows the document, which said the run is custom, but claiming interactivity when nothing is wired to them would be a promise nothing keeps. `NaturalBlockImages.network` gives every image a `semanticLabel` taken from its payload.
+Custom runs are announced to a screen reader only when something is actually wired to them: the custom *style* follows the document, which said the run is custom, but claiming interactivity when nothing is wired to them would be a promise nothing keeps. `NaturalBlockImages.network` and `.local` give every image a `semanticLabel` taken from its payload.
 
 Tables carry no row/column semantics yet — a screen reader reads their cells as an undifferentiated stream, losing the structure the `~` declaration exists to express.
 
@@ -173,12 +173,14 @@ NaturalBlockView(source: source, builders: builders);
 
 A builder receives the node — already typed as the kind it was registered for, so there is no cast — and a `NaturalBlockScope`: the theme, the builders, the customs, which travel together the whole way down. Recurse into a node's own children with `buildLayouts(node.children, scope)` for the blocks and rows a document holds, or `buildContents(node.children, scope)` for the lines, raw blocks and tables a block or a table cell holds. Either keeps every child on the same theme, builders and handlers. Where the tree already names one kind -- a row's cells, a table's rows -- reach for that field directly (`scope.builders.column(cell, scope)`), since there is nothing to choose.
 
-**Neither a builder nor a handler gets a `BuildContext`.** Each is called while its parent builds, so reading an inherited widget there would bake what it read into something that cannot say what that was -- and the view, unable to know whether this document cared, would have to redraw all of it on every ambient change. For a handler it is sharper still: a span cannot read a context lazily at all, and a line keeps its spans until what they were built from changes, which can never include what a handler went and read. To read one, return a `Builder`:
+**Neither a builder nor a handler gets a `BuildContext` to draw with.** Each is called while its parent builds, so reading an inherited widget there would bake what it read into something that cannot say what that was, and nothing would redraw it when that changed. A handler gets one only for later, through `run.withContext` -- what `tappableText`'s `onTap` receives. To read one while drawing, return a `Builder`:
 
 ```dart
-text: (node, scope) => Builder(
+Widget sizedText(TextNode node, NaturalBlockScope scope) => Builder(
   builder: (context) => MyLine(node, scope, MediaQuery.sizeOf(context)),
-),
+);
+
+const builders = NaturalBlockBuilders(text: sizedText);
 ```
 
 That puts the dependency in an element of its own for Flutter to track, so the document is kept and only your line redraws.
@@ -187,7 +189,7 @@ Every field defaults to the builder that draws that kind the usual way, so a set
 
 **The node types are sealed**, so this set is the whole set: a field per kind rather than a map keyed by type, which is what keeps each builder's node type exact and makes a builder written for the wrong kind a compile error. The two entry points are narrowed the same way: `buildLayouts` takes only `LayoutNode`s and `buildContents` only `ContentNode`s, so `DocumentNode`, `TableRowNode` and the two run types — which are never drawn on their own, the view and the table and the line drawing them instead — cannot be handed to the builders at all. A table's cells skip the dispatch entirely, since `TableCellNode` is the only kind a cell can be.
 
-The widgets the default builders use are exported as well, so a custom builder can wrap or reuse one rather than reimplementing it. `TextNodeView`, `TableNodeView` and `RawNodeView` take the node, because each reads more of one than its children; `RowNodeView(cells:)` and `ColumnNodeView(children:)` take widgets, so you can compose them out of anything. So are the types a builder signature needs: `NodeBuilder`, `NaturalBlockScope`, `RunHandler`, `CustomRun`, `RunRendering`, `widgetRun`, and `ImageSourceKind`.
+The widgets the default builders use are exported as well, so a custom builder can wrap or reuse one rather than reimplementing it. `TextNodeView`, `TableNodeView` and `RawNodeView` take the node, because each reads more of one than its children; `RowNodeView(cells:)` and `ColumnNodeView(children:)` take widgets, so you can compose them out of anything. So are the types a builder or a handler is written with -- `NodeBuilder`, `NaturalBlockScope`, `RunHandler`, `CustomRun`, `RunRendering`, `ImageSourceKind` -- and `widgetRun`.
 
 ### Selectable text
 
