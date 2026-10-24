@@ -5,12 +5,6 @@ import 'package:natural_block_flutter/natural_block_flutter.dart';
 
 import '../rendered_spans.dart';
 
-RunRendering? _plain(CustomRun run) =>
-    (span: TextSpan(text: run.text, style: run.style), dispose: () {});
-
-RunRendering? _plainElsewhere(CustomRun run) =>
-    (span: TextSpan(text: run.text, style: run.style), dispose: () {});
-
 void main() {
   TextSpanNode custom(String text) =>
       TextSpanNode(text: text, decoration: SpanDecoration(isCustom: true));
@@ -74,10 +68,15 @@ void main() {
     });
 
     testWidgets('a different handler rebuilds them', (tester) async {
-      await pumpRuns(tester, [custom('x')], customs: const [_plain]);
+      RunRendering? plain(CustomRun run) =>
+          (span: TextSpan(text: run.text, style: run.style), dispose: () {});
+      RunRendering? plainElsewhere(CustomRun run) =>
+          (span: TextSpan(text: run.text, style: run.style), dispose: () {});
+
+      await pumpRuns(tester, [custom('x')], customs: [plain]);
       final first = onlySpan(tester);
 
-      await pumpRuns(tester, [custom('x')], customs: const [_plainElsewhere]);
+      await pumpRuns(tester, [custom('x')], customs: [plainElsewhere]);
 
       expect(onlySpan(tester), isNot(same(first)));
     });

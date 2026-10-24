@@ -7,27 +7,22 @@ import 'package:natural_block_flutter/natural_block_flutter.dart';
 
 import '../rendered_spans.dart';
 
-RunRendering? _boxed(CustomRun run) =>
-    widgetRun(const SizedBox(width: 20, height: 10));
-
-void _ignore(String _) {}
-
-RunRendering? _links(CustomRun run) =>
-    tappableText(run.text, run.style, onTap: _ignore);
-
 void main() {
   group('Selectable text', () {
     testWidgets('a drag selects across cells, rows, a box and a raw block', (
       tester,
     ) async {
+      RunRendering? boxed(CustomRun run) =>
+          widgetRun(const SizedBox(width: 20, height: 10));
+
       SelectedContent? selected;
       await tester.pumpWidget(
         MaterialApp(
           home: SelectionArea(
             onSelectionChanged: (content) => selected = content,
-            child: const NaturalBlockView(
+            child: NaturalBlockView(
               source: 'a^b|c :@x:@ d\n`raw`\ne',
-              customs: [_boxed],
+              customs: [boxed],
             ),
           ),
         ),
@@ -155,18 +150,20 @@ void main() {
       tester,
     ) async {
       const inert = <RunHandler>[];
-      const wired = <RunHandler>[_links];
+      final wired = <RunHandler>[
+        (run) => tappableText(run.text, run.style, onTap: (_) {}),
+      ];
 
       Widget view({
         NaturalBlockTheme? theme,
         NaturalBlockBuilders builders = NaturalBlockBuilders.defaults,
-        List<RunHandler> customs = wired,
+        List<RunHandler>? customs,
       }) => MaterialApp(
         home: NaturalBlockView(
           source: ':@tap:@',
           theme: theme,
           builders: builders,
-          customs: customs,
+          customs: customs ?? wired,
         ),
       );
 

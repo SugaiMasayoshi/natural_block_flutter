@@ -5,17 +5,6 @@ import 'package:natural_block_flutter/natural_block_flutter.dart';
 
 import '../rendered_spans.dart';
 
-RunRendering? _mentions(CustomRun run) =>
-    run.text.startsWith('user(') && run.text.endsWith(')')
-    ? (
-        span: TextSpan(
-          text: run.text.substring(5, run.text.length - 1),
-          style: run.style,
-        ),
-        dispose: () {},
-      )
-    : null;
-
 void main() {
   Widget wrap(Widget child) => MaterialApp(
     home: DefaultTextStyle(
@@ -64,12 +53,23 @@ void main() {
   group('Drawing a custom run yourself', () {
     testWidgets('a handler may rewrite a run, and one that declines leaves it '
         'to the next', (tester) async {
+      RunRendering? mentions(CustomRun run) =>
+          run.text.startsWith('user(') && run.text.endsWith(')')
+          ? (
+              span: TextSpan(
+                text: run.text.substring(5, run.text.length - 1),
+                style: run.style,
+              ),
+              dispose: () {},
+            )
+          : null;
+
       await tester.pumpWidget(
         wrap(
-          const NaturalBlockView(
+          NaturalBlockView(
             source:
                 ':@user(alice):@ and :@image(https://example.invalid/a.png):@',
-            customs: [_mentions, NaturalBlockImages.network],
+            customs: [mentions, NaturalBlockImages.network],
           ),
         ),
       );
