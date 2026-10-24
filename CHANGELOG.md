@@ -34,9 +34,8 @@ Initial release.
   -- not a second list of the same fields kept for comparing. That second
   list is a place for a field to reach the drawing and not the comparison,
   and then a change never redraws; `NaturalBlockScope` now carries value
-  equality so there is one list instead of two. `customs` compares by
-  identity, so a handler of one's own is a top-level function or a method of
-  one's state, never a closure written afresh in a `build`.
+  equality so there is one list instead of two. `customs` is `const`,
+  so the list compares as the same one.
 - `TextNodeView` draws a line's styled runs, built with `Text.rich` so the
   result takes part in text selection: wrap a view in a `SelectionArea` and
   the text is selectable and copyable across cell and row boundaries.
@@ -299,6 +298,9 @@ Initial release.
   superset entry point could not. `dart:io` stays off the web through a
   conditional import, so a local path there declines as it always did.
 - A run is announced to a screen reader only when something is wired to it.
-- Keep a `customs` list stable -- `const`, or held in your state. One written
-  afresh on every build never compares equal to the last, which redraws every
-  line and loses a tap held across the redraw.
+- `customs` is marked `@mustBeConst`, so the analyzer warns where it is not
+  `const`. A list written afresh each build would redraw every line and lose
+  a tap held across it, and a handler reading the app's state would draw it
+  once and keep it; asking for `const` rules out both where they are
+  written, instead of in a note to remember. A tap still reaches the app's
+  state through the `BuildContext` `tappableText` hands its `onTap`.

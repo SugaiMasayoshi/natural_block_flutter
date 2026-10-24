@@ -1,4 +1,5 @@
 import 'package:flutter/widgets.dart';
+import 'package:meta/meta.dart';
 import 'package:natural_block/natural_block.dart';
 
 import '../custom/run_handler.dart';
@@ -18,8 +19,10 @@ class NaturalBlockView extends StatefulWidget {
   /// The handlers a custom run is offered to, in order, until one claims it.
   /// With none, custom runs are styled and nothing more.
   ///
-  /// Keep the list stable -- `const`, or held in your state. One written
-  /// afresh each build redraws every line and loses a tap held across it.
+  /// Must be `const`: the drawn lines are kept while this is the same list, so
+  /// one written afresh each build redraws every line, and a handler that
+  /// reads your state would draw it once and keep it. A tap gets the current
+  /// `BuildContext` through `tappableText`'s `onTap` instead.
   final List<RunHandler> customs;
 
   const NaturalBlockView({
@@ -27,7 +30,7 @@ class NaturalBlockView extends StatefulWidget {
     required this.source,
     this.theme,
     this.builders = NaturalBlockBuilders.defaults,
-    this.customs = const [],
+    @mustBeConst this.customs = const [],
   });
 
   @override

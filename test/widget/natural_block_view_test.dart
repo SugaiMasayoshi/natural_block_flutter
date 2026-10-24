@@ -22,6 +22,7 @@ void main() {
             onSelectionChanged: (content) => selected = content,
             child: NaturalBlockView(
               source: 'a^b|c :@x:@ d\n`raw`\ne',
+              // ignore: non_const_argument_for_const_parameter
               customs: [boxed],
             ),
           ),
@@ -58,6 +59,7 @@ void main() {
           home: NaturalBlockView(
             source: ':@x:@|`\nr\n`',
             builders: NaturalBlockBuilders(raw: raw),
+            // ignore: non_const_argument_for_const_parameter
             customs: [handler],
           ),
         ),
@@ -87,6 +89,7 @@ void main() {
       Widget view(double width) => MediaQuery(
         data: MediaQueryData(size: Size(width, 600)),
         child: MaterialApp(
+          // ignore: non_const_argument_for_const_parameter
           home: NaturalBlockView(source: ':@x:@', customs: customs),
         ),
       );
@@ -134,6 +137,7 @@ void main() {
       final customs = <RunHandler>[counting];
 
       Widget view(String source) => MaterialApp(
+        // ignore: non_const_argument_for_const_parameter
         home: NaturalBlockView(source: source, customs: customs),
       );
 
@@ -161,6 +165,7 @@ void main() {
           source: ':@tap:@',
           theme: theme,
           builders: builders,
+          // ignore: non_const_argument_for_const_parameter
           customs: customs ?? wired,
         ),
       );

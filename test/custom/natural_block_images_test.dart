@@ -138,6 +138,7 @@ void main() {
         ('image(C:/no/such/file.png)', NaturalBlockImages.local),
       ]) {
         await tester.pumpWidget(
+          // ignore: non_const_argument_for_const_parameter
           wrap(NaturalBlockView(source: ':@$payload:@', customs: [handler])),
         );
         await tester.runAsync(

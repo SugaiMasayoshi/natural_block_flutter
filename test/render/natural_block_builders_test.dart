@@ -60,6 +60,7 @@ void main() {
         MaterialApp(
           home: NaturalBlockView(
             source: '|x^:@a:@|~:@b:@^c~',
+            // ignore: non_const_argument_for_const_parameter
             customs: [(run) => tappableText(run, onTap: (_) {})],
           ),
         ),

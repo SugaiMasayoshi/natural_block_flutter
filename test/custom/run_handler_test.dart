@@ -22,6 +22,7 @@ void main() {
         wrap(
           NaturalBlockView(
             source: ':@tap me:@ plain',
+            // ignore: non_const_argument_for_const_parameter
             customs: [
               (run) => tappableText(run, onTap: (_) => tapped.add(run.text)),
             ],
@@ -48,6 +49,7 @@ void main() {
       Widget view(int lines) => MaterialApp(
         home: DefaultTextStyle.merge(
           maxLines: lines,
+          // ignore: non_const_argument_for_const_parameter
           child: NaturalBlockView(source: ':@x:@', customs: customs),
         ),
       );
@@ -66,6 +68,7 @@ void main() {
         wrap(
           NaturalBlockView(
             source: ':@x:@',
+            // ignore: non_const_argument_for_const_parameter
             customs: [
               (run) {
                 run.withContext((_) {});
@@ -111,6 +114,7 @@ void main() {
           NaturalBlockView(
             source:
                 ':@user(alice):@ and :@image(https://example.invalid/a.png):@',
+            // ignore: non_const_argument_for_const_parameter
             customs: [mentions, NaturalBlockImages.network],
           ),
         ),
@@ -134,6 +138,7 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
+          // ignore: non_const_argument_for_const_parameter
           home: NaturalBlockView(source: ':@x:@', customs: [first, second]),
         ),
       );
@@ -153,6 +158,7 @@ void main() {
 
       final customs = <RunHandler>[counting];
       Widget view(String source) => MaterialApp(
+        // ignore: non_const_argument_for_const_parameter
         home: NaturalBlockView(source: source, customs: customs),
       );
 

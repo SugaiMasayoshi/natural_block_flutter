@@ -17,6 +17,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  meta: ^1.19.0
   natural_block:
     path: ../natural_block
 
