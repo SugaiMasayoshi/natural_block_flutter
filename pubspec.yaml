@@ -18,8 +18,7 @@ dependencies:
   flutter:
     sdk: flutter
   meta: ^1.19.0
-  natural_block:
-    path: ../natural_block
+  natural_block: ^0.1.0
 
 dev_dependencies:
   flutter_test:

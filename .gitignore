@@ -34,3 +34,6 @@ migrate_working_dir/
 
 # Written by flutter_test when a golden comparison fails.
 **/failures/
+
+# Local path overrides until natural_block is published.
+pubspec_overrides.yaml

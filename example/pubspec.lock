@@ -124,19 +124,19 @@ packages:
     source: hosted
     version: "1.19.0"
   natural_block:
-    dependency: "direct main"
+    dependency: "direct overridden"
     description:
       path: "../../natural_block"
       relative: true
     source: path
-    version: "1.0.0"
+    version: "0.1.0"
   natural_block_flutter:
     dependency: "direct main"
     description:
       path: ".."
       relative: true
     source: path
-    version: "0.0.1"
+    version: "0.1.0"
   path:
     dependency: transitive
     description:
