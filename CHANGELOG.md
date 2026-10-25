@@ -1,4 +1,4 @@
-## 0.0.1
+## 0.1.0
 
 - Initial release.
 - `NaturalBlockView` renders a `natural_block` source as `Column`, `Row`,
