@@ -1,297 +1,256 @@
-# Design notes
+# 設計メモ
 
-Why the renderer is the way it is, and what it used to be. The README says
-how to use it; this says why.
+使い方は README に、なぜそうなっているか（と以前はどうだったか）をここに書く。
 
-## The view and its caches
+## ビューとキャッシュ
 
-- `natural_block` is re-exported. Builders and handlers are written against
-  its types -- `NodeBuilder<RowNode>`, `CustomRun.decoration` -- so one
-  import covers them, with no second dependency to add.
-- `NaturalBlockView` parses once per source, not once per build: the tree
-  owes nothing to the `BuildContext`, so an ancestor rebuilding -- a theme
-  change, an animating parent, a scroll -- reuses it, and only a new
-  `source` re-parses.
-- It keeps the drawn tree too, and hands back the very same widget object
-  when nothing it was drawn from has changed. That is the one thing Flutter
-  watches for: `updateChild` stops at a child whose widget has not changed,
-  so the whole document is skipped rather than rebuilt. `const` is the
-  framework's own version of this and cannot apply here, since a parsed
-  document is not a compile-time value. Measured on a debug build, an
-  ancestor rebuild of a 50-paragraph document went from 12.2ms to 7.0ms.
-- What it compares is the `NaturalBlockScope` it drew with, and the document
-  -- not a second list of the same fields kept for comparing. That second
-  list is a place for a field to reach the drawing and not the comparison,
-  and then a change never redraws; `NaturalBlockScope` carries value
-  equality so there is one list instead of two.
-- `customs` and `builders` are marked `@mustBeConst`. A list written afresh
-  each build would redraw every line and lose a tap held across it, and a
-  handler reading the app's state would draw it once and keep it; asking
-  for `const` rules out both where they are written, instead of in a note
-  to remember. A `NaturalBlockScope` is made by the view and never by hand
-  -- its constructor is `@internal` -- because a scope made elsewhere could
-  carry a list that is new on every build.
+- `natural_block` を再エクスポートする。ビルダやハンドラはその型
+  （`NodeBuilder<RowNode>`、`CustomRun.decoration`）で書くので、import 1つで
+  足り、依存を2つ目に足さなくて済む。
+- `NaturalBlockView` は build のたびではなく、ソースごとに1回だけ解析する。
+  木は `BuildContext` に何も負っていないので、祖先の作り直し（テーマの変更、
+  動く親、スクロール）では使い回し、`source` が変わったときだけ解析し直す。
+- 描いた木も持っておき、材料が何も変わっていなければ、まったく同じ
+  ウィジェットのオブジェクトを返す。Flutter が見ているのはそこだけで、
+  `updateChild` はウィジェットが変わっていない子で止まるので、文書全体が
+  作り直されずに飛ばされる。同じ仕組みのフレームワーク版が `const` だが、
+  解析した文書はコンパイル時の値ではないので使えない。デバッグビルドで
+  測ると、50 段落の文書で祖先を作り直す時間が 12.2ms から 7.0ms になった。
+- 比べるのは、描いたときの `NaturalBlockScope` と文書だ。比べるための
+  同じ項目のリストを別に持つことはしない。2つ目のリストがあると、描画には
+  届くのに比較には届かない項目ができ、その項目が変わっても描き直されなく
+  なる。`NaturalBlockScope` が値で等しさを持つので、リストは1つで済む。
+- `customs` と `builders` には `@mustBeConst` を付けた。build のたびに書いた
+  リストは毎回すべての行を描き直し、押している最中のタップを失う。アプリの
+  状態を読むハンドラは、最初に読んだ値で描いたまま変わらない。`const` を
+  求めれば、注意書きで覚えてもらう代わりに、書いたその場で両方を防げる。
+  `NaturalBlockScope` はビューが作るもので、手では作れない（コンストラクタは
+  `@internal`）。ほかで作った scope は、build のたびに新しいリストを持ちうる
+  からだ。
 
-## Lines
+## 行
 
-- `TextNodeView` builds with `Text.rich` so the result takes part in text
-  selection. A directly constructed `RichText` never registers with the
-  selection machinery, so a `SelectionArea` around one would do nothing.
-- A line's spans are built once and kept in its `State` until what they are
-  made of changes. This is a correctness measure, not a speed one -- it does
-  not make a rebuild faster. A recognizer that has taken a pointer down owns
-  an entry in the gesture arena, and replacing it mid-gesture throws that
-  entry away: the tap then vanishes with no error anywhere, and a test that
-  calls `onTap` directly cannot see it, because that bypasses the arena.
-  Flutter's own `TextSpan.recognizer` sample holds its recognizer in `State`
-  for the same reason and never rebuilds it. Ambient changes that do not
-  reach the spans -- a `DefaultTextStyle` size the theme's `base` overrides
-  -- are not a reason to replace one either, so the question is asked once
-  in `build`, which runs after both `didUpdateWidget` and
-  `didChangeDependencies`.
-- The spans lived in an `InlineSpans` object of their own for a while. That
-  existed because the state was two parallel fields -- the spans and the
-  recognizers -- whose correspondence was kept only by the order they were
-  written in, and bundling them made replacing one without the other
-  impossible. Once a handler began answering with what to release rather
-  than the package finding it, the spans became a projection of those
-  answers and could no longer disagree with them, so the object was holding
-  one widget's state and a relayed `dispose`. It went back into the `State`
-  that is for exactly that.
-- Turning a line into spans hands back the spans and, separately, whatever
-  needs releasing. Nothing ever asks which `dispose` belongs to which span,
-  so pairing them cost a record per run that was built, destructured, and
-  then held for the life of the line. Only a run a handler claims adds
-  anything now, so a line of ordinary text has nothing to release at all.
-  Measured in one session against the shape it replaced: 156ns per run
-  became 143ns for a line of a thousand runs, and 180ns became 129ns for a
-  line of twenty.
-- Every run of a line starts from one expression: the ambient style with the
-  theme's `base` merged over it. The root span and the baseline a `:+`
-  counts from were once computed separately, and a theme whose `base` named
-  a size made `:+` render smaller than the text beside it. A raw run once
-  took its style from the ambient one directly while the line compared the
-  root style, so under a `base` that names a size the spans were kept across
-  an ambient size change and the raw run went on showing the old size.
-  `RawNodeView` starts a raw block from `base` too, for the same reason.
-- Every list whose length is known before it is filled is built with
-  `List.generate` rather than a collection-for. A collection-for and a
-  hand-written `add` measure the same, because both grow a list and pay for
-  the reallocation; pre-sizing is what costs less. Compiled ahead of time and
-  measured on list building alone, a thousand elements cost 22.5us one way
-  and 3.9us the other. A loop stays a loop where no list comes out of it.
+- `TextNodeView` は `Text.rich` で作る。テキスト選択に参加させるためだ。
+  `RichText` を直接作ると選択の仕組みに登録されないので、`SelectionArea` で
+  包んでも何も起きない。
+- 行の span は一度作って `State` に持ち、材料が変わるまで作り直さない。
+  これは速さではなく正しさのためで、作り直しが速くなるわけではない。
+  指を下ろしたあとの認識器はジェスチャの調停（アリーナ）に登録されていて、
+  ジェスチャの途中で取り替えるとその登録が捨てられ、タップは何のエラーも
+  出さずに消える。`onTap` を直接呼ぶテストはアリーナを通らないので、これを
+  見つけられない。Flutter 自身の `TextSpan.recognizer` の例も、同じ理由で
+  認識器を `State` に持ち、作り直さない。span に届かない周りの変化（テーマの
+  `base` が上書きする `DefaultTextStyle` の大きさなど）も取り替える理由には
+  ならないので、判断は `didUpdateWidget` と `didChangeDependencies` のどちらの
+  あとにも走る `build` で1回だけ行う。
+- span は一時期、`InlineSpans` という専用のオブジェクトに入っていた。状態が
+  span と認識器という平行な2つの項目で、その対応が書いた順番だけで保たれて
+  いたので、まとめて片方だけを取り替えられないようにしていた。ハンドラが、
+  解放するものをパッケージに探させるのではなく自分で答えるようになってから
+  は、span はその答えの写しになり、食い違いようがなくなった。オブジェクトに
+  残ったのは1つのウィジェットの状態と、中継される `dispose` だけだったので、
+  まさにそのためにある `State` に戻した。
+- 行を span にすると、span と、それとは別に解放するものの一覧を返す。どの
+  `dispose` がどの span のものかを尋ねる場面はないので、組にすると run ごとに
+  レコードを作って分解し、行が生きている間持ち続けることになっていた。今は
+  ハンドラが引き受けた run だけが何かを足すので、普通の文字だけの行には
+  解放するものがない。置き換える前の形と同じセッションで測ると、run あたり
+  156ns が 143ns（1000 run の行）、180ns が 129ns（20 run の行）になった。
+- 行のすべての run は、周りの書式にテーマの `base` を重ねた1つの式から
+  始まる。以前は根の span と `:+` が数え始める基準を別々に計算していて、
+  `base` が大きさを決めるテーマでは `:+` が隣の文字より小さく描かれた。
+  また、raw の run は周りの書式を直接使い、行は根の書式で比べていたので、
+  `base` が大きさを決めていると、周りの大きさが変わっても span が使い回され、
+  raw の run だけが古い大きさのままになった。`RawNodeView` も同じ理由で
+  raw のブロックを `base` から始める。
+- 埋める前に長さが分かるリストは、collection-for ではなく `List.generate` で
+  作る。collection-for と手書きの `add` は同じ速さだ。どちらもリストを
+  伸ばして作り直しの代償を払う。安いのは前もって大きさを決めることだ。
+  AOT でコンパイルし、リストを作る部分だけを測ると、1000 要素で 22.5µs と
+  3.9µs だった。リストを作らない所はループのままにする。
 
-## Layout
+## レイアウト
 
-- Unstated and `HorizontalAlign.start` both draw at the start; what keeps
-  them apart is a table, where a cell that stated nothing is drawn with its
-  column instead. A non-start block is wrapped in `Align` rather than a
-  width-filling box, so adding an alignment marker can never make a document
-  stop rendering where the available width is unbounded. The raw block's box
-  is never stretched for the same reason.
-- The mapping from `HorizontalAlign` to Flutter layout lives in one `switch`
-  in `ColumnNodeView`, which blocks and table cells both draw through. Both
-  views used to hold a copy of it, one written as a `switch` statement and
-  one as a switch expression, which made the duplication easy to miss.
-- `RowNodeView` gives each cell an equal share of the width, which is what
-  keeps columns lined up between rows, and what makes `左^^右` push `右` to
-  the far edge. Where the width is unbounded there is no width to divide, so
-  it falls back to shrink-wrapped cells -- a degradation, since columns then
-  stop lining up and alignment markers become no-ops, but better than not
-  rendering.
-- A view takes a node only where it reads more of one than its children.
-  `TextNodeView` does, because a run becomes an `InlineSpan` and never a
-  widget, so that recursion cannot leave the view at all. `TableNodeView`
-  does, because it squares short rows off and resolves each cell's
-  alignment. `RawNodeView` is a leaf. `RowNodeView` and `ColumnNodeView`
-  decide only how to place what they are given, so they take widgets and
-  anyone can compose them -- which is also what lets one `ColumnNodeView`
-  serve a `ColumnNode`, a `TableCellNode` and the document root, none of
-  which share a type.
-- `TableNodeView` does the two things the tree deliberately leaves undone:
-  it squares short rows off to the table's width (Flutter's `TableRow`
-  requires every row to hold the same number of children) and resolves each
-  cell's alignment against its column. Both are questions about drawing,
-  asked of a tree that records only what the author wrote.
-- A table's border defaults to hairlines on every edge, outer frame
-  included: a table is the one construct with a declared beginning and end,
-  so a frame states something the source actually says.
+- 寄せなしと `HorizontalAlign.start` は、どちらも始端に描く。両者を分けるのは
+  表で、何も書かなかったセルは列の寄せで描く。始端以外のブロックは、幅
+  いっぱいに広がる箱ではなく `Align` で包む。幅に上限がない場所で、寄せの
+  記号を足しただけで文書が描けなくなることがないようにするためだ。raw
+  ブロックの箱を伸ばさないのも同じ理由。
+- `HorizontalAlign` から Flutter のレイアウトへの対応は、`ColumnNodeView` の
+  1つの `switch` にある。ブロックも表のセルもこれを通って描く。以前は両方の
+  ビューに写しがあり、片方は switch 文、片方は switch 式で書かれていたので、
+  重複に気づきにくかった。
+- `RowNodeView` は各セルに幅を均等に分ける。これが行をまたいで列を揃え、
+  `左^^右` の `右` を右端に押し出す。幅に上限がない所では分ける幅がないので、
+  セルを中身の幅に縮める。列は揃わなくなり寄せの記号も効かなくなるので
+  劣化だが、描けないよりはよい。
+- ビューがノードを受け取るのは、子より多くのことをノードから読むときだけだ。
+  `TextNodeView` はそうで、run は `InlineSpan` になりウィジェットにはならない
+  ので、その再帰はビューの外に出られない。`TableNodeView` もそうで、短い行を
+  揃え、各セルの寄せを解決する。`RawNodeView` は葉だ。`RowNodeView` と
+  `ColumnNodeView` は渡されたものの置き方だけを決めるので、ウィジェットを
+  受け取り、誰でも組み合わせられる。だから1つの `ColumnNodeView` が、型の
+  共通しない `ColumnNode`、`TableCellNode`、文書の根のどれにも使える。
+- `TableNodeView` は、木がわざと残している2つのことをする。短い行を表の幅に
+  揃えること（Flutter の `TableRow` はどの行にも同じ数の子を求める）と、
+  各セルの寄せを列の寄せと突き合わせることだ。どちらも描くときの問いで、
+  書き手が書いたことだけを記録する木に対して問う。
+- 表の枠線の既定は、外枠を含むすべての辺に細い線を引く。表は始まりと終わりを
+  宣言する唯一の構文なので、枠はソースが実際に言っていることを表す。
 
-## Theming
+## テーマ
 
-- A view given no theme uses `fromContext`, so a document reads correctly in
-  a light theme and a dark one without being told which it is in. Passing a
-  theme is opting out of that. `fromContext` takes `baseFontSize` from the
-  ambient `textTheme.bodyMedium`, which is Material's own "ordinary text",
-  so a document reads at the size the rest of the app does and nothing here
-  restates a number Material already decided. The step a `:+` is worth
-  cannot come from there: the Material scale runs 12, 14, 16, 22, 24, 28,
-  32, 36, 45, 57, so its steps are not uniform, and a size does not even
-  name a slot -- 14 is `bodyMedium`, `titleSmall` and `labelLarge` alike.
-- Striping lives on `fromColorScheme` rather than on the default constructor
-  because a band must be darker than the surface in a light theme and
-  lighter in a dark one, so no single constant can serve both. The raw
-  block's box is derived there for the same reason: a fixed translucent
-  black moves a light surface by about ten steps per channel and a dark one
-  by one, which is invisible.
-- `fromColorScheme` names only what a `ColorScheme` can answer. It used to
-  take the other fields as arguments as well, which meant re-declaring six
-  of the default constructor's defaults in a second place -- for no caller,
-  anywhere, that ever passed one. `copyWith` covers them.
-- "None" is written as a value, not as null: `const TableBorder()` has
-  `BorderSide.none` on every side and measures the same as no border at all,
-  and a `const BoxDecoration()` names no colour, border or shadow. That is
-  what lets `copyWith` mean "leave this alone" for every omitted argument,
-  the way Flutter's own `copyWith` methods do, with no sentinel standing in
-  for "not passed". `tableStripe` stays nullable, because `Color` has no
-  "none" of its own and a transparent one is still a fill -- it would put a
-  decoration on every other row of every table.
-- `styleFor` is the whole mapping from what the source said to what is
-  drawn. It lives on the theme because every value it needs is a field of
-  one, and because a builder of your own would otherwise have to reproduce
-  the order. It replaced a `styleFor(Tone)` that exposed only the first
-  step, leaving the rest in the renderer.
-- `==` and `hashCode` read one private list of the fields rather than naming
-  each field twice, so they cannot come to disagree about what a theme is
-  made of -- a field that reached `==` but not `hashCode` made two unequal
-  themes hash alike, and the view compares themes to decide whether the tree
-  it drew still holds. `NaturalBlockBuilders` is written the same way. The
-  cost is a list per comparison, which is one or two per build of a
-  document.
-- Code is monospaced because in a region whose whole point is exactness,
-  indentation and the difference between `l` and `1` are part of the
-  content. `rawScrollsHorizontally` is off by default: wrapping is wrong for
-  code, but turning it on puts a scroll view inside the caller's layout,
-  which nothing else here does.
+- テーマを渡されないビューは `fromContext` を使う。明るいテーマか暗いテーマか
+  を教えなくても、文書は正しく読める。テーマを渡すことは、それをやめること
+  だ。`fromContext` は `baseFontSize` を周りの `textTheme.bodyMedium` から取る。
+  これは Material 自身の「普通の文字」なので、文書はアプリのほかの文字と同じ
+  大きさで読め、Material がすでに決めた数をここで言い直さずに済む。`:+` 1段の
+  値はそこからは取れない。Material の大きさは 12、14、16、22、24、28、32、36、
+  45、57 と並び、段が均等でない。しかも大きさは枠の名前にすらならず、14 は
+  `bodyMedium` でも `titleSmall` でも `labelLarge` でもある。
+- 縞は既定のコンストラクタではなく `fromColorScheme` にある。縞は明るい
+  テーマでは背景より暗く、暗いテーマでは明るくなければならず、1つの定数では
+  両方に合わないからだ。raw ブロックの箱をそこで決めるのも同じ理由で、固定の
+  半透明の黒は明るい背景を各チャンネル約 10 段動かすが、暗い背景は 1 段しか
+  動かさず、見えない。
+- `fromColorScheme` は、`ColorScheme` が答えられるものだけを引数に取る。以前は
+  ほかの項目も引数で受けていて、既定のコンストラクタの既定値 6 つを2か所目で
+  宣言し直していたが、それを渡す呼び出し元はどこにもなかった。それらは
+  `copyWith` で足りる。
+- 「なし」は null ではなく値で書く。`const TableBorder()` はすべての辺が
+  `BorderSide.none` で、枠がないのと同じ大きさになる。`const BoxDecoration()`
+  は色も枠も影も持たない。だから `copyWith` は、Flutter 自身の `copyWith` と
+  同じく、省いた引数をすべて「そのまま」と扱え、「渡されなかった」を表す
+  番兵が要らない。`tableStripe` は null を許すまま残す。`Color` には「なし」が
+  なく、透明でも塗りであることは変わらないので、すべての表の1行おきに
+  装飾が付いてしまう。
+- `styleFor` は、ソースが言ったことから描くものへの対応のすべてだ。必要な値は
+  すべてテーマの項目なのでテーマに置き、そうしなければ自前のビルダがその
+  順番を作り直すことになる。最初の段だけを公開し、残りを描く側に置いていた
+  `styleFor(Tone)` を置き換えた。
+- `==` と `hashCode` は、項目を2回ずつ書くのではなく、項目を並べた非公開の
+  リスト1つを読む。そうすれば、テーマが何でできているかについて両者が
+  食い違わない。`==` にはあるが `hashCode` にはない項目があると、等しくない
+  2つのテーマが同じハッシュになる。ビューはテーマを比べて、描いた木がまだ
+  使えるかを決める。`NaturalBlockBuilders` も同じ書き方だ。代償は比べるたびの
+  リスト1つで、文書の build あたり1〜2回。
+- コードは等幅にする。正確さがすべての区間では、字下げや `l` と `1` の違いも
+  中身の一部だからだ。`rawScrollsHorizontally` の既定はオフ。コードを折り
+  返すのは誤りだが、オンにすると呼び出し側のレイアウトの中にスクロール
+  ビューが入る。それは、ここではほかに何もしないことだ。
 
-## Builders
+## ビルダ
 
-- `NaturalBlockBuilders` holds one builder per kind of node. The node types
-  are sealed, so the set is closed and can be named: the builder's node type
-  stays exact, nothing is cast on the way in, and a builder written for the
-  wrong kind does not compile. It replaced a `Type`-keyed map, which
-  modelled an openness the AST does not have and needed a fallback for types
-  that cannot occur.
-- The default builders are exported so a builder of your own can delegate
-  back. Naming one that way also keeps `NaturalBlockBuilders` const.
-- Choosing between the fields is `buildLayouts` / `buildContents`' job, and
-  they are the only places the tree says merely that one of several kinds is
-  there. Each switches over a sealed set small enough to be exhaustive, so
-  the nodes that are never drawn on their own -- the document, a table's
-  rows, the runs -- cannot be handed to a builder at all. Where the tree
-  already names one kind, as a table's cells do, there is nothing to choose
-  and the field is called directly.
-- The theme, the builders and the handlers travel together the whole way
-  down and no level swaps one of them for its children, so they are one
-  value, `NaturalBlockScope`, rather than three parameters repeated at every
-  level.
-- A builder gets no `BuildContext`. It was threaded through the whole layer
-  and read by nothing in it -- every default builder only passed it on --
-  and existed so a builder of the caller's own could read an inherited
-  widget. That possibility is what forced the view to drop its drawn tree
-  from `didChangeDependencies`: a builder could have read anything, the tree
-  cannot say what, so the only safe answer was to redraw the document on
-  every ambient change. Returning a `Builder` reads one instead, which puts
-  the dependency in an element of its own for Flutter to notify, so the
-  document is kept and only that line redraws.
-- `RunHandler` lost its `BuildContext` for the same reason, where it was not
-  a hazard but a defect. A handler that read a `MediaQuery` through the
-  context it was handed drew the first value and then never moved again: a
-  line keeps its spans until what they were built from changes, and what
-  they were built from can never say what a handler went and read. There is
-  no escape of the builders' kind either, because a `TextSpan` cannot read a
-  context lazily, and dropping the spans on an ambient change would replace
-  recognizers mid-gesture. Through `widgetRun(Builder(...))` the dependency
-  sits in an element of its own and Flutter tracks it.
+- `NaturalBlockBuilders` はノードの種類ごとにビルダを1つ持つ。ノードの型は
+  sealed なので、組は閉じていて名前で書ける。ビルダのノードの型は正確な
+  まま、受け取るときにキャストせず、違う種類用に書いたビルダはコンパイル
+  できない。`Type` をキーにしたマップを置き換えた。それは AST にない開かれ方
+  を表していて、起こりえない型のための代わりも要った。
+- 既定のビルダは公開してあり、自前のビルダから委ねられる。名前で渡せば
+  `NaturalBlockBuilders` も const のままにできる。
+- どの項目を使うかを選ぶのは `buildLayouts` と `buildContents` の仕事で、木が
+  「いくつかの種類のどれか」としか言わないのはそこだけだ。どちらも網羅できる
+  小さな sealed の組で switch するので、単独では描かないノード（文書、表の行、
+  run）はビルダに渡しようがない。表のセルのように、木がすでに1つの種類を
+  名指ししている所では、選ぶものがないので項目を直接呼ぶ。
+- テーマ、ビルダ、ハンドラは一番下まで一緒に運ばれ、子のためにどれかを
+  取り替える階層はない。だから各階層で繰り返す3つの引数ではなく、
+  `NaturalBlockScope` という1つの値にした。
+- ビルダは `BuildContext` を受け取らない。以前は層全体に通していたが、そこで
+  読むものは何もなく、既定のビルダはどれも渡すだけだった。呼び出し側の自前の
+  ビルダが inherited widget を読めるようにするためにあった。その可能性の
+  せいで、ビューは `didChangeDependencies` で描いた木を捨てなければならな
+  かった。ビルダは何でも読めるのに、木は何を読んだかを言えないので、安全な
+  答えは周りが変わるたびに文書を描き直すことしかなかった。代わりに
+  `Builder` を返せば、依存は Flutter が知らせる専用の要素に入り、文書は
+  残ったまま、その行だけが描き直される。
+- `RunHandler` も同じ理由で `BuildContext` をなくした。こちらは危険ではなく
+  欠陥だった。渡された context で `MediaQuery` を読むハンドラは、最初の値で
+  描いたあと二度と動かなかった。行は材料が変わるまで span を持ち続け、その
+  材料はハンドラが何を読みに行ったかを言えない。ビルダのような逃げ道もない。
+  `TextSpan` は context をあとから読めず、周りが変わるたびに span を捨てると、
+  ジェスチャの途中で認識器を取り替えることになる。`widgetRun(Builder(...))`
+  を通せば、依存は専用の要素に入り、Flutter が追う。
 
-## Custom runs
+## カスタムの run
 
-- This package does not call a custom run a link. The parser only records
-  that a run is custom; what tapping it means is the app's decision. Nothing
-  here ever interprets the text: no URL is opened, and there is no
-  `url_launcher` dependency.
-- The default `customs` is empty: tappable text and each kind of image are
-  things an app includes, so replacing a run and making it tappable are not
-  the same switch. With no handler a custom run is still styled, but it is
-  announced to a screen reader as interactive only when something is wired
-  to it -- claiming otherwise would be a promise nothing keeps.
-- A handler is given the run as one `CustomRun` rather than as several
-  arguments. Telling a handler one more thing is then a new field, which the
-  handlers already written simply do not read, instead of a new parameter
-  that every one of them must be edited to accept. It is a class rather than
-  a record: a record's shape is its type, so one more field would break
-  every record literal and pattern of it. `NaturalBlockImages.scaleOf` takes
-  the run for the same reason.
-- A handler answers with a `RunRendering`: the `InlineSpan` to put in the
-  line, and the `dispose` that releases whatever that span carries.
-  Returning a span rather than a description of one is what makes the
-  extension point reach as far as Flutter does -- a `TextSpan` so a long run
-  still wraps, a `TextSpan` with `children:` for text built from several
-  styled pieces that must select as one, a `WidgetSpan` for a widget, a
-  recognizer other than `TapGestureRecognizer` for a gesture other than a
-  tap. It replaced a sealed pair (`TextRun` / `WidgetRun`) whose two cases
-  bought the invariant "every span here is ours" by refusing everything in
-  between.
-- `dispose` is required rather than omittable, so a handler with nothing to
-  release writes `() {}` and says so. That is the whole guard: nothing
-  inspects a returned span, so a recognizer made without a `dispose` to
-  match leaks in silence. Required-and-trivially-satisfied was chosen over a
-  debug-only check that sweeps the span for a recognizer, because the check
-  cannot see anything that is not a recognizer -- a stream subscription, a
-  controller -- and the slot can. This is the contract `TextSpan.recognizer`
-  already hands a caller; Flutter has no inline-link widget of its own
-  ([flutter#91600](https://github.com/flutter/flutter/issues/91600) is
-  open), so the package is not standing in front of something better.
-- `tappableText` is written through that public API, recognizer and
-  `dispose` included, so it is also the worked example.
-- `widgetRun(child)` is not a wrapper around `WidgetSpan`, because it
-  disagrees with one: the alignment defaults to `middle` where
-  `WidgetSpan`'s own default is `bottom`. Measured against 14-point text, a
-  20-point box centres at 10 either way while the text centres at 10 for
-  `middle` and 13 for `bottom`, so the default leaves the text hanging below
-  what it sits beside. Of the alignments that cost the least line height --
-  `top`, `bottom` and `middle` all measure 20 against the baseline variants'
-  24 and 31 -- `middle` is the one that lines the two centres up. It was a
-  private helper in `NaturalBlockImages` while the same three lines were
-  being written by hand everywhere else, each needing the same sentence
-  about why an empty `dispose` is right.
-- What a tap means belongs to the handler that drew the run, so there is no
-  `onTap` on the view. One for the whole view could only receive a string
-  and guess which handler it came from. `tappableText` calls its `onTap`
-  with the line's `BuildContext` through `CustomRun.withContext`, so a
-  handler stays a top-level function -- its list `const` -- yet answers a
-  tap with what is current then. Calling `withContext` while drawing
-  asserts, since what is read then would be baked into a line nothing
-  redraws when it changes. It replaced an `onTap` taking only the text,
-  which a handler needing the app's state had to capture as a method of
-  that state, keeping its list out of `const`.
+- このパッケージは、カスタムの run をリンクとは呼ばない。パーサは run が
+  カスタムであることだけを記録し、押したときに何を意味するかはアプリが
+  決める。ここでは文字を一切解釈しない。URL を開くこともなく、
+  `url_launcher` にも依存しない。
+- `customs` の既定は空だ。押せる文字も画像の種類も、アプリが選んで入れる
+  もので、run を差し替えることと押せるようにすることは同じスイッチでは
+  ない。ハンドラがなくてもカスタムの run には書式が付くが、スクリーン
+  リーダーに操作できるものとして伝えるのは、何かがつながっているとき
+  だけだ。そうでなければ、誰も守らない約束になる。
+- ハンドラには run を、いくつもの引数ではなく1つの `CustomRun` として渡す。
+  ハンドラに伝えることを1つ増やすときは項目を足すだけで、書かれたハンドラは
+  それを読まないだけで済む。引数を足すと、すべてのハンドラを書き換えなければ
+  ならない。レコードではなくクラスにしたのは、レコードは形がそのまま型なので、
+  項目を1つ足すとそのレコードのリテラルやパターンがすべて壊れるからだ。
+  `NaturalBlockImages.scaleOf` が run を受け取るのも同じ理由。
+- ハンドラは `RunRendering` で答える。行に入れる `InlineSpan` と、その span が
+  持つものを解放する `dispose` だ。span の説明ではなく span そのものを返す
+  ことで、拡張口が Flutter と同じだけ届く。長い run が折り返す `TextSpan`、
+  1つとして選択されるべき複数の書式の文字を作る `children:` 付きの
+  `TextSpan`、ウィジェットのための `WidgetSpan`、タップ以外のジェスチャの
+  ための `TapGestureRecognizer` 以外の認識器。2つの場合（`TextRun` /
+  `WidgetRun`）の sealed の組を置き換えた。それは間にあるものをすべて拒む
+  ことで、「ここの span はすべて自分のもの」という不変条件を得ていた。
+- `dispose` は省略できず必須で、解放するものがないハンドラは `() {}` と書いて
+  そう言う。守りはそれだけだ。返された span は誰も調べないので、対応する
+  `dispose` なしで作った認識器は黙ってリークする。デバッグ時だけ span の中の
+  認識器を探す検査より、必須だが満たすのは簡単、という形を選んだ。検査は
+  認識器以外のもの（ストリームの購読、コントローラ）を見られないが、この枠
+  なら見られるからだ。これは `TextSpan.recognizer` がすでに呼び出し側に
+  渡している約束と同じだ。Flutter には文中のリンクのためのウィジェットが
+  なく（[flutter#91600](https://github.com/flutter/flutter/issues/91600) は
+  未解決）、このパッケージがよりよいものの前に立ちはだかっているわけでも
+  ない。
+- `tappableText` はその公開 API だけで、認識器も `dispose` も含めて書いて
+  あるので、そのまま実例にもなる。
+- `widgetRun(child)` は `WidgetSpan` の単なる包みではない。既定が違うからで、
+  寄せの既定は `middle` だが、`WidgetSpan` 自身の既定は `bottom` だ。14 ポイント
+  の文字に対して測ると、20 ポイントの箱の中心はどちらでも 10 だが、文字の
+  中心は `middle` で 10、`bottom` で 13 になり、既定のままでは文字が横の箱
+  から下に垂れて見える。行の高さが最も小さく済む寄せ（`top`、`bottom`、
+  `middle` はどれも 20、ベースライン系は 24 と 31）のうち、2つの中心を
+  そろえるのは `middle` だ。以前は `NaturalBlockImages` の非公開の補助で、
+  ほかの所では同じ3行を手で書き、そのたびに空の `dispose` が正しい理由を
+  同じ一文で説明していた。
+- タップが何を意味するかは、その run を描いたハンドラが決めるので、ビューに
+  `onTap` はない。ビュー全体で1つの `onTap` は文字列を受け取るしかなく、
+  どのハンドラから来たかを推測するしかない。`tappableText` は
+  `CustomRun.withContext` を通じて、行の `BuildContext` で `onTap` を呼ぶ。
+  だからハンドラはトップレベルの関数のまま（リストは `const` のまま）で、
+  タップしたときの最新のものに答えられる。描いている最中に `withContext` を
+  呼ぶと assert で止まる。そこで読んだものは、変わっても誰も描き直さない行に
+  焼き付くからだ。文字列だけを受け取る `onTap` を置き換えた。そのときは、
+  アプリの状態が要るハンドラをその状態のメソッドとして書くしかなく、
+  リストを `const` にできなかった。
 
-## Images
+## 画像
 
-- There is no image syntax. An image is a custom run with the payload
-  `image(<url>)`, so an implementation that has never heard of images still
-  shows readable text. The word is spelled out, and `img` is not accepted as
-  an alias: what the reader sees when nothing renders the payload is the
-  whole point of the convention, and two spellings would be exactly the
-  dialect it exists to prevent. Whitespace is never trimmed for the same
-  reason: `image( a.png )` reads as text, so a mistake shows up where it was
-  made.
-- Shipping a reference implementation is the point: declining to interpret
-  would not prevent dialects, it would guarantee them, with every app
-  inventing its own spelling.
-- `NaturalBlockImages.network` is off until included. Drawing a remote image
-  is a request to a third party made by displaying a document, and a URL
-  carrying a per-recipient marker turns that into a read receipt. The
-  package cannot tell those apart, so the disclosure decision belongs to the
-  app -- the same reason mail clients block remote images by default.
-- `NaturalBlockImages.local` is a handler of its own rather than a setting
-  on the first, because the two are different decisions: a remote image
-  tells a third party the document was opened, a local one puts the
-  reader's own file on screen under someone else's text, and lets a
-  document probe which paths exist from whether they draw. Separate handlers
-  also make local-without-network expressible. `dart:io` stays off the web
-  through a conditional import, so a local path there declines.
-- `sourceOf`, not `urlOf`: a local payload names a path, and on Windows that
-  is not a URL even by accident. `kindOf` exists because `Uri.parse` reads
-  `C:\Users\a.png` as a URI whose scheme is `c`, so "has a scheme, so it is
-  a URL" mistakes every Windows path for one.
+- 画像の構文はない。画像は `image(<url>)` を中身とするカスタムの run なので、
+  画像を知らない実装でも読める文字が出る。単語は省略せずに書き、`img` は
+  別名として受け付けない。何も描かないときに読み手が目にするものこそが
+  この慣習の要点で、綴りが2つあることは、まさにこの慣習が防ごうとしている
+  方言だからだ。同じ理由で空白も削らない。`image( a.png )` は文字として
+  読めるので、間違いは間違えた場所に現れる。
+- 参照実装を同梱することが要点だ。解釈を断っても方言は防げず、むしろどの
+  アプリも自分の綴りを発明することになる。
+- `NaturalBlockImages.network` は入れるまで無効だ。リモートの画像を描くことは、
+  文書を表示しただけで第三者に要求を送ることで、受け手ごとの印を持つ URL
+  ならそれは既読の通知になる。パッケージはその2つを見分けられないので、
+  知らせるかどうかの判断はアプリのものだ。メールのクライアントがリモートの
+  画像を既定で止めるのと同じ理由。
+- `NaturalBlockImages.local` は、1つ目の設定ではなく別のハンドラだ。2つは別の
+  判断だからで、リモートの画像は文書が開かれたことを第三者に伝え、ローカルの
+  画像は読み手自身のファイルを他人の文章の下に映し、描けたかどうかでどの
+  パスが存在するかを文書に探らせる。ハンドラを分ければ、ネットワークなしで
+  ローカルだけ、も書ける。`dart:io` は条件付き import で web から外してあり、
+  web ではローカルのパスは辞退する。
+- `urlOf` ではなく `sourceOf`。ローカルの中身はパスを名指しし、Windows では
+  それは偶然でも URL ではない。`kindOf` があるのは、`Uri.parse` が
+  `C:\Users\a.png` をスキームが `c` の URI と読むため、「スキームがあるから
+  URL」と判断すると、Windows のパスをすべて URL と取り違えるからだ。
