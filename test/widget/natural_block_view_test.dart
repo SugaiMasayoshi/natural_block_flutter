@@ -20,7 +20,7 @@ void main() {
           home: SelectionArea(
             onSelectionChanged: (content) => selected = content,
             child: NaturalBlockView(
-              source: 'a^b|c :@x:@ d\n`raw`\ne',
+              source: '^a^b^\nc :@x:@ d\n`raw`\ne',
               // ignore: non_const_argument_for_const_parameter
               customs: [boxed],
             ),
@@ -56,7 +56,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: NaturalBlockView(
-            source: ':@x:@|`\nr\n`',
+            source: ':@x:@\n`\nr\n`',
             // ignore: non_const_argument_for_const_parameter
             builders: NaturalBlockBuilders(raw: raw),
             // ignore: non_const_argument_for_const_parameter
@@ -142,11 +142,11 @@ void main() {
         home: NaturalBlockView(source: source, customs: customs),
       );
 
-      await tester.pumpWidget(view('one :@a:@|two :@b:@'));
+      await tester.pumpWidget(view('<one :@a:@\n<two :@b:@'));
       expect(calls, 2, reason: 'both lines built their custom span');
 
       calls = 0;
-      await tester.pumpWidget(view('ONE :@a:@|two :@b:@'));
+      await tester.pumpWidget(view('<ONE :@a:@\n<two :@b:@'));
 
       expect(calls, 1, reason: 'only the edited line builds its spans again');
     });
@@ -222,7 +222,7 @@ void main() {
               children: [
                 Text('rebuild $value'),
                 NaturalBlockView(
-                  source: 'one|two|three',
+                  source: '<one\n<two\n<three',
                   // ignore: non_const_argument_for_const_parameter
                   builders: NaturalBlockBuilders(text: countingText),
                 ),
@@ -260,11 +260,11 @@ void main() {
     ) async {
       for (final source in [
         'plain',
-        '|=A|',
-        '|>A|',
+        '=A',
+        '>A',
         '`code here`',
-        'a^b',
-        '|=~A^B|C^D~',
+        '^a^b^',
+        '=~A^B\nC^D~',
         '   ',
       ]) {
         await tester.pumpWidget(
@@ -294,7 +294,7 @@ void main() {
             alignment: Alignment.topLeft,
             child: SizedBox(
               width: 400,
-              child: NaturalBlockView(source: '|<A|>B|'),
+              child: NaturalBlockView(source: '<A\n>B'),
             ),
           ),
         ),

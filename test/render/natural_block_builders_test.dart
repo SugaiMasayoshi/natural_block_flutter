@@ -45,7 +45,7 @@ void main() {
     testWidgets('a row cell is a column', (tester) async {
       await pump(
         tester,
-        'a^b',
+        '^a^b^',
         NaturalBlockBuilders(column: (node, scope) => const Placeholder()),
       );
 
@@ -59,7 +59,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: NaturalBlockView(
-            source: '|x^:@a:@|~:@b:@^c~',
+            source: '^x^:@a:@^\n~:@b:@^c~',
             // ignore: non_const_argument_for_const_parameter
             customs: [(run) => tappableText(run, onTap: (_) {})],
           ),
