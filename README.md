@@ -213,4 +213,4 @@ const builders = NaturalBlockBuilders(text: spacedText);
 
 - Bugs and feature requests:
   [GitHub issues](https://github.com/SugaiMasayoshi/natural_block_flutter/issues).
-- Why it is built this way: [doc/design.md](doc/design.md).
+- Why it is built this way: [doc/design.md](doc/design.md) (in Japanese).
