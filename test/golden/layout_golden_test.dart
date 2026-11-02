@@ -112,18 +112,18 @@ void main() {
 
   testWidgets('tables', (tester) async {
     await _scene(tester, 'tables', [
-      ('~Item^Price\nApple^200\nBanana^1~', null),
-      ('~\nA^>BBBB\nC^D\nE^<F\n~', null),
-      ('~a^b\nc~', null),
+      ('~Item^Price^\nApple^200^\nBanana^1^~', null),
+      ('~\nA^>BBBB^\nC^D^\nE^<F^\n~', null),
+      ('~a^b^\nc^~', null),
       ('~one cell~', null),
       ('=~A^B~', null),
       (
-        '~a^b\nc^d\ne^f~',
+        '~a^b^\nc^d^\ne^f^~',
         NaturalBlockTheme.fromColorScheme(_scheme, striped: true),
       ),
-      ('~a^b\nc^d~', const NaturalBlockTheme(tableBorder: TableBorder())),
+      ('~a^b^\nc^d^~', const NaturalBlockTheme(tableBorder: TableBorder())),
       (
-        '~a^b\nc^d~',
+        '~a^b^\nc^d^~',
         const NaturalBlockTheme(
           tableCellPadding: EdgeInsets.symmetric(horizontal: 24),
         ),
@@ -164,11 +164,11 @@ void main() {
         '=:++:*Combined::\n'
             '^<:!left:!^=centre `raw`^>:%right:%^\n'
             '~\n'
-            '=:*Item::^>:*Price::\n'
-            ':@apple:@^>200\n'
-            '`banana`^>1\n'
+            '=:*Item::^>:*Price::^\n'
+            ':@apple:@^>200^\n'
+            '`banana`^>1^\n'
             '~\n'
-            '^a cell beside a table^~x^y\nz^w~^\n'
+            '^a cell beside a table^~x^y^\nz^w^~^\n'
             '=~A^B~\n'
             '^intro\n'
             '`\n'
