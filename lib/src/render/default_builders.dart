@@ -19,7 +19,7 @@ Widget buildRowNode(RowNode node, NaturalBlockScope scope) => RowNodeView(
 Widget buildColumnNode(ColumnNode node, NaturalBlockScope scope) =>
     ColumnNodeView(
       align: node.align,
-      children: buildContents(node.children, scope),
+      children: _cellContents(node.children, scope),
     );
 
 Widget buildTextNode(TextNode node, NaturalBlockScope scope) =>
@@ -34,5 +34,11 @@ Widget buildRawNode(RawNode node, NaturalBlockScope scope) =>
 Widget buildTableCellNode(TableCellNode node, NaturalBlockScope scope) =>
     ColumnNodeView(
       align: node.align,
-      children: buildContents(node.children, scope),
+      children: _cellContents(node.children, scope),
     );
+
+// An empty cell keeps a line's height, so a row of empty cells still shows.
+List<Widget> _cellContents(List<ContentNode> nodes, NaturalBlockScope scope) =>
+    nodes.isEmpty
+    ? [Text('', style: scope.theme.base)]
+    : buildContents(nodes, scope);

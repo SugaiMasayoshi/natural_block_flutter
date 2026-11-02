@@ -106,6 +106,7 @@ void main() {
       ('^<left^>right^', null),
       ('^<a^=b^>c^', null),
       ('^=a^bb^ccc^', null),
+      ('^a^b^\n^^^\n^c^d^', null),
       ('^=a centred cell long enough to wrap onto a second line^>end^', null),
     ]);
   });
@@ -116,6 +117,8 @@ void main() {
       ('~\nA^>BBBB^\nC^D^\nE^<F^\n~', null),
       ('~a^b^\nc^~', null),
       ('~one cell~', null),
+      ('~^Item^Notes^\n^Apple^red\nsweet^\n^Lemon^sour^~', null),
+      ('~^^~', null),
       ('=~A^B~', null),
       (
         '~a^b^\nc^d^\ne^f^~',
