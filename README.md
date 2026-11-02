@@ -1,5 +1,7 @@
 # natural_block_flutter
 
+[日本語](README.ja.md)
+
 Flutter widgets that render [natural_block](https://github.com/SugaiMasayoshi/natural_block),
 a lightweight markup language that leaves ordinary prose alone. Blocks,
 rows, tables, alignment, semantic decoration and code become `Column`,
