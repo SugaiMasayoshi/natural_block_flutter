@@ -52,7 +52,7 @@ void main() {
       const MaterialApp(
         home: Scaffold(
           body: NaturalBlockView(
-            source: 'Q|:@wrong(A → no):@ :@correct(B → yes):@',
+            source: 'Q\n:@wrong(A → no):@ :@correct(B → yes):@',
             customs: appCustoms,
           ),
         ),
