@@ -13,13 +13,11 @@ class NaturalBlockDemoPage extends StatelessWidget {
 
   const NaturalBlockDemoPage({
     super.key,
-    this.dark = false,
-    this.striped = false,
-    this.onDarkChanged = _ignore,
-    this.onStripedChanged = _ignore,
+    required this.dark,
+    required this.striped,
+    required this.onDarkChanged,
+    required this.onStripedChanged,
   });
-
-  static void _ignore(bool _) {}
 
   @override
   Widget build(BuildContext context) {

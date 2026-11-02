@@ -1,14 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/widget_previews.dart';
 
 import 'demo_page.dart';
 
 void main() {
   runApp(const MyApp());
 }
-
-@Preview(name: 'natural_block_flutter サンプル一覧')
-Widget naturalBlockSamplesPreview() => const NaturalBlockDemoPage();
 
 class MyApp extends StatefulWidget {
   const MyApp({super.key});
