@@ -1,30 +1,16 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:natural_block_flutter/natural_block_flutter.dart';
 
-// Drawn in fonts kept beside this file, so the pictures can be read. Another
-// OS may smooth the glyphs differently by a pixel or so; if these ever run
-// elsewhere, compare with a small tolerance rather than give the fonts up.
-// A failure leaves the old image, the new one and their difference under
+// Drawn in the test font, whose glyphs are plain boxes, so the pixels hardly
+// depend on the OS: these guard where things go, not how text looks. A
+// failure leaves the old image, the new one and their difference under
 // `failures/`.
 //
 // Regenerate with:
 //   flutter test test/golden --update-goldens
 
 final _scheme = ColorScheme.fromSeed(seedColor: Colors.deepPurple);
-
-Future<void> _loadFont(String family, List<String> files) async {
-  final loader = FontLoader(family);
-  for (final file in files) {
-    loader.addFont(
-      File('test/golden/fonts/$file').readAsBytes().then(ByteData.sublistView),
-    );
-  }
-  await loader.load();
-}
 
 /// One sample: a source, and the theme to draw it with when not the
 /// ambient one.
@@ -42,7 +28,7 @@ Future<void> _scene(
   await tester.pumpWidget(
     MaterialApp(
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(colorScheme: _scheme, fontFamily: 'Roboto'),
+      theme: ThemeData(colorScheme: _scheme),
       home: Scaffold(
         body: Align(
           alignment: Alignment.topLeft,
@@ -81,11 +67,6 @@ Future<void> _scene(
 }
 
 void main() {
-  setUpAll(() async {
-    await _loadFont('Roboto', ['Roboto-Regular.ttf', 'Roboto-Bold.ttf']);
-    await _loadFont('monospace', ['RobotoMono-Regular.ttf']);
-  });
-
   testWidgets('block alignment', (tester) async {
     await _scene(tester, 'alignment', [
       ('unstated', null),
