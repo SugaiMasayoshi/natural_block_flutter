@@ -30,6 +30,11 @@ jobs:
       - run: dart format --output=none --set-exit-if-changed .
       - run: flutter analyze --fatal-infos
       - run: flutter test
+      - if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: golden-failures
+          path: natural_block_flutter/test/**/failures/
       - run: flutter analyze --fatal-infos
         working-directory: natural_block_flutter/example
       - run: flutter test
