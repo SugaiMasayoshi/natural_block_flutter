@@ -1,23 +1,57 @@
 # natural_block_flutter example
 
-A demo app for the [`natural_block_flutter`](../README.md) package.
+## The smallest use
 
-It has two parts:
+```dart
+import 'package:flutter/material.dart';
+import 'package:natural_block_flutter/natural_block_flutter.dart';
 
-* **Playground** -- a text field at the top where you can type `natural_block` markup and see it rendered live, using `NaturalBlockView`.
-* **Sample gallery** -- a scrollable list of markup snippets, each shown alongside its rendered output: plain text, tones, combined tone+emphasis, size steps, punctuation that needs no escaping, escaping when it is needed, row and column layout, block alignment, custom text, tables (including per-column alignment and closing one), and images.
+void main() => runApp(const MaterialApp(home: Scaffold(body: Notes())));
 
-The app wires up the optional pieces so they can be seen working: `customs` holds `NaturalBlockImages.network` so `image(...)` payloads draw and a handler built on `tappableText` that reports taps, everything is wrapped in a `SelectionArea` so the text is selectable, and a theme derived from the app's own `ColorScheme` can be toggled between plain and striped tables, and between light and dark.
+// A custom run starting with https:// becomes a tap.
+RunRendering? links(CustomRun run) {
+  if (!run.text.startsWith('https://')) return null;
+  return tappableText(
+    run,
+    onTap: (context) =>
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(run.text))),
+  );
+}
 
-## Running it
+class Notes extends StatelessWidget {
+  const Notes({super.key});
+
+  @override
+  Widget build(BuildContext context) => const SelectionArea(
+    child: NaturalBlockView(
+      source:
+          '=:++*Release notes\n'
+          '<:%Fixed:% a crash on start. C++ and 100% need no escaping.\n'
+          'Details: :@https://example.com:@\n'
+          '^<Item^>Price^\n'
+          '^Apple^>100^',
+      customs: [links, NaturalBlockImages.network],
+    ),
+  );
+}
+```
+
+## The demo app
+
+This folder is also a demo app with two parts:
+
+* **Playground** -- type markup at the top and see it rendered live.
+* **Sample gallery** -- snippets of every construct beside how they render:
+  tones, size steps, punctuation that needs no escaping, escaping, rows,
+  alignment, custom runs, tables and images.
+
+It wires up the optional pieces so they can be seen working: images, a tap
+handler built on `tappableText`, a `SelectionArea`, and a theme from the app's
+`ColorScheme` that switches between light and dark, and plain and striped
+tables.
 
 ```bash
 cd example
 flutter run
-```
-
-You can also preview just the demo page, without launching the full app, via:
-
-```bash
-flutter widget-preview start
 ```
