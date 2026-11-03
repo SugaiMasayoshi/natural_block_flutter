@@ -12,6 +12,42 @@
 [natural_block の README](https://github.com/SugaiMasayoshi/natural_block/blob/main/README.ja.md)
 を見てください。
 
+## 見え方
+
+このソースは
+
+```text
+:++:*:%natural_block:: sample
+
+Ordinary prose passes through. C++, 100%, Really?! and you@example.com are untouched.
+
+:!Danger:! and :%Success:% and :*Emphasis:*
+
+Alignment starts a line with `<` `=` `>`; a row starts a line with `^` and closes with `^`.
+
+`
+final x = a == b ? 1 : 2;
+cat file.txt | grep foo | wc -l
+`
+
+A table is wrapped in `~`. Columns fit their content.
+
+~
+:*Item::^>:*Price::^=:*Stock::^
+Apple^150^12^
+Banana^98^3^
+Grape^1280^1^
+~
+
+:-A region on its own lines becomes a box; one inside a line becomes monospace text.
+
+^Updated^^>2026-09-02^
+```
+
+次のように描かれます。
+
+![上のソースを NaturalBlockView で描いたもの](doc/showcase.png)
+
 ## はじめに
 
 ```
