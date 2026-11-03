@@ -7,9 +7,11 @@ on:
 
 jobs:
   check:
-    runs-on: ubuntu-latest
+    # The goldens were drawn on Windows, and text edges differ by OS.
+    runs-on: windows-latest
     defaults:
       run:
+        shell: bash
         working-directory: natural_block_flutter
     steps:
       - uses: actions/checkout@v5
