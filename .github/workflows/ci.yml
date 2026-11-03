@@ -9,22 +9,8 @@ jobs:
   check:
     # The goldens were drawn on Windows, and text edges differ by OS.
     runs-on: windows-latest
-    defaults:
-      run:
-        shell: bash
-        working-directory: natural_block_flutter
     steps:
       - uses: actions/checkout@v5
-        with:
-          path: natural_block_flutter
-      # natural_block is not on pub.dev yet, so it is read from its repository.
-      - uses: actions/checkout@v5
-        with:
-          repository: SugaiMasayoshi/natural_block
-          path: natural_block
-      - run: |
-          printf 'dependency_overrides:\n  natural_block:\n    path: ../natural_block\n' > pubspec_overrides.yaml
-          printf 'dependency_overrides:\n  natural_block:\n    path: ../../natural_block\n' > example/pubspec_overrides.yaml
       - uses: subosito/flutter-action@v2
         with:
           flutter-version: 3.47.3
@@ -36,8 +22,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: golden-failures
-          path: natural_block_flutter/test/**/failures/
+          path: test/**/failures/
       - run: flutter analyze --fatal-infos
-        working-directory: natural_block_flutter/example
+        working-directory: example
       - run: flutter test
-        working-directory: natural_block_flutter/example
+        working-directory: example
+      - run: flutter pub publish --dry-run

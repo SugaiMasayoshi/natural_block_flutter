@@ -8,7 +8,6 @@ topics:
   - widgets
   - text
   - rich-text
-publish_to: none
 
 environment:
   sdk: ^3.13.1
