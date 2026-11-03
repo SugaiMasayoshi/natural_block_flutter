@@ -32,7 +32,7 @@ class Example extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const NaturalBlockView(
-      source: '=:++*見出し\n:!在庫切れ:! です\n^<品名^>価格^',
+      source: '=:++*Heading\n:!Out of stock:! today\n^<Item^>Price^',
     );
   }
 }
