@@ -25,7 +25,7 @@ jobs:
           printf 'dependency_overrides:\n  natural_block:\n    path: ../../natural_block\n' > example/pubspec_overrides.yaml
       - uses: subosito/flutter-action@v2
         with:
-          channel: stable
+          flutter-version: 3.47.3
       - run: flutter pub get
       - run: dart format --output=none --set-exit-if-changed .
       - run: flutter analyze --fatal-infos
