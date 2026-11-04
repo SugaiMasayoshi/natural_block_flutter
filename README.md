@@ -16,7 +16,7 @@ for the syntax.
 This source:
 
 ```text
-:++:*:%natural_block:: sample
+:++*%natural_block:: sample
 
 Ordinary prose passes through. C++, 100%, Really?! and you@example.com are untouched.
 

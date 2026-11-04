@@ -1,3 +1,8 @@
+## 0.2.0
+
+- Requires natural_block 0.2.0, where `~` opens and closes a table only at
+  the start of a line or of a row's cell.
+
 ## 0.1.0
 
 - Initial release.

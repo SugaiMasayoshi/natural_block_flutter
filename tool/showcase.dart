@@ -15,7 +15,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:natural_block_flutter/natural_block_flutter.dart';
 
 const _source = '''
-:++:*:%natural_block:: sample
+:++*%natural_block:: sample
 
 Ordinary prose passes through. C++, 100%, Really?! and you@example.com are untouched.
 

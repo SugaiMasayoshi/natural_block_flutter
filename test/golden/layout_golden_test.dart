@@ -94,20 +94,20 @@ void main() {
 
   testWidgets('tables', (tester) async {
     await _scene(tester, 'tables', [
-      ('~Item^Price^\nApple^200^\nBanana^1^~', null),
+      ('~Item^Price^\nApple^200^\nBanana^1^\n~', null),
       ('~\nA^>BBBB^\nC^D^\nE^<F^\n~', null),
-      ('~a^b^\nc^~', null),
-      ('~one cell~', null),
-      ('~^Item^Notes^\n^Apple^red\nsweet^\n^Lemon^sour^~', null),
-      ('~^^~', null),
-      ('=~A^B~', null),
+      ('~a^b^\nc^\n~', null),
+      ('~one cell\n~', null),
+      ('~^Item^Notes^\n^Apple^red\nsweet^\n^Lemon^sour^\n~', null),
+      ('~^^\n~', null),
+      ('=~A^B\n~', null),
       (
-        '~a^b^\nc^d^\ne^f^~',
+        '~a^b^\nc^d^\ne^f^\n~',
         NaturalBlockTheme.fromColorScheme(_scheme, striped: true),
       ),
-      ('~a^b^\nc^d^~', const NaturalBlockTheme(tableBorder: TableBorder())),
+      ('~a^b^\nc^d^\n~', const NaturalBlockTheme(tableBorder: TableBorder())),
       (
-        '~a^b^\nc^d^~',
+        '~a^b^\nc^d^\n~',
         const NaturalBlockTheme(
           tableCellPadding: EdgeInsets.symmetric(horizontal: 24),
         ),
@@ -145,15 +145,15 @@ void main() {
   testWidgets('everything nested in one document', (tester) async {
     await _scene(tester, 'combined', [
       (
-        '=:++:*Combined::\n'
+        '=:++*Combined::\n'
             '^<:!left:!^=centre `raw`^>:%right:%^\n'
             '~\n'
             '=:*Item::^>:*Price::^\n'
             ':@apple:@^>200^\n'
             '`banana`^>1^\n'
             '~\n'
-            '^a cell beside a table^~x^y^\nz^w^~^\n'
-            '=~A^B~\n'
+            '^a cell beside a table^~x^y^\nz^w^\n~^\n'
+            '=~A^B\n~\n'
             '^intro\n'
             '`\n'
             'if (x) {\n'
