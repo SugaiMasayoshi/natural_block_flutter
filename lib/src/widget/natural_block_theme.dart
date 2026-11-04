@@ -4,6 +4,13 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:natural_block/natural_block.dart';
 
+// Green, toned for each brightness the way a scheme tones its error.
+final _positiveLight = ColorScheme.fromSeed(seedColor: Colors.green).primary;
+final _positiveDark = ColorScheme.fromSeed(
+  seedColor: Colors.green,
+  brightness: Brightness.dark,
+).primary;
+
 class NaturalBlockTheme {
   final TextStyle base;
 
@@ -76,7 +83,11 @@ class NaturalBlockTheme {
     final rule = BorderSide(color: scheme.outlineVariant);
     return NaturalBlockTheme(
       negative: TextStyle(color: scheme.error),
-      positive: TextStyle(color: scheme.tertiary),
+      positive: TextStyle(
+        color: scheme.brightness == Brightness.light
+            ? _positiveLight
+            : _positiveDark,
+      ),
       custom: TextStyle(
         color: scheme.primary,
         decoration: TextDecoration.underline,

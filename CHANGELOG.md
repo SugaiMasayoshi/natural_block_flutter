@@ -2,6 +2,9 @@
 
 - Requires natural_block 0.2.0, where `~` opens and closes a table only at
   the start of a line or of a row's cell.
+- `fromColorScheme` and `fromContext` draw the positive tone green, toned
+  for the brightness, instead of the scheme's `tertiary`, which can be as red
+  as `error`.
 
 ## 0.1.0
 
