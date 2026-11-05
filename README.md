@@ -200,7 +200,9 @@ NaturalBlockView(
 
 - `NaturalBlockImages.scaleOf(run)` follows the run's `:+` / `:-` steps.
 
-### A payload convention (non-normative)
+### A payload convention
+
+This is a convention, not a rule.
 
 | Text | Meaning |
 |---|---|
@@ -228,10 +230,12 @@ Widget spacedText(TextNode node, NaturalBlockScope scope) => Padding(
 const builders = NaturalBlockBuilders(text: spacedText);
 ```
 
-- The defaults (`buildRowNode`, `buildColumnNode`, `buildTableNode`,
-  `buildTableCellNode`, `buildTextNode`, `buildRawNode`) and their widgets
-  (`RowNodeView`, `ColumnNodeView`, `TableNodeView`, `TextNodeView`,
-  `RawNodeView`) are exported to delegate to or reuse.
+- The default builders and their widgets are exported to delegate to or
+  reuse.
+  - Builders: `buildRowNode`, `buildColumnNode`, `buildTableNode`,
+    `buildTableCellNode`, `buildTextNode`, `buildRawNode`
+  - Widgets: `RowNodeView`, `ColumnNodeView`, `TableNodeView`,
+    `TextNodeView`, `RawNodeView`
 - Recurse into children with `buildLayouts(node.children, scope)` or
   `buildContents(node.children, scope)`, so they keep the same theme,
   builders and handlers.

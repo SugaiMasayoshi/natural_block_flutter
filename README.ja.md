@@ -197,7 +197,9 @@ NaturalBlockView(
 
 - `NaturalBlockImages.scaleOf(run)` は、その区間の `:+` / `:-` の段に従います。
 
-### 中身の慣習（規定ではありません）
+### 中身の慣習
+
+決まりではなく、慣習です。
 
 | 文字 | 意味 |
 |---|---|
@@ -225,10 +227,12 @@ Widget spacedText(TextNode node, NaturalBlockScope scope) => Padding(
 const builders = NaturalBlockBuilders(text: spacedText);
 ```
 
-- 既定のビルダ（`buildRowNode`、`buildColumnNode`、`buildTableNode`、
-  `buildTableCellNode`、`buildTextNode`、`buildRawNode`）とそのウィジェット
-  （`RowNodeView`、`ColumnNodeView`、`TableNodeView`、`TextNodeView`、
-  `RawNodeView`）は、処理を任せたり再利用したりできるよう公開しています。
+- 既定のビルダとそのウィジェットは、処理を任せたり再利用したりできるよう公開して
+  います。
+  - ビルダ: `buildRowNode`、`buildColumnNode`、`buildTableNode`、
+    `buildTableCellNode`、`buildTextNode`、`buildRawNode`
+  - ウィジェット: `RowNodeView`、`ColumnNodeView`、`TableNodeView`、
+    `TextNodeView`、`RawNodeView`
 - 子へは `buildLayouts(node.children, scope)` か
   `buildContents(node.children, scope)` で再帰してください。同じテーマ、
   ビルダ、ハンドラが引き継がれます。
