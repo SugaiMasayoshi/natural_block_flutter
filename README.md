@@ -215,6 +215,10 @@ This is a convention, not a rule.
 Keep payloads human-readable: an app that does not recognise one still shows
 it as text.
 
+For a payload of your own that takes an argument, follow `image(...)`:
+`run.argumentOf('note')` gives what is inside `note(...)`, or null when the
+run is not one.
+
 ## Builders
 
 `NaturalBlockBuilders` has one builder per kind of node: `row`, `column`,

@@ -46,6 +46,20 @@ final class CustomRun {
     required this.decoration,
     required this.withContext,
   });
+
+  /// What is between the parentheses when [text] is exactly `name(...)`, as
+  /// `image(<source>)` is, or null. How the argument splits further is the
+  /// handler's to decide:
+  ///
+  /// ```dart
+  /// // :@note(say this slowly):@
+  /// run.argumentOf('note') // 'say this slowly'
+  /// ```
+  String? argumentOf(String name) {
+    final open = '$name(';
+    if (!text.startsWith(open) || !text.endsWith(')')) return null;
+    return text.substring(open.length, text.length - 1);
+  }
 }
 
 /// Answers how [run] is drawn, or null to leave it to the next handler.

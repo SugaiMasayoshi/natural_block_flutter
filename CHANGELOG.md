@@ -1,3 +1,8 @@
+## Unreleased
+
+- `CustomRun.argumentOf(name)` reads a `name(<argument>)` payload, the shape
+  `image(<source>)` has, without a regular expression.
+
 ## 0.2.0
 
 - Requires natural_block 0.2.0, where `~` opens and closes a table only at
