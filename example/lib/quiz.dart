@@ -1,20 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:natural_block_flutter/natural_block_flutter.dart';
 
-final _choice = RegExp(r'^(correct|wrong)\((.+?)(?:\s*→\s*(.+))?\)$');
-
-/// Draws `correct(<label> → <message>)` and `wrong(<label> → <message>)` as a
+/// Draws `correct(<label>→<message>)` and `wrong(<label>→<message>)` as a
 /// choice that says whether it was right while it is open. The message is
 /// optional. Unrendered, the payload still reads as the answer it marks.
 RunRendering? quizChoice(CustomRun run) {
-  final match = _choice.firstMatch(run.text);
-  if (match == null) return null;
+  final correct = run.argumentOf('correct');
+  final argument = correct ?? run.argumentOf('wrong');
+  if (argument == null) return null;
+
+  final arrow = argument.indexOf('→');
+  final label = arrow < 0 ? argument : argument.substring(0, arrow);
+  final message = arrow < 0 ? null : argument.substring(arrow + 1);
 
   return widgetRun(
     _QuizChoice(
-      correct: match[1] == 'correct',
-      label: match[2]!,
-      message: match[3],
+      correct: correct != null,
+      label: label,
+      message: message,
       fontSize: run.style.fontSize!,
     ),
   );

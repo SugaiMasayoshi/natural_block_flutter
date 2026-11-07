@@ -19,7 +19,7 @@ class _PlaygroundState extends State<Playground> {
         ':+++大きく:--標準に戻す\n'
         '^左のセル^右のセル^\n'
         ':@ここをタップ:@ するとSnackBarが出る\n'
-        '1 + 1 は？\n:@wrong(1 → ちがいます):@\n:@correct(2 → 正解):@',
+        '1 + 1 は？\n:@wrong(1→ちがいます):@\n:@correct(2→正解):@',
   );
 
   @override
