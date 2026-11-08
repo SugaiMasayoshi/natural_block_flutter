@@ -213,8 +213,8 @@ NaturalBlockView(
 表示されます。
 
 引数を取る中身を自分で作るときは、`image(...)` と同じ形にします。
-`run.argumentOf('note')` は `note(...)` の括弧の中を返し、そうでない区間なら
-null を返します。
+`payloadArgument(run.text, 'note')` は `note(...)` の括弧の中を返し、そうでない
+区間なら null を返します。ハンドラの中でも、木から拾った文字にも使えます。
 
 ## ビルダ
 

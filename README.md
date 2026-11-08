@@ -216,8 +216,9 @@ Keep payloads human-readable: an app that does not recognise one still shows
 it as text.
 
 For a payload of your own that takes an argument, follow `image(...)`:
-`run.argumentOf('note')` gives what is inside `note(...)`, or null when the
-run is not one.
+`payloadArgument(run.text, 'note')` gives what is inside `note(...)`, or null
+when the run is not one. It works in a handler and on text picked out of the
+tree alike.
 
 ## Builders
 

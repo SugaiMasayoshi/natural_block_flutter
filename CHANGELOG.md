@@ -1,7 +1,8 @@
 ## Unreleased
 
-- `CustomRun.argumentOf(name)` reads a `name(<argument>)` payload, the shape
-  `image(<source>)` has, without a regular expression.
+- `payloadArgument(payload, name)` reads a `name(<argument>)` payload, the
+  shape `image(<source>)` has, from a run's text or from text picked out of
+  the tree.
 
 ## 0.2.0
 

@@ -5,8 +5,8 @@ import 'package:natural_block_flutter/natural_block_flutter.dart';
 /// choice that says whether it was right while it is open. The message is
 /// optional. Unrendered, the payload still reads as the answer it marks.
 RunRendering? quizChoice(CustomRun run) {
-  final correct = run.argumentOf('correct');
-  final argument = correct ?? run.argumentOf('wrong');
+  final correct = payloadArgument(run.text, 'correct');
+  final argument = correct ?? payloadArgument(run.text, 'wrong');
   if (argument == null) return null;
 
   final arrow = argument.indexOf('→');

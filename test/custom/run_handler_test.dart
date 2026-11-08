@@ -177,7 +177,7 @@ void main() {
     });
   });
 
-  test('argumentOf reads name(...) and declines anything else', () {
+  test('payloadArgument reads name(...) and declines anything else', () {
     const expected = <String, String?>{
       'note(say this)': 'say this',
       'note()': '',
@@ -190,14 +190,7 @@ void main() {
     };
 
     for (final MapEntry(key: text, value: argument) in expected.entries) {
-      final run = CustomRun(
-        text: text,
-        style: const TextStyle(),
-        theme: const NaturalBlockTheme(),
-        decoration: const SpanDecoration(),
-        withContext: (_) {},
-      );
-      expect(run.argumentOf('note'), argument, reason: '"$text"');
+      expect(payloadArgument(text, 'note'), argument, reason: '"$text"');
     }
   });
 }
