@@ -1,8 +1,8 @@
 ## Unreleased
 
-- `payloadArgument(payload, name)` reads a `name(<argument>)` payload, the
-  shape `image(<source>)` has, from a run's text or from text picked out of
-  the tree.
+- Requires the next natural_block, whose `payloadArgument(payload, name)`
+  reads a `name(<argument>)` payload, the shape `image(<source>)` has. It is
+  re-exported, so a handler reads `payloadArgument(run.text, 'note')`.
 - `NaturalBlockView.document` draws a `DocumentNode` already parsed.
 - Breaking: `NaturalBlockView` is sealed, and a view no longer exposes the
   `source` it was given. A test finds views with
