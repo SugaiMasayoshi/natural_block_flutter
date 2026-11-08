@@ -5,7 +5,8 @@
   the tree.
 - `NaturalBlockView.document` draws a `DocumentNode` already parsed.
 - Breaking: `NaturalBlockView` is sealed, and a view no longer exposes the
-  `source` it was given.
+  `source` it was given. A test finds views with
+  `find.bySubtype<NaturalBlockView>()`, since `find.byType` matches none.
 
 ## 0.2.0
 
