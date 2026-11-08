@@ -92,6 +92,10 @@ class Example extends StatelessWidget {
 ブロックやセルをまたいで文字を選択できるようにするには、ビューを
 `SelectionArea` で包みます。
 
+先に木を読んで設定を拾うときなど、解析済みの `DocumentNode` を描くには
+`NaturalBlockView.document(document: document)` を使います。`source` の代わりに
+`document` を受け取り、それ以外は同じです。
+
 ## テーマ
 
 ```dart

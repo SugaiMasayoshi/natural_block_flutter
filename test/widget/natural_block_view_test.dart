@@ -204,6 +204,52 @@ void main() {
       expect(find.byType(Placeholder), findsOneWidget, reason: 'builders');
     });
 
+    testWidgets('a parsed tree draws as its source does', (tester) async {
+      const source = '<one\n^two^three^';
+      await tester.pumpWidget(
+        const MaterialApp(home: NaturalBlockView(source: source)),
+      );
+      final fromSource = renderedSpans(tester, index: 1).single.toPlainText();
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: NaturalBlockView.document(
+            document: NaturalBlockParser.parse(source),
+          ),
+        ),
+      );
+      expect(find.text('one'), findsOneWidget);
+      expect(renderedSpans(tester, index: 1).single.toPlainText(), fromSource);
+    });
+
+    testWidgets('a different tree draws again, an equal one does not', (
+      tester,
+    ) async {
+      var builds = 0;
+      Widget countingText(TextNode node, NaturalBlockScope scope) {
+        builds++;
+        return Text(node.children.whereType<TextSpanNode>().single.text);
+      }
+
+      Widget view(String source) => MaterialApp(
+        home: NaturalBlockView.document(
+          document: NaturalBlockParser.parse(source),
+          // ignore: non_const_argument_for_const_parameter
+          builders: NaturalBlockBuilders(text: countingText),
+        ),
+      );
+
+      await tester.pumpWidget(view('one'));
+      expect(builds, 1);
+
+      await tester.pumpWidget(view('one'));
+      expect(builds, 1, reason: 'an equal tree, parsed afresh, is kept');
+
+      await tester.pumpWidget(view('two'));
+      expect(builds, 2);
+      expect(find.text('two'), findsOneWidget);
+    });
+
     testWidgets('an ancestor rebuild does not re-parse', (tester) async {
       var builds = 0;
       Widget countingText(TextNode node, NaturalBlockScope scope) {

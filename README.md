@@ -91,6 +91,10 @@ not. Write handlers and builders as top-level functions.
 Wrap the view in a `SelectionArea` to make the text selectable across
 blocks and cells.
 
+To draw a `DocumentNode` already parsed, for instance one read first for its
+settings, use `NaturalBlockView.document(document: document)`. It takes
+`document` in place of `source` and is otherwise the same.
+
 ## Theme
 
 ```dart

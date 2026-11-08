@@ -8,9 +8,9 @@ import '../render/natural_block_render.dart';
 import 'column_node_view.dart';
 import 'natural_block_theme.dart';
 
-class NaturalBlockView extends StatefulWidget {
-  final String source;
-
+/// Draws natural_block markup: from a [NaturalBlockView.new] source, or from
+/// a [NaturalBlockView.document] tree already parsed.
+sealed class NaturalBlockView extends StatefulWidget {
   /// Null takes the theme from the ambient one.
   final NaturalBlockTheme? theme;
 
@@ -27,27 +27,79 @@ class NaturalBlockView extends StatefulWidget {
   /// `BuildContext` through `tappableText`'s `onTap` instead.
   final List<RunHandler> customs;
 
-  const NaturalBlockView({
+  const NaturalBlockView._({
     super.key,
-    required this.source,
-    this.theme,
-    @mustBeConst this.builders = NaturalBlockBuilders.defaults,
-    @mustBeConst this.customs = const [],
+    required this.theme,
+    required this.builders,
+    required this.customs,
   });
+
+  /// Parses [source] and draws it.
+  const factory NaturalBlockView({
+    Key? key,
+    required String source,
+    NaturalBlockTheme? theme,
+    @mustBeConst NaturalBlockBuilders builders,
+    @mustBeConst List<RunHandler> customs,
+  }) = _SourceView;
+
+  /// Draws [document] without parsing, for a tree that was parsed to be read
+  /// first, or one built or cut apart by hand.
+  const factory NaturalBlockView.document({
+    Key? key,
+    required DocumentNode document,
+    NaturalBlockTheme? theme,
+    @mustBeConst NaturalBlockBuilders builders,
+    @mustBeConst List<RunHandler> customs,
+  }) = _DocumentView;
 
   @override
   State<NaturalBlockView> createState() => _NaturalBlockViewState();
 }
 
+final class _SourceView extends NaturalBlockView {
+  final String source;
+
+  const _SourceView({
+    super.key,
+    required this.source,
+    super.theme,
+    super.builders = NaturalBlockBuilders.defaults,
+    super.customs = const [],
+  }) : super._();
+}
+
+final class _DocumentView extends NaturalBlockView {
+  final DocumentNode document;
+
+  const _DocumentView({
+    super.key,
+    required this.document,
+    super.theme,
+    super.builders = NaturalBlockBuilders.defaults,
+    super.customs = const [],
+  }) : super._();
+}
+
 class _NaturalBlockViewState extends State<NaturalBlockView> {
-  late DocumentNode _document = NaturalBlockParser.parse(widget.source);
+  DocumentNode _read() => switch (widget) {
+    _SourceView(:final source) => NaturalBlockParser.parse(source),
+    _DocumentView(:final document) => document,
+  };
+
+  late DocumentNode _document = _read();
 
   @override
   void didUpdateWidget(NaturalBlockView oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.source != oldWidget.source) {
-      _document = NaturalBlockParser.parse(widget.source);
-    }
+    final unchanged = switch ((widget, oldWidget)) {
+      (_SourceView(:final source), _SourceView(source: final was)) =>
+        source == was,
+      (_DocumentView(:final document), _DocumentView(document: final was)) =>
+        identical(document, was),
+      _ => false,
+    };
+    if (!unchanged) _document = _read();
   }
 
   // The same widget object lets Flutter skip the whole subtree.
@@ -59,7 +111,7 @@ class _NaturalBlockViewState extends State<NaturalBlockView> {
   @override
   void reassemble() {
     super.reassemble();
-    _document = NaturalBlockParser.parse(widget.source);
+    _document = _read();
     _cached = null;
   }
 
