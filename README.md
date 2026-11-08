@@ -111,7 +111,7 @@ true` bands table rows instead of ruling them. Change anything else with
 | Field | Controls |
 |---|---|
 | `base`, `negative`, `positive`, `emphasis`, `custom` | Text styles for each decoration |
-| `baseFontSize`, `fontSizeStep`, `minFontSize` | What a `:+` / `:-` step is worth |
+| `fontScaleFor` | How many times the size around it each `:+` / `:-` step draws; 1.2 per step by default |
 | `tableCellPadding`, `tableBorder`, `tableStripe` | Tables |
 | `raw`, `rawPadding`, `rawDecoration`, `rawScrollsHorizontally` | Code regions |
 

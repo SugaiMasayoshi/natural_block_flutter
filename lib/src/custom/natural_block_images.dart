@@ -45,13 +45,10 @@ abstract final class NaturalBlockImages {
   }
 
   /// `Image.scale` for [run]: 1 with no step, so an image keeps its own size,
-  /// and each `:+` or `:-` moves it by `fontSizeStep` against `baseFontSize`.
-  /// It divides, so less than 1 draws the image larger.
-  static double scaleOf(CustomRun run) {
-    final theme = run.theme;
-    return theme.baseFontSize /
-        theme.styleFor(run.decoration, baseSize: theme.baseFontSize).fontSize!;
-  }
+  /// and each `:+` or `:-` scales it as `fontScaleFor` scales text. It
+  /// divides, so less than 1 draws the image larger.
+  static double scaleOf(CustomRun run) =>
+      1 / run.theme.fontScaleFor(run.decoration.sizeOffset);
 
   static const String _prefix = 'image(';
 

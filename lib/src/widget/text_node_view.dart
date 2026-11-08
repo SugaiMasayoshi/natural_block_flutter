@@ -123,7 +123,7 @@ typedef _SpanInputs = ({
 
       case TextSpanNode():
         final text = run.text;
-        final baseSize = from.rootStyle.fontSize ?? theme.baseFontSize;
+        final baseSize = from.rootStyle.fontSize ?? kDefaultFontSize;
         final style = theme.styleFor(run.decoration, baseSize: baseSize);
 
         RunRendering? claimed;

@@ -6,16 +6,17 @@ import 'package:natural_block_flutter/natural_block_flutter.dart';
 
 void main() {
   group('NaturalBlockTheme.styleFor', () {
-    const theme = NaturalBlockTheme(fontSizeStep: 3);
+    const theme = NaturalBlockTheme(fontScaleFor: _doublePerStep);
 
     TextStyle styleOf(SpanDecoration decoration, {double baseSize = 14}) =>
         theme.styleFor(decoration, baseSize: baseSize);
 
-    test('a size step counts from baseSize', () {
-      expect(styleOf(SpanDecoration(sizeOffset: 2)).fontSize, 14 + 2 * 3);
+    test('a size step scales baseSize by fontScaleFor', () {
+      expect(styleOf(SpanDecoration(sizeOffset: 2)).fontSize, 14 * 4);
+      expect(styleOf(SpanDecoration(sizeOffset: -1)).fontSize, 14 / 2);
       expect(
         styleOf(SpanDecoration(sizeOffset: 1), baseSize: 30).fontSize,
-        30 + 3,
+        30 * 2,
       );
     });
 
@@ -34,13 +35,6 @@ void main() {
         );
       }
     });
-
-    test('a step cannot drive the size below minFontSize', () {
-      expect(
-        styleOf(SpanDecoration(sizeOffset: -99)).fontSize,
-        theme.minFontSize,
-      );
-    });
   });
 
   group('equality covers every field', () {
@@ -54,9 +48,7 @@ void main() {
         emphasis: const TextStyle(fontStyle: FontStyle.italic),
       ),
       'custom': base.copyWith(custom: const TextStyle(color: Colors.pink)),
-      'baseFontSize': base.copyWith(baseFontSize: 99),
-      'fontSizeStep': base.copyWith(fontSizeStep: 99),
-      'minFontSize': base.copyWith(minFontSize: 99),
+      'fontScaleFor': base.copyWith(fontScaleFor: _doublePerStep),
       'tableCellPadding': base.copyWith(
         tableCellPadding: const EdgeInsets.all(99),
       ),
@@ -118,15 +110,11 @@ void main() {
     }
   });
 
-  testWidgets('fromContext counts sizes from the ambient body text, and '
-      'stripes when asked', (tester) async {
+  testWidgets('fromContext stripes when asked', (tester) async {
     late NaturalBlockTheme theme;
     late NaturalBlockTheme striped;
     await tester.pumpWidget(
       MaterialApp(
-        theme: ThemeData(
-          textTheme: const TextTheme(bodyMedium: TextStyle(fontSize: 21)),
-        ),
         home: Builder(
           builder: (context) {
             theme = NaturalBlockTheme.fromContext(context);
@@ -137,8 +125,9 @@ void main() {
       ),
     );
 
-    expect(theme.baseFontSize, 21);
     expect(theme.tableStripe, isNull);
     expect(striped.tableStripe, isNotNull);
   });
 }
+
+double _doublePerStep(int sizeOffset) => pow(2, sizeOffset).toDouble();

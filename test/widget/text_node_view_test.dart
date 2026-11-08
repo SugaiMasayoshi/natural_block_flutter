@@ -95,7 +95,7 @@ void main() {
 
       await pumpRuns(tester, [
         TextSpanNode(text: 'x'),
-      ], theme: const NaturalBlockTheme(fontSizeStep: 9));
+      ], theme: const NaturalBlockTheme(rawScrollsHorizontally: true));
 
       expect(onlySpan(tester), isNot(same(first)));
     });

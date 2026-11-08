@@ -112,7 +112,7 @@ NaturalBlockView(
 | フィールド | 決めるもの |
 |---|---|
 | `base`、`negative`、`positive`、`emphasis`、`custom` | 装飾ごとの文字のスタイル |
-| `baseFontSize`、`fontSizeStep`、`minFontSize` | `:+` / `:-` の1段の大きさ |
+| `fontScaleFor` | `:+` / `:-` の段ごとに、周りの文字の何倍で描くか。既定は1段 1.2 倍 |
 | `tableCellPadding`、`tableBorder`、`tableStripe` | 表 |
 | `raw`、`rawPadding`、`rawDecoration`、`rawScrollsHorizontally` | コードの区間 |
 

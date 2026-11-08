@@ -102,14 +102,14 @@ void main() {
         CustomRun(
           text: 'image(https://example.invalid/a.png)',
           style: const TextStyle(fontSize: 30),
-          theme: const NaturalBlockTheme(baseFontSize: 14, fontSizeStep: 4),
+          theme: const NaturalBlockTheme(),
           decoration: decoration,
           withContext: (_) {},
         ),
       );
 
       expect(scaleWith(const SpanDecoration()), 1);
-      expect(scaleWith(SpanDecoration(sizeOffset: 1)), 14 / 18);
+      expect(scaleWith(SpanDecoration(sizeOffset: 1)), 1 / 1.2);
     });
 
     testWidgets('an image carries a semantic label', (tester) async {
@@ -164,7 +164,6 @@ void main() {
         wrap(
           const NaturalBlockView(
             source: r':@image(C:\a.png):@',
-            theme: NaturalBlockTheme(baseFontSize: 28),
             customs: [NaturalBlockImages.local, NaturalBlockImages.network],
           ),
         ),

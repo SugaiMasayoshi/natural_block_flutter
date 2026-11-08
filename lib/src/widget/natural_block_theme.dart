@@ -1,4 +1,4 @@
-import 'dart:math' show max;
+import 'dart:math' show pow;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -22,11 +22,10 @@ class NaturalBlockTheme {
 
   final TextStyle custom;
 
-  final double baseFontSize;
-
-  final double fontSizeStep;
-
-  final double minFontSize;
+  /// How many times the size around it a run `sizeOffset` steps of `:+` or
+  /// `:-` is drawn. A step is 1.2 times by default. A top-level function keeps
+  /// the theme `const`, and equal from one build to the next.
+  final double Function(int sizeOffset) fontScaleFor;
 
   final EdgeInsets tableCellPadding;
 
@@ -54,9 +53,7 @@ class NaturalBlockTheme {
       color: Colors.blue,
       decoration: TextDecoration.underline,
     ),
-    this.baseFontSize = 14,
-    this.fontSizeStep = 4,
-    this.minFontSize = 1,
+    this.fontScaleFor = _twentyPercentPerStep,
     this.tableCellPadding = const EdgeInsets.symmetric(
       horizontal: 8,
       vertical: 4,
@@ -109,21 +106,19 @@ class NaturalBlockTheme {
     );
   }
 
-  /// A theme from the ambient `ThemeData`: colours from its `ColorScheme`, and
-  /// the size a `:+` counts from its `bodyMedium`.
+  /// A theme whose colours come from the ambient `ThemeData`.
   factory NaturalBlockTheme.fromContext(
     BuildContext context, {
     bool striped = false,
   }) {
-    final theme = Theme.of(context);
     return NaturalBlockTheme.fromColorScheme(
-      theme.colorScheme,
+      Theme.of(context).colorScheme,
       striped: striped,
-    ).copyWith(baseFontSize: theme.textTheme.bodyMedium?.fontSize);
+    );
   }
 
   /// The style one run draws with: [base], then its tone, emphasis and custom
-  /// marking, at [baseSize] moved by its `:+` and `:-` steps. The size comes
+  /// marking, at [baseSize] scaled by [fontScaleFor]. The size comes
   /// only from these: a `fontSize` in the tone, emphasis or custom styles is
   /// not used.
   TextStyle styleFor(SpanDecoration decoration, {required double baseSize}) =>
@@ -135,12 +130,7 @@ class NaturalBlockTheme {
           })
           .merge(decoration.isEmphasized ? emphasis : null)
           .merge(decoration.isCustom ? custom : null)
-          .copyWith(
-            fontSize: max(
-              minFontSize,
-              baseSize + decoration.sizeOffset * fontSizeStep,
-            ),
-          );
+          .copyWith(fontSize: baseSize * fontScaleFor(decoration.sizeOffset));
 
   /// This theme with the given fields replaced. An omitted argument keeps the
   /// current value; none can set a field to null.
@@ -150,9 +140,7 @@ class NaturalBlockTheme {
     TextStyle? positive,
     TextStyle? emphasis,
     TextStyle? custom,
-    double? baseFontSize,
-    double? fontSizeStep,
-    double? minFontSize,
+    double Function(int sizeOffset)? fontScaleFor,
     EdgeInsets? tableCellPadding,
     TableBorder? tableBorder,
     Color? tableStripe,
@@ -166,9 +154,7 @@ class NaturalBlockTheme {
     positive: positive ?? this.positive,
     emphasis: emphasis ?? this.emphasis,
     custom: custom ?? this.custom,
-    baseFontSize: baseFontSize ?? this.baseFontSize,
-    fontSizeStep: fontSizeStep ?? this.fontSizeStep,
-    minFontSize: minFontSize ?? this.minFontSize,
+    fontScaleFor: fontScaleFor ?? this.fontScaleFor,
     tableCellPadding: tableCellPadding ?? this.tableCellPadding,
     tableBorder: tableBorder ?? this.tableBorder,
     tableStripe: tableStripe ?? this.tableStripe,
@@ -185,9 +171,7 @@ class NaturalBlockTheme {
     positive,
     emphasis,
     custom,
-    baseFontSize,
-    fontSizeStep,
-    minFontSize,
+    fontScaleFor,
     tableCellPadding,
     tableBorder,
     tableStripe,
@@ -205,3 +189,5 @@ class NaturalBlockTheme {
   @override
   int get hashCode => Object.hashAll(_fields);
 }
+
+double _twentyPercentPerStep(int sizeOffset) => pow(1.2, sizeOffset).toDouble();
