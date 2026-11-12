@@ -4,6 +4,9 @@
   reads a `name(<argument>)` payload, the shape `image(<source>)` has. It is
   re-exported, so a handler reads `payloadArgument(run.text, 'note')`.
 - `NaturalBlockView.document` draws a `DocumentNode` already parsed.
+- A row's cells line up on the baseline of their first lines, where they
+  lined up at the top. `^:++A^B^` now sets `B` on the line `A` stands on;
+  cells whose first lines are the same size and font stay where they were.
 - Breaking: `NaturalBlockTheme.fontScaleFor` sizes `:+` and `:-` as a ratio
   of the text around the view, 1.2 per step by default. It replaces
   `baseFontSize`, `fontSizeStep` and `minFontSize`; set the body size with
