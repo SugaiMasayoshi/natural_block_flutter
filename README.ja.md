@@ -117,6 +117,8 @@ NaturalBlockView(
 | `raw`、`rawPadding`、`rawDecoration`、`rawScrollsHorizontally` | コードの区間 |
 
 `styleFor(decoration, baseSize: ...)` は、区間を描くときのスタイルを返します。
+`base` に `height` を書くと、行の上下に足される余白は、`:+` や `:-` で大きさを
+変えても同じピクセル数のままです。大きな行だけ間が広がることはありません。
 罫線や枠を消すには、`const TableBorder()` や `const BoxDecoration()` を渡します。
 
 ## カスタムの区間

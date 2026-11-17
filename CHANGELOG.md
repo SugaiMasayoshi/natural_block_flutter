@@ -4,6 +4,10 @@
   reads a `name(<argument>)` payload, the shape `image(<source>)` has. It is
   re-exported, so a handler reads `payloadArgument(run.text, 'note')`.
 - `NaturalBlockView.document` draws a `DocumentNode` already parsed.
+- With a `height` in `NaturalBlockTheme.base`, `:+` and `:-` keep the space
+  it adds around a line the same in pixels, where it grew with the size. A
+  large line no longer carries a wide gap, so blank lines read the same next
+  to any size.
 - A row's cells line up on the baseline of their first lines, where they
   lined up at the top. `^:++A^B^` now sets `B` on the line `A` stands on;
   cells whose first lines are the same size and font stay where they were.

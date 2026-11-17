@@ -25,6 +25,32 @@ void main() {
       expect(styleOf(const SpanDecoration(), baseSize: 30).fontSize, 30);
     });
 
+    test('the space a base height adds stays the same at every size', () {
+      const spaced = NaturalBlockTheme(
+        base: TextStyle(height: 1.5),
+        fontScaleFor: _doublePerStep,
+      );
+      double spaceAround(int sizeOffset) {
+        final style = spaced.styleFor(
+          SpanDecoration(sizeOffset: sizeOffset),
+          baseSize: 20,
+        );
+        return style.fontSize! * (style.height! - 1);
+      }
+
+      for (final sizeOffset in [-1, 0, 1, 2]) {
+        expect(
+          spaceAround(sizeOffset),
+          closeTo(10, 1e-9),
+          reason: '$sizeOffset',
+        );
+      }
+    });
+
+    test('no base height leaves the height to the font', () {
+      expect(styleOf(SpanDecoration(sizeOffset: 2)).height, isNull);
+    });
+
     test('base lies under every tone', () {
       const based = NaturalBlockTheme(base: TextStyle(fontFamily: 'Serif'));
       for (final tone in Tone.values) {

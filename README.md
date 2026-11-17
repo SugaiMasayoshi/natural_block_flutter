@@ -116,6 +116,9 @@ true` bands table rows instead of ruling them. Change anything else with
 | `raw`, `rawPadding`, `rawDecoration`, `rawScrollsHorizontally` | Code regions |
 
 `styleFor(decoration, baseSize: ...)` gives the style a run is drawn with.
+With a `height` in `base`, the space it adds around a line stays the same
+number of pixels at every `:+` and `:-` size, so a large line carries no
+wider gap than a body line.
 To turn a border or box off, pass `const TableBorder()` or
 `const BoxDecoration()`.
 

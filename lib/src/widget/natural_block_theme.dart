@@ -121,16 +121,26 @@ class NaturalBlockTheme {
   /// marking, at [baseSize] scaled by [fontScaleFor]. The size comes
   /// only from these: a `fontSize` in the tone, emphasis or custom styles is
   /// not used.
-  TextStyle styleFor(SpanDecoration decoration, {required double baseSize}) =>
-      base
-          .merge(switch (decoration.tone) {
-            Tone.negative => negative,
-            Tone.positive => positive,
-            Tone.none => null,
-          })
-          .merge(decoration.isEmphasized ? emphasis : null)
-          .merge(decoration.isCustom ? custom : null)
-          .copyWith(fontSize: baseSize * fontScaleFor(decoration.sizeOffset));
+  ///
+  /// The space a `height` in [base] adds around a line stays the same in
+  /// pixels at every size, so a large line carries no more space than a body
+  /// line and a blank line looks the same next to either.
+  TextStyle styleFor(SpanDecoration decoration, {required double baseSize}) {
+    final scale = fontScaleFor(decoration.sizeOffset);
+    final bodyHeight = base.height;
+    return base
+        .merge(switch (decoration.tone) {
+          Tone.negative => negative,
+          Tone.positive => positive,
+          Tone.none => null,
+        })
+        .merge(decoration.isEmphasized ? emphasis : null)
+        .merge(decoration.isCustom ? custom : null)
+        .copyWith(
+          fontSize: baseSize * scale,
+          height: bodyHeight == null ? null : 1 + (bodyHeight - 1) / scale,
+        );
+  }
 
   /// This theme with the given fields replaced. An omitted argument keeps the
   /// current value; none can set a field to null.
