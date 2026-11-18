@@ -79,6 +79,7 @@ void main() {
         tableCellPadding: const EdgeInsets.all(99),
       ),
       'tableBorder': base.copyWith(tableBorder: const TableBorder()),
+      'striped': base.copyWith(striped: true),
       'tableStripe': base.copyWith(tableStripe: const Color(0xFF123456)),
       'raw': base.copyWith(raw: const TextStyle(fontFamily: 'Courier')),
       'rawPadding': base.copyWith(rawPadding: const EdgeInsets.all(99)),
@@ -104,10 +105,9 @@ void main() {
         seedColor: Colors.deepPurple,
         brightness: brightness,
       );
-      final stripe = NaturalBlockTheme.fromColorScheme(
-        scheme,
-        striped: true,
-      ).tableStripe!;
+      final stripe = const NaturalBlockTheme(striped: true)
+          .resolve(scheme)
+          .tableStripe!;
 
       final surfaceLuminance = scheme.surface.computeLuminance();
       final stripeLuminance = stripe.computeLuminance();
@@ -136,23 +136,45 @@ void main() {
     }
   });
 
-  testWidgets('fromContext stripes when asked', (tester) async {
-    late NaturalBlockTheme theme;
-    late NaturalBlockTheme striped;
-    await tester.pumpWidget(
-      MaterialApp(
-        home: Builder(
-          builder: (context) {
-            theme = NaturalBlockTheme.fromContext(context);
-            striped = NaturalBlockTheme.fromContext(context, striped: true);
-            return const SizedBox();
-          },
-        ),
-      ),
-    );
+  group('resolve', () {
+    final scheme = ColorScheme.fromSeed(seedColor: Colors.deepPurple);
 
-    expect(theme.tableStripe, isNull);
-    expect(striped.tableStripe, isNotNull);
+    test('fills the colours a theme leaves open from the scheme', () {
+      final theme = const NaturalBlockTheme().resolve(scheme);
+
+      expect(theme.negative.color, scheme.error);
+      expect(theme.custom.color, scheme.primary);
+      expect(theme.tableBorder?.top.color, scheme.outlineVariant);
+      expect(theme.tableStripe, isNull);
+      expect(theme.rawDecoration?.color, scheme.surfaceContainerHigh);
+    });
+
+    test('keeps what a theme sets, and the rest of its styles', () {
+      final theme = const NaturalBlockTheme(
+        negative: TextStyle(letterSpacing: 2),
+        positive: TextStyle(color: Colors.pink),
+        tableBorder: TableBorder(),
+        rawDecoration: BoxDecoration(),
+      ).resolve(scheme);
+
+      expect(theme.negative.color, scheme.error);
+      expect(theme.negative.letterSpacing, 2);
+      expect(theme.positive.color, Colors.pink);
+      expect(theme.tableBorder, const TableBorder());
+      expect(theme.rawDecoration, const BoxDecoration());
+    });
+
+    test('stripes when asked', () {
+      final striped = const NaturalBlockTheme(striped: true).resolve(scheme);
+
+      expect(striped.tableStripe, scheme.surfaceContainerHigh);
+    });
+
+    test('resolving twice changes nothing', () {
+      final once = const NaturalBlockTheme().resolve(scheme);
+
+      expect(once.resolve(scheme), once);
+    });
   });
 }
 

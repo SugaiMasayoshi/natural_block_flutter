@@ -46,6 +46,8 @@ class NaturalBlockScope {
 class NaturalBlockBuilders {
   final NodeBuilder<RowNode> row;
 
+  final NodeBuilder<CellNode> cell;
+
   final NodeBuilder<ColumnNode> column;
 
   final NodeBuilder<TableNode> table;
@@ -56,18 +58,33 @@ class NaturalBlockBuilders {
 
   final NodeBuilder<RawNode> raw;
 
+  /// The default takes the spacer's share of the height left over; another
+  /// widget, such as a gap of a fixed height, takes its own.
+  final NodeBuilder<SpacerNode> spacer;
+
   const NaturalBlockBuilders({
     this.row = buildRowNode,
+    this.cell = buildCellNode,
     this.column = buildColumnNode,
     this.table = buildTableNode,
     this.tableCell = buildTableCellNode,
     this.text = buildTextNode,
     this.raw = buildRawNode,
+    this.spacer = buildSpacerNode,
   });
 
   static const NaturalBlockBuilders defaults = NaturalBlockBuilders();
 
-  List<Object?> get _fields => [row, column, table, tableCell, text, raw];
+  List<Object?> get _fields => [
+    row,
+    cell,
+    column,
+    table,
+    tableCell,
+    text,
+    raw,
+    spacer,
+  ];
 
   @override
   bool operator ==(Object other) =>

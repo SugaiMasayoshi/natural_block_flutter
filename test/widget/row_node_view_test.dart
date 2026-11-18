@@ -42,6 +42,12 @@ void main() {
     expect(top(short), top(tall));
   });
 
+  testWidgets('an aligned cell still lines up on the baseline', (tester) async {
+    final [tall, short] = await cellsOf(tester, '=^:++A\nb\nc^d^');
+
+    expect(baseline(short), baseline(tall));
+  });
+
   testWidgets('the first line of a tall cell is the one that lines up', (
     tester,
   ) async {

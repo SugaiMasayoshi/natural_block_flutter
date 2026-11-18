@@ -4,9 +4,9 @@
 
 Flutter widgets that render [natural_block](https://github.com/SugaiMasayoshi/natural_block),
 a lightweight markup language that leaves ordinary prose alone. Blocks,
-rows, tables, alignment, semantic decoration and code become `Column`,
-`Row`, `Table` and selectable `Text.rich` widgets, styled from your app's
-color scheme.
+rows, tables, alignment, spacers, semantic decoration and code become
+`Column`, `Row`, `Table`, `Spacer` and selectable `Text.rich` widgets,
+styled from your app's color scheme.
 
 See the [natural_block README](https://github.com/SugaiMasayoshi/natural_block#readme)
 for the syntax.
@@ -77,9 +77,8 @@ class Example extends StatelessWidget {
 `NaturalBlockView` takes:
 
 - `source` -- the markup to render.
-- `theme` -- a `NaturalBlockTheme`. Defaults to
-  `NaturalBlockTheme.fromContext(context)`, which follows the app's
-  `ColorScheme` and text size in light and dark themes.
+- `theme` -- a `NaturalBlockTheme`. The colors it leaves open come from
+  the app's `ColorScheme`, in light and dark themes alike.
 - `builders` -- a `NaturalBlockBuilders` that replaces the widget for a kind
   of node.
 - `customs` -- handlers for custom runs (`:@...:@`). Empty by default, so
@@ -100,27 +99,34 @@ settings, use `NaturalBlockView.document(document: document)`. It takes
 ```dart
 NaturalBlockView(
   source: source,
-  theme: NaturalBlockTheme.fromContext(context, striped: true),
+  theme: const NaturalBlockTheme(
+    base: TextStyle(fontSize: 20),
+    striped: true,
+  ),
 );
 ```
 
-`fromContext` and `fromColorScheme` derive colors from the app; `striped:
-true` bands table rows instead of ruling them. Change anything else with
-`copyWith`, or build a theme by hand with the constructor:
+Write only what you want to change. The view takes the colors a theme
+leaves open from the app's `ColorScheme`, so dark mode follows. `striped:
+true` bands table rows instead of ruling them.
+
+The tone and custom styles are laid over the colors the scheme gives, so
+one that names no color keeps the scheme's. To draw with a scheme other
+than the app's, take the colors from it first with `resolve(scheme)`.
 
 | Field | Controls |
 |---|---|
 | `base`, `negative`, `positive`, `emphasis`, `custom` | Text styles for each decoration |
 | `fontScaleFor` | How many times the size around it each `:+` / `:-` step draws; 1.2 per step by default |
-| `tableCellPadding`, `tableBorder`, `tableStripe` | Tables |
+| `tableCellPadding`, `tableBorder`, `striped`, `tableStripe` | Tables |
 | `raw`, `rawPadding`, `rawDecoration`, `rawScrollsHorizontally` | Code regions |
 
 `styleFor(decoration, baseSize: ...)` gives the style a run is drawn with.
 With a `height` in `base`, the space it adds around a line stays the same
 number of pixels at every `:+` and `:-` size, so a large line carries no
 wider gap than a body line.
-To turn a border or box off, pass `const TableBorder()` or
-`const BoxDecoration()`.
+The color of `rawDecoration` also backs code inside a line. To turn a border
+or box off, pass `const TableBorder()` or `const BoxDecoration()`.
 
 ## Custom runs
 
@@ -229,9 +235,12 @@ tree alike.
 
 ## Builders
 
-`NaturalBlockBuilders` has one builder per kind of node: `row`, `column`,
-`table`, `tableCell`, `text` and `raw`. Each defaults to the one that draws
-that kind as usual, so you name only what you change:
+`NaturalBlockBuilders` has one builder per kind of node: `row`, `cell`,
+`column`, `table`, `tableCell`, `text`, `raw` and `spacer`. Each defaults to the one
+that draws that kind as usual, so you name only what you change. The
+default `spacer` is a `SpacerNodeView`, sharing out the height left over,
+with its `child` drawn in that height; another widget, such as a gap of a
+fixed height, can take its place:
 
 ```dart
 Widget spacedText(TextNode node, NaturalBlockScope scope) => Padding(
@@ -244,10 +253,14 @@ const builders = NaturalBlockBuilders(text: spacedText);
 
 - The default builders and their widgets are exported to delegate to or
   reuse.
-  - Builders: `buildRowNode`, `buildColumnNode`, `buildTableNode`,
-    `buildTableCellNode`, `buildTextNode`, `buildRawNode`
+  - Builders: `buildRowNode`, `buildCellNode`, `buildColumnNode`,
+    `buildTableNode`, `buildTableCellNode`, `buildTextNode`, `buildRawNode`,
+    `buildSpacerNode`
   - Widgets: `RowNodeView`, `ColumnNodeView`, `TableNodeView`,
-    `TextNodeView`, `RawNodeView`
+    `TextNodeView`, `RawNodeView`, `SpacerNodeView`
+- A `SpacerNodeView` takes height only when a `SpacerRoom` above it says
+  the column's height has an upper bound. In a column of your own, tell its
+  spacers with a `SpacerRoom`.
 - Recurse into children with `buildLayouts(node.children, scope)` or
   `buildContents(node.children, scope)`, so they keep the same theme,
   builders and handlers.
@@ -256,6 +269,10 @@ const builders = NaturalBlockBuilders(text: spacedText);
 
 ## Limitations
 
+- A spacer, a line of `|` alone, shares out height only where the height has
+  an upper bound. Under one, such as a Scaffold's body, a document with a
+  spacer fills the height; inside a scroll view, the spacer takes none. A
+  row's cell that holds a spacer stretches to the row's height.
 - Where the width is unbounded, such as in a horizontal scroll view, row
   cells shrink to their content: columns no longer line up and alignment
   markers have no effect.

@@ -1,6 +1,8 @@
 import 'package:flutter/widgets.dart';
 import 'package:natural_block/natural_block.dart';
 
+import 'spacer_node_view.dart';
+
 class ColumnNodeView extends StatelessWidget {
   final List<Widget> children;
 
@@ -41,6 +43,17 @@ class ColumnNodeView extends StatelessWidget {
         children: children,
       ),
     );
-    return block == null ? column : Align(alignment: block, child: column);
+
+    final content = children.any((child) => child is SpacerNodeView)
+        ? LayoutBuilder(
+            builder: (context, constraints) => SpacerRoom(
+              isBounded: constraints.hasBoundedHeight,
+              child: column,
+            ),
+          )
+        : column;
+    return block == null
+        ? content
+        : Align(alignment: block, heightFactor: 1, child: content);
   }
 }

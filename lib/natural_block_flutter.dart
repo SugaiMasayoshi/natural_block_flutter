@@ -12,5 +12,6 @@ export 'src/widget/natural_block_theme.dart';
 export 'src/widget/natural_block_view.dart';
 export 'src/widget/raw_node_view.dart';
 export 'src/widget/row_node_view.dart';
+export 'src/widget/spacer_node_view.dart';
 export 'src/widget/table_node_view.dart';
 export 'src/widget/text_node_view.dart';

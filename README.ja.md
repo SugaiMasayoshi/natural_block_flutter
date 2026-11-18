@@ -4,9 +4,9 @@
 
 普通の文章をそのまま通す軽量マークアップ言語
 [natural_block](https://github.com/SugaiMasayoshi/natural_block) を描く、Flutter
-のウィジェットです。ブロック、横並び、表、寄せ、意味に基づく装飾、コードが、
-`Column`、`Row`、`Table`、選択できる `Text.rich` になり、アプリの配色に合わせて
-描かれます。
+のウィジェットです。ブロック、横並び、表、寄せ、伸びる余白、意味に基づく装飾、
+コードが、`Column`、`Row`、`Table`、`Spacer`、選択できる `Text.rich` になり、
+アプリの配色に合わせて描かれます。
 
 構文は
 [natural_block の README](https://github.com/SugaiMasayoshi/natural_block/blob/main/README.ja.md)
@@ -78,9 +78,8 @@ class Example extends StatelessWidget {
 `NaturalBlockView` が受け取るもの：
 
 - `source`：描くマークアップ。
-- `theme`：`NaturalBlockTheme`。既定は `NaturalBlockTheme.fromContext(context)`
-  で、明るいテーマでも暗いテーマでも、アプリの `ColorScheme` と文字の大きさに
-  従います。
+- `theme`：`NaturalBlockTheme`。テーマが決めていない色は、明るいテーマでも暗い
+  テーマでも、アプリの `ColorScheme` から決めます。
 - `builders`：ノードの種類ごとに、描くウィジェットを差し替える
   `NaturalBlockBuilders`。
 - `customs`：カスタムの区間（`:@...:@`）のハンドラ。既定は空なので、カスタムの
@@ -101,24 +100,32 @@ class Example extends StatelessWidget {
 ```dart
 NaturalBlockView(
   source: source,
-  theme: NaturalBlockTheme.fromContext(context, striped: true),
+  theme: const NaturalBlockTheme(
+    base: TextStyle(fontSize: 20),
+    striped: true,
+  ),
 );
 ```
 
-`fromContext` と `fromColorScheme` は、アプリから色を決めます。`striped: true`
-にすると、表の行を罫線ではなく縞で分けます。それ以外は `copyWith` で変えるか、
-コンストラクタで一から作ります。
+テーマは、変えたいものだけを書きます。決めていない色は、ビューがアプリの
+`ColorScheme` から決めるので、ダークモードにも合います。`striped: true` にすると、
+表の行を罫線ではなく縞で分けます。
+
+トーンとカスタムのスタイルは、配色から決めた色の上に重ねるので、色を書かな
+ければ配色の色のままです。アプリとは別の配色で描くときは、`resolve(scheme)` で
+その配色から色を決めておきます。
 
 | フィールド | 決めるもの |
 |---|---|
 | `base`、`negative`、`positive`、`emphasis`、`custom` | 装飾ごとの文字のスタイル |
 | `fontScaleFor` | `:+` / `:-` の段ごとに、周りの文字の何倍で描くか。既定は1段 1.2 倍 |
-| `tableCellPadding`、`tableBorder`、`tableStripe` | 表 |
+| `tableCellPadding`、`tableBorder`、`striped`、`tableStripe` | 表 |
 | `raw`、`rawPadding`、`rawDecoration`、`rawScrollsHorizontally` | コードの区間 |
 
 `styleFor(decoration, baseSize: ...)` は、区間を描くときのスタイルを返します。
 `base` に `height` を書くと、行の上下に足される余白は、`:+` や `:-` で大きさを
 変えても同じピクセル数のままです。大きな行だけ間が広がることはありません。
+`rawDecoration` の色は、文中のコードの背景にも使います。
 罫線や枠を消すには、`const TableBorder()` や `const BoxDecoration()` を渡します。
 
 ## カスタムの区間
@@ -225,8 +232,10 @@ NaturalBlockView(
 ## ビルダ
 
 `NaturalBlockBuilders` は、ノードの種類ごとに1つのビルダを持ちます：`row`、
-`column`、`table`、`tableCell`、`text`、`raw`。それぞれの既定は、その種類を
-いつもどおりに描くものなので、変えるものだけを指定します。
+`cell`、`column`、`table`、`tableCell`、`text`、`raw`、`spacer`。それぞれの既定は、その
+種類をいつもどおりに描くものなので、変えるものだけを指定します。既定の `spacer`
+は、余った高さを分け合う `SpacerNodeView` です。`child` で、その高さの中に何か
+を描けます。決まった高さの空白などに差し替えることもできます。
 
 ```dart
 Widget spacedText(TextNode node, NaturalBlockScope scope) => Padding(
@@ -239,10 +248,14 @@ const builders = NaturalBlockBuilders(text: spacedText);
 
 - 既定のビルダとそのウィジェットは、処理を任せたり再利用したりできるよう公開して
   います。
-  - ビルダ: `buildRowNode`、`buildColumnNode`、`buildTableNode`、
-    `buildTableCellNode`、`buildTextNode`、`buildRawNode`
+  - ビルダ: `buildRowNode`、`buildCellNode`、`buildColumnNode`、
+    `buildTableNode`、`buildTableCellNode`、`buildTextNode`、`buildRawNode`、
+    `buildSpacerNode`
   - ウィジェット: `RowNodeView`、`ColumnNodeView`、`TableNodeView`、
-    `TextNodeView`、`RawNodeView`
+    `TextNodeView`、`RawNodeView`、`SpacerNodeView`
+- `SpacerNodeView` は、縦の並びの高さに上限があることを `SpacerRoom` から知った
+  ときだけ、余りの高さを取ります。自前の縦の並びで伸びる余白を使うときは、
+  `SpacerRoom` で知らせてください。
 - 子へは `buildLayouts(node.children, scope)` か
   `buildContents(node.children, scope)` で再帰してください。同じテーマ、
   ビルダ、ハンドラが引き継がれます。
@@ -252,6 +265,10 @@ const builders = NaturalBlockBuilders(text: spacedText);
 
 ## 制限
 
+- `|` だけの行の伸びる余白は、高さに上限があるときだけ余りを分けます。Scaffold
+  の本体のように上限のある場所では、伸びる余白を含む文書は高さいっぱいに広がり、
+  スクロールの中では高さを取りません。伸びる余白を含む横並びのセルは、行の高さ
+  まで伸びます。
 - 横スクロールのビューの中のように幅に上限がない場所では、横並びのセルは中身の
   幅に縮みます。列が揃わなくなり、寄せの記号も効きません。
 - 表は、スクリーンリーダー向けの行と列の情報をまだ持っていません。

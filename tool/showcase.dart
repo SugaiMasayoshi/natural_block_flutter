@@ -75,10 +75,7 @@ void main() {
             body: Padding(
               padding: const EdgeInsets.all(24),
               child: SingleChildScrollView(
-                child: NaturalBlockView(
-                  source: _source,
-                  theme: NaturalBlockTheme.fromContext(context),
-                ),
+                child: NaturalBlockView(source: _source),
               ),
             ),
           ),

@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart' show Theme;
 import 'package:flutter/widgets.dart';
 import 'package:meta/meta.dart';
 import 'package:natural_block/natural_block.dart';
@@ -11,7 +12,8 @@ import 'natural_block_theme.dart';
 /// Draws natural_block markup: from a [NaturalBlockView.new] source, or from
 /// a [NaturalBlockView.document] tree already parsed.
 sealed class NaturalBlockView extends StatefulWidget {
-  /// Null takes the theme from the ambient one.
+  /// Null is `const NaturalBlockTheme()`. The colours it leaves open come
+  /// from the ambient `Theme`.
   final NaturalBlockTheme? theme;
 
   /// Must be `const`: a builder that reads your state would draw it once and
@@ -117,7 +119,9 @@ class _NaturalBlockViewState extends State<NaturalBlockView> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = widget.theme ?? NaturalBlockTheme.fromContext(context);
+    final theme = (widget.theme ?? const NaturalBlockTheme()).resolve(
+      Theme.of(context).colorScheme,
+    );
 
     final scope = NaturalBlockScope(
       theme: theme,

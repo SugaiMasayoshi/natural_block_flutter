@@ -101,10 +101,7 @@ void main() {
       ('~^Item^Notes^\n^Apple^red\nsweet^\n^Lemon^sour^\n~', null),
       ('~^^\n~', null),
       ('=~A^B\n~', null),
-      (
-        '~a^b^\nc^d^\ne^f^\n~',
-        NaturalBlockTheme.fromColorScheme(_scheme, striped: true),
-      ),
+      ('~a^b^\nc^d^\ne^f^\n~', const NaturalBlockTheme(striped: true)),
       ('~a^b^\nc^d^\n~', const NaturalBlockTheme(tableBorder: TableBorder())),
       (
         '~a^b^\nc^d^\n~',

@@ -5,22 +5,26 @@ import 'package:natural_block_flutter/natural_block_flutter.dart';
 import '../rendered_spans.dart';
 
 Widget _row(RowNode node, NaturalBlockScope scope) => const SizedBox();
+Widget _cell(CellNode node, NaturalBlockScope scope) => const SizedBox();
 Widget _column(ColumnNode node, NaturalBlockScope scope) => const SizedBox();
 Widget _table(TableNode node, NaturalBlockScope scope) => const SizedBox();
 Widget _tableCell(TableCellNode node, NaturalBlockScope scope) =>
     const SizedBox();
 Widget _text(TextNode node, NaturalBlockScope scope) => const SizedBox();
 Widget _raw(RawNode node, NaturalBlockScope scope) => const SizedBox();
+Widget _spacer(SpacerNode node, NaturalBlockScope scope) => const SizedBox();
 
 void main() {
   group('NaturalBlockBuilders equality', () {
     const variants = <String, NaturalBlockBuilders>{
       'row': NaturalBlockBuilders(row: _row),
+      'cell': NaturalBlockBuilders(cell: _cell),
       'column': NaturalBlockBuilders(column: _column),
       'table': NaturalBlockBuilders(table: _table),
       'tableCell': NaturalBlockBuilders(tableCell: _tableCell),
       'text': NaturalBlockBuilders(text: _text),
       'raw': NaturalBlockBuilders(raw: _raw),
+      'spacer': NaturalBlockBuilders(spacer: _spacer),
     };
 
     for (final entry in variants.entries) {
@@ -73,6 +77,29 @@ void main() {
             if (span.recognizer != null) span.text,
       ];
       expect(tappable, ['a', 'b']);
+    });
+
+    testWidgets('a spacer is a spacer, which can be a fixed gap', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: SizedBox(
+            height: 300,
+            child: NaturalBlockView(
+              source: 'a\n|\nb',
+              // ignore: non_const_argument_for_const_parameter
+              builders: NaturalBlockBuilders(
+                spacer: (node, scope) => const SizedBox(height: 40),
+              ),
+            ),
+          ),
+        ),
+      );
+
+      final a = tester.getRect(find.textContaining('a', findRichText: true));
+      final b = tester.getRect(find.textContaining('b', findRichText: true));
+      expect(b.top - a.bottom, 40);
     });
 
     testWidgets('a table cell is a tableCell', (tester) async {

@@ -1,5 +1,29 @@
 ## Unreleased
 
+- Draws natural_block's spacer, a line of `|` alone: where the height has an
+  upper bound, spacers share out what the content leaves, by their `flex`,
+  and elsewhere take none. A row's cell may take up to the row's height,
+  and one that grows into it, as a cell with a spacer does, runs from the
+  top of the row; so `^Image^|\nCaption\n|^` centers the caption beside the
+  image. The other cells still line up on their first baseline. Breaking:
+  `RowNodeView` lays out its cells itself rather than through a `Row`. The new
+  `spacer` builder draws a spacer: by default a `SpacerNodeView`, which
+  takes the share when a `SpacerRoom` says there is one and draws its
+  `child` there, and in its place any widget, such as a fixed gap.
+- Breaking: a `NaturalBlockTheme` takes the colors it leaves open from a
+  `ColorScheme` through `resolve`, which `NaturalBlockView` does with the
+  ambient one, so a theme written with the constructor follows dark mode.
+  The tone and custom styles are laid over the scheme's colors;
+  `tableBorder` and `rawDecoration` are null until resolved, and `striped`
+  bands tables. `fromColorScheme` and `fromContext` are gone: write
+  `NaturalBlockTheme(striped: true)`, or `theme.resolve(scheme)` for a
+  scheme other than the app's.
+- Requires the natural_block whose row cells are `CellNode`s. The new
+  `cell` builder draws one, by default stacking its blocks and spacers as a
+  document's are.
+- Code inside a line takes `rawDecoration`'s color as its background, as a
+  code block does, so it stands apart from the text around it.
+
 - Requires the next natural_block, whose `payloadArgument(payload, name)`
   reads a `name(<argument>)` payload, the shape `image(<source>)` has. It is
   re-exported, so a handler reads `payloadArgument(run.text, 'note')`.

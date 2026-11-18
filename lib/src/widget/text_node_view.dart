@@ -118,7 +118,9 @@ typedef _SpanInputs = ({
       case RawSpanNode():
         spans[i] = TextSpan(
           text: run.text,
-          style: from.rootStyle.merge(theme.raw),
+          style: from.rootStyle
+              .merge(theme.raw)
+              .copyWith(backgroundColor: theme.rawDecoration?.color),
         );
 
       case TextSpanNode():

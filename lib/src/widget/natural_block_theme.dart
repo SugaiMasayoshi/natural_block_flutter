@@ -11,15 +11,21 @@ final _positiveDark = ColorScheme.fromSeed(
   brightness: Brightness.dark,
 ).primary;
 
+/// How natural_block is drawn. The colours it leaves open come from a
+/// `ColorScheme` through [resolve], which `NaturalBlockView` does with the
+/// ambient one.
 class NaturalBlockTheme {
   final TextStyle base;
 
+  /// Drawn over the scheme's error colour.
   final TextStyle negative;
 
+  /// Drawn over a green toned for the scheme's brightness.
   final TextStyle positive;
 
   final TextStyle emphasis;
 
+  /// Drawn over the scheme's primary colour, underlined.
   final TextStyle custom;
 
   /// How many times the size around it a run `sizeOffset` steps of `:+` or
@@ -29,91 +35,79 @@ class NaturalBlockTheme {
 
   final EdgeInsets tableCellPadding;
 
-  /// The rules around and between a table's cells; `const TableBorder()` for none.
-  final TableBorder tableBorder;
+  /// The rules around and between a table's cells; `const TableBorder()` for
+  /// none. Null takes the scheme's outline.
+  final TableBorder? tableBorder;
 
-  /// A background on every other row, or null for none.
+  /// Whether a table bands its rows instead of ruling between them.
+  final bool striped;
+
+  /// The band on every other row. Null takes the scheme's when [striped].
   final Color? tableStripe;
 
   final TextStyle raw;
 
   final EdgeInsets rawPadding;
 
-  /// The box around a raw block; `const BoxDecoration()` for none.
-  final BoxDecoration rawDecoration;
+  /// The box around a raw block, whose colour also backs a raw run inside a
+  /// line; `const BoxDecoration()` for none. Null takes the scheme's.
+  final BoxDecoration? rawDecoration;
 
   final bool rawScrollsHorizontally;
 
   const NaturalBlockTheme({
     this.base = const TextStyle(),
-    this.negative = const TextStyle(color: Colors.red),
-    this.positive = const TextStyle(color: Colors.green),
+    this.negative = const TextStyle(),
+    this.positive = const TextStyle(),
     this.emphasis = const TextStyle(fontWeight: FontWeight.bold),
-    this.custom = const TextStyle(
-      color: Colors.blue,
-      decoration: TextDecoration.underline,
-    ),
+    this.custom = const TextStyle(),
     this.fontScaleFor = _twentyPercentPerStep,
     this.tableCellPadding = const EdgeInsets.symmetric(
       horizontal: 8,
       vertical: 4,
     ),
-    this.tableBorder = const TableBorder.symmetric(
-      inside: BorderSide(color: Color(0x1F000000)),
-      outside: BorderSide(color: Color(0x1F000000)),
-    ),
+    this.tableBorder,
+    this.striped = false,
     this.tableStripe,
     this.raw = const TextStyle(fontFamily: 'monospace'),
     this.rawPadding = const EdgeInsets.all(12),
-    this.rawDecoration = const BoxDecoration(
-      color: Color(0x0A000000),
-      borderRadius: BorderRadius.all(Radius.circular(4)),
-    ),
+    this.rawDecoration,
     this.rawScrollsHorizontally = false,
   });
 
-  /// A theme whose colours come from [scheme]; everything else is the default's.
-  factory NaturalBlockTheme.fromColorScheme(
-    ColorScheme scheme, {
-    bool striped = false,
-  }) {
+  /// This theme with the colours it leaves open taken from [scheme]. A colour
+  /// it sets stays, so resolving twice changes nothing.
+  NaturalBlockTheme resolve(ColorScheme scheme) {
     final rule = BorderSide(color: scheme.outlineVariant);
-    return NaturalBlockTheme(
-      negative: TextStyle(color: scheme.error),
-      positive: TextStyle(
-        color: scheme.brightness == Brightness.light
-            ? _positiveLight
-            : _positiveDark,
-      ),
+    final green = scheme.brightness == Brightness.light
+        ? _positiveLight
+        : _positiveDark;
+    return copyWith(
+      negative: TextStyle(color: scheme.error).merge(negative),
+      positive: TextStyle(color: green).merge(positive),
       custom: TextStyle(
         color: scheme.primary,
         decoration: TextDecoration.underline,
-      ),
-      tableBorder: striped
-          ? TableBorder(
-              top: rule,
-              right: rule,
-              bottom: rule,
-              left: rule,
-              verticalInside: rule,
-            )
-          : TableBorder.symmetric(inside: rule, outside: rule),
-      tableStripe: striped ? scheme.surfaceContainerHigh : null,
-      rawDecoration: BoxDecoration(
-        color: scheme.surfaceContainerHigh,
-        borderRadius: const BorderRadius.all(Radius.circular(4)),
-      ),
-    );
-  }
-
-  /// A theme whose colours come from the ambient `ThemeData`.
-  factory NaturalBlockTheme.fromContext(
-    BuildContext context, {
-    bool striped = false,
-  }) {
-    return NaturalBlockTheme.fromColorScheme(
-      Theme.of(context).colorScheme,
-      striped: striped,
+      ).merge(custom),
+      tableBorder:
+          tableBorder ??
+          (striped
+              ? TableBorder(
+                  top: rule,
+                  right: rule,
+                  bottom: rule,
+                  left: rule,
+                  verticalInside: rule,
+                )
+              : TableBorder.symmetric(inside: rule, outside: rule)),
+      tableStripe:
+          tableStripe ?? (striped ? scheme.surfaceContainerHigh : null),
+      rawDecoration:
+          rawDecoration ??
+          BoxDecoration(
+            color: scheme.surfaceContainerHigh,
+            borderRadius: const BorderRadius.all(Radius.circular(4)),
+          ),
     );
   }
 
@@ -153,6 +147,7 @@ class NaturalBlockTheme {
     double Function(int sizeOffset)? fontScaleFor,
     EdgeInsets? tableCellPadding,
     TableBorder? tableBorder,
+    bool? striped,
     Color? tableStripe,
     TextStyle? raw,
     EdgeInsets? rawPadding,
@@ -167,6 +162,7 @@ class NaturalBlockTheme {
     fontScaleFor: fontScaleFor ?? this.fontScaleFor,
     tableCellPadding: tableCellPadding ?? this.tableCellPadding,
     tableBorder: tableBorder ?? this.tableBorder,
+    striped: striped ?? this.striped,
     tableStripe: tableStripe ?? this.tableStripe,
     raw: raw ?? this.raw,
     rawPadding: rawPadding ?? this.rawPadding,
@@ -184,6 +180,7 @@ class NaturalBlockTheme {
     fontScaleFor,
     tableCellPadding,
     tableBorder,
+    striped,
     tableStripe,
     raw,
     rawPadding,

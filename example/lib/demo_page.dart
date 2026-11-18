@@ -21,7 +21,7 @@ class NaturalBlockDemoPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = NaturalBlockTheme.fromContext(context, striped: striped);
+    final theme = NaturalBlockTheme(striped: striped);
 
     return Scaffold(
       appBar: AppBar(
