@@ -21,6 +21,8 @@
 - Requires the natural_block whose row cells are `CellNode`s. The new
   `cell` builder draws one, by default stacking its blocks and spacers as a
   document's are.
+- A blank line that ends a block, before the next one, is a body line high,
+  where it took the height of the line above it, as large as a heading.
 - Code inside a line takes `rawDecoration`'s color as its background, as a
   code block does, so it stands apart from the text around it.
 

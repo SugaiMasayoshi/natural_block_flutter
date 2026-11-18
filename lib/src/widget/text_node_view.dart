@@ -22,6 +22,8 @@ class _TextNodeViewState extends State<TextNodeView> {
 
   TextSpan _paragraph = const TextSpan();
 
+  bool _endsWithLineBreak = false;
+
   _SpanInputs? _builtFrom;
 
   bool _drawing = false;
@@ -88,9 +90,21 @@ class _TextNodeViewState extends State<TextNodeView> {
       _drawing = false;
       _disposes = drawn.disposes;
       _paragraph = TextSpan(style: rootStyle, children: drawn.spans);
+      _endsWithLineBreak = drawn.endsWithLineBreak;
     }
 
-    return Text.rich(_paragraph);
+    final paragraph = Text.rich(_paragraph);
+    if (!_endsWithLineBreak) return paragraph;
+    // A paragraph that ends in a line break gives its empty last line the
+    // height of the line before, so that line is drawn apart, at body size.
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        paragraph,
+        Text('', style: rootStyle),
+      ],
+    );
   }
 }
 
@@ -102,7 +116,8 @@ typedef _SpanInputs = ({
   List<RunHandler> customs,
 });
 
-({List<InlineSpan> spans, List<VoidCallback> disposes}) _runSpans(
+({List<InlineSpan> spans, List<VoidCallback> disposes, bool endsWithLineBreak})
+_runSpans(
   _SpanInputs from,
   void Function(void Function(BuildContext context) action) withContext,
 ) {
@@ -111,6 +126,10 @@ typedef _SpanInputs = ({
 
   final spans = List<InlineSpan>.filled(runs.length, const TextSpan());
   final disposes = <VoidCallback>[];
+  final endsWithLineBreak = switch (runs.last) {
+    TextSpanNode(:final text) => text.endsWith('\n'),
+    RawSpanNode() => false,
+  };
 
   for (var i = 0; i < runs.length; i++) {
     final run = runs[i];
@@ -124,7 +143,10 @@ typedef _SpanInputs = ({
         );
 
       case TextSpanNode():
-        final text = run.text;
+        final isLast = i == runs.length - 1;
+        final text = isLast && endsWithLineBreak
+            ? run.text.substring(0, run.text.length - 1)
+            : run.text;
         final baseSize = from.rootStyle.fontSize ?? kDefaultFontSize;
         final style = theme.styleFor(run.decoration, baseSize: baseSize);
 
@@ -160,5 +182,9 @@ typedef _SpanInputs = ({
     }
   }
 
-  return (spans: spans, disposes: disposes);
+  return (
+    spans: spans,
+    disposes: disposes,
+    endsWithLineBreak: endsWithLineBreak,
+  );
 }

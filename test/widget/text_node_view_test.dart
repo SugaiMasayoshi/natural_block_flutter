@@ -168,4 +168,20 @@ void main() {
       'press',
     ], reason: 'the tap must survive a rebuild between down and up');
   });
+
+  testWidgets('a blank line ending a block is a body line, after any size', (
+    tester,
+  ) async {
+    const theme = NaturalBlockTheme(base: TextStyle(fontSize: 20, height: 1));
+    await pumpRuns(tester, [
+      TextSpanNode(text: 'A', decoration: SpanDecoration(sizeOffset: 3)),
+      TextSpanNode(text: '\n'),
+    ], theme: theme);
+
+    final large = theme.styleFor(SpanDecoration(sizeOffset: 3), baseSize: 20);
+    expect(
+      tester.getSize(find.byType(TextNodeView)).height,
+      closeTo(large.fontSize! + 20, 1),
+    );
+  });
 }
