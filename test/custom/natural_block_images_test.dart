@@ -121,6 +121,20 @@ void main() {
       );
     });
 
+    test('networkImage gives the image network draws, as a widget', () {
+      final image = NaturalBlockImages.networkImage(
+        CustomRun(
+          text: 'image(https://example.invalid/a.png)',
+          style: const TextStyle(fontSize: 30),
+          theme: const NaturalBlockTheme(),
+          decoration: const SpanDecoration(),
+          withContext: (_) {},
+        ),
+      );
+
+      expect(image, isA<Image>());
+    });
+
     testWidgets('network declines a local path rather than fetching it', (
       tester,
     ) async {

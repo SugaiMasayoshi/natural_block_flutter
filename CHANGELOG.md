@@ -25,6 +25,9 @@
   where it took the height of the line above it, as large as a heading.
 - Code inside a line takes `rawDecoration`'s color as its background, as a
   code block does, so it stands apart from the text around it.
+- `NaturalBlockImages.networkImage` and `localImage` give the image the
+  `network` and `local` handlers draw, as a widget, so an app can wrap it,
+  to bound its size for one, and draw it with `widgetRun`.
 
 - Requires the next natural_block, whose `payloadArgument(payload, name)`
   reads a `name(<argument>)` payload, the shape `image(<source>)` has. It is

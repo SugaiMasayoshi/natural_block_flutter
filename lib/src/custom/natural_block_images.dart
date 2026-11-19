@@ -9,40 +9,50 @@ enum ImageSourceKind { network, file, relative }
 /// The reference rendering for the `image(<source>)` payload: `network` and
 /// `local` are handlers, and an app includes the ones it means. An image that
 /// cannot be drawn falls back to its payload as text.
+///
+/// `networkImage` and `localImage` give the image as a widget, for an app
+/// that wraps it, to bound its size for one, before drawing it with
+/// `widgetRun`.
 abstract final class NaturalBlockImages {
   /// Draws `image(<url>)` by fetching it.
-  static RunRendering? network(CustomRun run) {
+  static RunRendering? network(CustomRun run) => _drawn(networkImage(run));
+
+  /// Draws `image(<path>)` or `image(file:...)` by reading the file. Declines
+  /// where there is no `dart:io`, the web.
+  static RunRendering? local(CustomRun run) => _drawn(localImage(run));
+
+  /// The image `network` draws, or null where it declines.
+  static Widget? networkImage(CustomRun run) {
     final source = sourceOf(run.text);
     if (source == null || kindOf(source) != ImageSourceKind.network) {
       return null;
     }
 
-    return widgetRun(
-      Image.network(
-        source,
-        scale: scaleOf(run),
-        semanticLabel: source,
-        errorBuilder: (_, _, _) => Text(run.text, style: run.style),
-        loadingBuilder: (context, child, progress) => progress == null
-            ? child
-            : SizedBox.square(dimension: run.style.fontSize),
-      ),
+    return Image.network(
+      source,
+      scale: scaleOf(run),
+      semanticLabel: source,
+      errorBuilder: (_, _, _) => Text(run.text, style: run.style),
+      loadingBuilder: (context, child, progress) => progress == null
+          ? child
+          : SizedBox.square(dimension: run.style.fontSize),
     );
   }
 
-  /// Draws `image(<path>)` or `image(file:...)` by reading the file. Declines
-  /// where there is no `dart:io`, the web.
-  static RunRendering? local(CustomRun run) {
+  /// The image `local` draws, or null where it declines.
+  static Widget? localImage(CustomRun run) {
     final source = sourceOf(run.text);
     if (source == null || kindOf(source) != ImageSourceKind.file) return null;
 
-    final image = localFileImage(
+    return localFileImage(
       source,
       scale: scaleOf(run),
       errorBuilder: (_, _, _) => Text(run.text, style: run.style),
     );
-    return image == null ? null : widgetRun(image);
   }
+
+  static RunRendering? _drawn(Widget? image) =>
+      image == null ? null : widgetRun(image);
 
   /// `Image.scale` for [run]: 1 with no step, so an image keeps its own size,
   /// and each `:+` or `:-` scales it as `fontScaleFor` scales text. It
