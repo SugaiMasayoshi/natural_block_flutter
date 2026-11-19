@@ -1,3 +1,4 @@
+import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
 
 import 'local_file_image_stub.dart'
@@ -28,14 +29,17 @@ abstract final class NaturalBlockImages {
       return null;
     }
 
-    return Image.network(
-      source,
-      scale: scaleOf(run),
-      semanticLabel: source,
-      errorBuilder: (_, _, _) => Text(run.text, style: run.style),
-      loadingBuilder: (context, child, progress) => progress == null
-          ? child
-          : SizedBox.square(dimension: run.style.fontSize),
+    return _stepped(
+      run,
+      Image.network(
+        source,
+        fit: BoxFit.contain,
+        semanticLabel: source,
+        errorBuilder: (_, _, _) => Text(run.text, style: run.style),
+        loadingBuilder: (context, child, progress) => progress == null
+            ? child
+            : SizedBox.square(dimension: run.style.fontSize! / _stepOf(run)),
+      ),
     );
   }
 
@@ -44,21 +48,21 @@ abstract final class NaturalBlockImages {
     final source = sourceOf(run.text);
     if (source == null || kindOf(source) != ImageSourceKind.file) return null;
 
-    return localFileImage(
+    final image = localFileImage(
       source,
-      scale: scaleOf(run),
       errorBuilder: (_, _, _) => Text(run.text, style: run.style),
     );
+    return image == null ? null : _stepped(run, image);
   }
 
   static RunRendering? _drawn(Widget? image) =>
       image == null ? null : widgetRun(image);
 
-  /// `Image.scale` for [run]: 1 with no step, so an image keeps its own size,
-  /// and each `:+` or `:-` scales it as `fontScaleFor` scales text. It
-  /// divides, so less than 1 draws the image larger.
-  static double scaleOf(CustomRun run) =>
-      1 / run.theme.fontScaleFor(run.decoration.sizeOffset);
+  static double _stepOf(CustomRun run) =>
+      run.theme.fontScaleFor(run.decoration.sizeOffset);
+
+  static Widget _stepped(CustomRun run, Widget image) =>
+      _Stepped(factor: _stepOf(run), child: image);
 
   static const String _prefix = 'image(';
 
@@ -91,4 +95,71 @@ abstract final class NaturalBlockImages {
         ? ImageSourceKind.file
         : ImageSourceKind.relative;
   }
+}
+
+/// An image at [factor] times the size it takes where it stands, its own
+/// size or less, so a `:-` shows even on an image its space has already
+/// shrunk. It never grows past that space.
+class _Stepped extends SingleChildRenderObjectWidget {
+  final double factor;
+
+  const _Stepped({required this.factor, required Widget super.child});
+
+  @override
+  RenderObject createRenderObject(BuildContext context) =>
+      _RenderStepped(factor);
+
+  @override
+  void updateRenderObject(BuildContext context, _RenderStepped renderObject) {
+    renderObject.factor = factor;
+  }
+}
+
+class _RenderStepped extends RenderProxyBox {
+  _RenderStepped(this._factor);
+
+  double _factor;
+  set factor(double value) {
+    if (value == _factor) return;
+    _factor = value;
+    markNeedsLayout();
+  }
+
+  Size _sizeWithin(BoxConstraints constraints, RenderBox child) =>
+      constraints.constrainSizeAndAttemptToPreserveAspectRatio(
+        child.getDryLayout(constraints.loosen()) * _factor,
+      );
+
+  @override
+  Size computeDryLayout(BoxConstraints constraints) => switch (child) {
+    final child? => _sizeWithin(constraints, child),
+    null => constraints.smallest,
+  };
+
+  @override
+  void performLayout() {
+    final child = this.child;
+    if (child == null) {
+      size = constraints.smallest;
+      return;
+    }
+    size = _sizeWithin(constraints, child);
+    child.layout(BoxConstraints.tight(size));
+  }
+
+  @override
+  double computeMinIntrinsicWidth(double height) =>
+      super.computeMinIntrinsicWidth(height) * _factor;
+
+  @override
+  double computeMaxIntrinsicWidth(double height) =>
+      super.computeMaxIntrinsicWidth(height) * _factor;
+
+  @override
+  double computeMinIntrinsicHeight(double width) =>
+      super.computeMinIntrinsicHeight(width) * _factor;
+
+  @override
+  double computeMaxIntrinsicHeight(double width) =>
+      super.computeMaxIntrinsicHeight(width) * _factor;
 }

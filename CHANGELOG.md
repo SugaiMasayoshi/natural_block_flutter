@@ -28,6 +28,10 @@
 - `NaturalBlockImages.networkImage` and `localImage` give the image the
   `network` and `local` handlers draw, as a widget, so an app can wrap it,
   to bound its size for one, and draw it with `widgetRun`.
+- Breaking: a `:+` / `:-` step scales an image from the size its space
+  leaves it, where it scaled the image's own size before the space bounded
+  it. A `:-` now shrinks an image wider than its space, and a `:+` stops at
+  the space. `NaturalBlockImages.scaleOf` is gone.
 
 - Requires the next natural_block, whose `payloadArgument(payload, name)`
   reads a `name(<argument>)` payload, the shape `image(<source>)` has. It is

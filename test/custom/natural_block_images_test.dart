@@ -1,3 +1,6 @@
+import 'dart:io';
+import 'dart:ui' as ui;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:natural_block_flutter/natural_block_flutter.dart';
@@ -97,19 +100,54 @@ void main() {
       );
     });
 
-    test('the scale follows only the steps', () {
-      double scaleWith(SpanDecoration decoration) => NaturalBlockImages.scaleOf(
-        CustomRun(
-          text: 'image(https://example.invalid/a.png)',
-          style: const TextStyle(fontSize: 30),
-          theme: const NaturalBlockTheme(),
-          decoration: decoration,
-          withContext: (_) {},
-        ),
-      );
+    testWidgets('a step scales the image from the size its space leaves it', (
+      tester,
+    ) async {
+      final folder = Directory.systemTemp.createTempSync('natural_block_');
+      final file = File('${folder.path}/200x100.png');
+      await tester.runAsync(() async {
+        final recorder = ui.PictureRecorder();
+        Canvas(recorder).drawColor(const Color(0xFF336699), BlendMode.src);
+        final image = await recorder.endRecording().toImage(200, 100);
+        final png = await image.toByteData(format: ui.ImageByteFormat.png);
+        await file.writeAsBytes(png!.buffer.asUint8List());
+      });
+      addTearDown(() => folder.deleteSync(recursive: true));
 
-      expect(scaleWith(const SpanDecoration()), 1);
-      expect(scaleWith(SpanDecoration(sizeOffset: 1)), 1 / 1.2);
+      Future<Size> drawnAt(String steps, {required double width}) async {
+        await tester.pumpWidget(
+          wrap(
+            Align(
+              alignment: Alignment.topLeft,
+              child: SizedBox(
+                width: width,
+                child: NaturalBlockView(
+                  source: ':$steps@image(${file.path}):@',
+                  customs: const [NaturalBlockImages.local],
+                ),
+              ),
+            ),
+          ),
+        );
+        for (var tries = 0; tries < 20; tries++) {
+          await tester.runAsync(
+            () => Future<void>.delayed(const Duration(milliseconds: 50)),
+          );
+          await tester.pump();
+          if (tester.getSize(find.byType(Image)) != Size.zero) break;
+        }
+        return tester.getSize(find.byType(Image));
+      }
+
+      expect(await drawnAt('', width: 1000), const Size(200, 100));
+      expect(await drawnAt('+', width: 1000), const Size(240, 120));
+      expect(await drawnAt('', width: 100), const Size(100, 50));
+      expect(
+        await drawnAt('-', width: 100),
+        const Size(100 / 1.2, 50 / 1.2),
+        reason: 'the step shows on an image its space already shrank',
+      );
+      expect(await drawnAt('++++', width: 100), const Size(100, 50));
     });
 
     testWidgets('an image carries a semantic label', (tester) async {
@@ -121,7 +159,9 @@ void main() {
       );
     });
 
-    test('networkImage gives the image network draws, as a widget', () {
+    testWidgets('networkImage gives the image network draws, as a widget', (
+      tester,
+    ) async {
       final image = NaturalBlockImages.networkImage(
         CustomRun(
           text: 'image(https://example.invalid/a.png)',
@@ -131,8 +171,9 @@ void main() {
           withContext: (_) {},
         ),
       );
+      await tester.pumpWidget(wrap(image!));
 
-      expect(image, isA<Image>());
+      expect(find.byType(Image), findsOneWidget);
     });
 
     testWidgets('network declines a local path rather than fetching it', (

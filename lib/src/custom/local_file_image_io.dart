@@ -4,7 +4,6 @@ import 'package:flutter/widgets.dart';
 
 Widget? localFileImage(
   String source, {
-  required double scale,
   required ImageErrorWidgetBuilder errorBuilder,
 }) {
   final uri = Uri.tryParse(source);
@@ -25,7 +24,7 @@ Widget? localFileImage(
 
   return Image.file(
     File(path),
-    scale: scale,
+    fit: BoxFit.contain,
     semanticLabel: source,
     errorBuilder: errorBuilder,
   );

@@ -211,7 +211,9 @@ NaturalBlockView(
   }
   ```
 
-- `NaturalBlockImages.scaleOf(run)` follows the run's `:+` / `:-` steps.
+- An image takes its own size, or less where its space is narrower, and
+  each `:+` / `:-` step scales it from there as `fontScaleFor` scales text.
+  It never grows past its space.
 
 ### A payload convention
 
