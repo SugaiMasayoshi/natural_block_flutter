@@ -11,6 +11,28 @@ final _positiveDark = ColorScheme.fromSeed(
   brightness: Brightness.dark,
 ).primary;
 
+final _fontHeights = <TextStyle, double>{};
+
+// A line's height with no `height` set, as a multiple of the font size.
+double _fontHeightOf(TextStyle style) {
+  final font = TextStyle(
+    fontFamily: style.fontFamily,
+    fontFamilyFallback: style.fontFamilyFallback,
+    fontWeight: style.fontWeight,
+    fontStyle: style.fontStyle,
+    fontSize: 100,
+  );
+  return _fontHeights.putIfAbsent(font, () {
+    final painter = TextPainter(
+      text: TextSpan(style: font),
+      textDirection: TextDirection.ltr,
+    );
+    final height = painter.preferredLineHeight / 100;
+    painter.dispose();
+    return height;
+  });
+}
+
 /// How natural_block is drawn. The colours it leaves open come from a
 /// `ColorScheme` through [resolve], which `NaturalBlockView` does with the
 /// ambient one.
@@ -116,24 +138,28 @@ class NaturalBlockTheme {
   /// only from these: a `fontSize` in the tone, emphasis or custom styles is
   /// not used.
   ///
-  /// The space a `height` in [base] adds around a line stays the same in
-  /// pixels at every size, so a large line carries no more space than a body
-  /// line and a blank line looks the same next to either.
+  /// The space a `height` in [base] adds to the font's own line height stays
+  /// the same in pixels at every size, so a large line carries no more space
+  /// than a body line, its glyphs never reach into the next line, and a blank
+  /// line looks the same next to either.
   TextStyle styleFor(SpanDecoration decoration, {required double baseSize}) {
     final scale = fontScaleFor(decoration.sizeOffset);
     final bodyHeight = base.height;
-    return base
+    final style = base
         .merge(switch (decoration.tone) {
           Tone.negative => negative,
           Tone.positive => positive,
           Tone.none => null,
         })
         .merge(decoration.isEmphasized ? emphasis : null)
-        .merge(decoration.isCustom ? custom : null)
-        .copyWith(
-          fontSize: baseSize * scale,
-          height: bodyHeight == null ? null : 1 + (bodyHeight - 1) / scale,
-        );
+        .merge(decoration.isCustom ? custom : null);
+    final fontHeight = bodyHeight == null ? 0.0 : _fontHeightOf(style);
+    return style.copyWith(
+      fontSize: baseSize * scale,
+      height: bodyHeight == null
+          ? null
+          : fontHeight + (bodyHeight - fontHeight) / scale,
+    );
   }
 
   /// This theme with the given fields replaced. An omitted argument keeps the

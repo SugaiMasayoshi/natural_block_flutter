@@ -1,3 +1,10 @@
+## Unreleased
+
+- With a `height` in `NaturalBlockTheme.base`, the space kept the same in
+  pixels at every size is what the height adds to the font's own line
+  height, where it was what it added to the font size. A large line no
+  longer stands closer than its glyphs, so they stay off the next line.
+
 ## 0.3.0
 
 - Draws natural_block's spacer, a line of `|` alone: where the height has an
