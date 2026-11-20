@@ -211,6 +211,10 @@ NaturalBlockView(
   }
   ```
 
+  To read a file the app resolved, from the document's folder for instance,
+  pass it as `path`: `NaturalBlockImages.localImage(run, path: resolved)`
+  keeps the steps and shows the payload as written when the file is missing.
+
 - An image takes its own size, or less where its space is narrower, and
   each `:+` / `:-` step scales it from there as `fontScaleFor` scales text.
   It never grows past its space.

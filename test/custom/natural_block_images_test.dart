@@ -281,5 +281,21 @@ void main() {
       expect(find.byType(Image), findsNothing);
       expect(renderedSpans(tester).single.text, 'image(assets/a.png)');
     });
+
+    test('localImage reads the path an app resolved a relative one to', () {
+      final run = CustomRun(
+        text: 'image(a.png)',
+        style: const TextStyle(fontSize: 30),
+        theme: const NaturalBlockTheme(),
+        decoration: const SpanDecoration(),
+        withContext: (_) {},
+      );
+
+      expect(NaturalBlockImages.localImage(run), isNull);
+      expect(
+        NaturalBlockImages.localImage(run, path: 'C:/talk/a.png'),
+        isNotNull,
+      );
+    });
   });
 }

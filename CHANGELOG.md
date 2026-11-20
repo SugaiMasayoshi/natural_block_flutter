@@ -32,6 +32,9 @@
   leaves it, where it scaled the image's own size before the space bounded
   it. A `:-` now shrinks an image wider than its space, and a `:+` stops at
   the space. `NaturalBlockImages.scaleOf` is gone.
+- `NaturalBlockImages.localImage` takes a `path` the app resolved, from the
+  document's folder for one, and still shows the payload as written when
+  the file cannot be drawn.
 
 - Requires the next natural_block, whose `payloadArgument(payload, name)`
   reads a `name(<argument>)` payload, the shape `image(<source>)` has. It is

@@ -43,9 +43,11 @@ abstract final class NaturalBlockImages {
     );
   }
 
-  /// The image `local` draws, or null where it declines.
-  static Widget? localImage(CustomRun run) {
-    final source = sourceOf(run.text);
+  /// The image `local` draws, or null where it declines. [path] reads a file
+  /// the app resolved from the payload, a relative one for instance; an image
+  /// that cannot be drawn still shows the payload as written.
+  static Widget? localImage(CustomRun run, {String? path}) {
+    final source = path ?? sourceOf(run.text);
     if (source == null || kindOf(source) != ImageSourceKind.file) return null;
 
     final image = localFileImage(
