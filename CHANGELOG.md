@@ -1,4 +1,4 @@
-## Unreleased
+## 0.3.0
 
 - Draws natural_block's spacer, a line of `|` alone: where the height has an
   upper bound, spacers share out what the content leaves, by their `flex`,
@@ -18,7 +18,7 @@
   bands tables. `fromColorScheme` and `fromContext` are gone: write
   `NaturalBlockTheme(striped: true)`, or `theme.resolve(scheme)` for a
   scheme other than the app's.
-- Requires the natural_block whose row cells are `CellNode`s. The new
+- Requires natural_block 0.3.0, whose row cells are `CellNode`s. The new
   `cell` builder draws one, by default stacking its blocks and spacers as a
   document's are.
 - A blank line that ends a block, before the next one, is a body line high,
@@ -35,9 +35,8 @@
 - `NaturalBlockImages.localImage` takes a `path` the app resolved, from the
   document's folder for one, and still shows the payload as written when
   the file cannot be drawn.
-
-- Requires the next natural_block, whose `payloadArgument(payload, name)`
-  reads a `name(<argument>)` payload, the shape `image(<source>)` has. It is
+- natural_block's `payloadArgument(payload, name)`, which reads a
+  `name(<argument>)` payload, the shape `image(<source>)` has, is
   re-exported, so a handler reads `payloadArgument(run.text, 'note')`.
 - `NaturalBlockView.document` draws a `DocumentNode` already parsed.
 - With a `height` in `NaturalBlockTheme.base`, `:+` and `:-` keep the space
