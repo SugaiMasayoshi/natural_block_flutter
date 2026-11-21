@@ -130,6 +130,20 @@ void main() {
     expect(spans[1].style!.fontFamily, 'monospace');
   });
 
+  testWidgets('a raw run takes the size of the decoration around it', (
+    tester,
+  ) async {
+    const larger = SpanDecoration(sizeOffset: 2);
+    await pumpRuns(tester, [
+      TextSpanNode(text: 'a', decoration: larger),
+      RawSpanNode(text: 'code', decoration: larger),
+    ], theme: const NaturalBlockTheme(base: TextStyle(fontSize: 20)));
+
+    final spans = renderedSpans(tester);
+    expect(spans[1].style!.fontSize, spans[0].style!.fontSize);
+    expect(spans[1].style!.fontSize, greaterThan(20));
+  });
+
   testWidgets('a handler that throws is reported and leaves the run to the '
       'next', (tester) async {
     final customs = <RunHandler>[

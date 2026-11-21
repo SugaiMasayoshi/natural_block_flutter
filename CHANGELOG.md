@@ -4,6 +4,8 @@
   pixels at every size is what the height adds to the font's own line
   height, where it was what it added to the font size. A large line no
   longer stands closer than its glyphs, so they stay off the next line.
+- Code inside a line is drawn with the decoration around it, as natural_block
+  now gives it: at the line's size, in its tone and weight, in `raw`'s font.
 
 ## 0.3.0
 

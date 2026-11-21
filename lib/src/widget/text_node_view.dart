@@ -131,15 +131,20 @@ _runSpans(
     RawSpanNode() => false,
   };
 
+  final baseSize = from.rootStyle.fontSize ?? kDefaultFontSize;
   for (var i = 0; i < runs.length; i++) {
     final run = runs[i];
+    final style = theme.styleFor(run.decoration, baseSize: baseSize);
     switch (run) {
       case RawSpanNode():
         spans[i] = TextSpan(
           text: run.text,
-          style: from.rootStyle
+          style: style
               .merge(theme.raw)
-              .copyWith(backgroundColor: theme.rawDecoration?.color),
+              .copyWith(
+                fontSize: style.fontSize,
+                backgroundColor: theme.rawDecoration?.color,
+              ),
         );
 
       case TextSpanNode():
@@ -147,8 +152,6 @@ _runSpans(
         final text = isLast && endsWithLineBreak
             ? run.text.substring(0, run.text.length - 1)
             : run.text;
-        final baseSize = from.rootStyle.fontSize ?? kDefaultFontSize;
-        final style = theme.styleFor(run.decoration, baseSize: baseSize);
 
         RunRendering? claimed;
         if (run.decoration.isCustom) {
