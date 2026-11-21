@@ -158,14 +158,14 @@ packages:
       path: "../../natural_block"
       relative: true
     source: path
-    version: "0.3.0"
+    version: "0.4.0"
   natural_block_flutter:
     dependency: "direct main"
     description:
       path: ".."
       relative: true
     source: path
-    version: "0.3.0"
+    version: "0.4.0"
   path:
     dependency: transitive
     description:

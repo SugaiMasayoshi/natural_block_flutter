@@ -1,10 +1,12 @@
-## Unreleased
+## 0.4.0
 
 - Breaking: built on the `material_ui` package, where Flutter 3.50
   deprecates `package:flutter/material.dart`. `resolve` takes its
   `ColorScheme`, and `NaturalBlockView` finds its `Theme`, so an app moves
   to `material_ui` too, with `dart fix --apply --code=migrate_design_widgets`.
   Requires Flutter 3.47.
+- Requires natural_block 0.4.0, whose code inside a line carries the
+  decoration around it.
 - With a `height` in `NaturalBlockTheme.base`, the space kept the same in
   pixels at every size is what the height adds to the font's own line
   height, where it was what it added to the font size. A large line no
