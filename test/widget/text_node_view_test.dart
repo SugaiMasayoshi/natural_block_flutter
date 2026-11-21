@@ -198,4 +198,20 @@ void main() {
       closeTo(large.fontSize! + 20, 1),
     );
   });
+
+  testWidgets('empty lines are body lines, whatever the ambient size', (
+    tester,
+  ) async {
+    await pumpRuns(
+      tester,
+      [TextSpanNode(text: '\n')],
+      theme: const NaturalBlockTheme(base: TextStyle(fontSize: 20, height: 1)),
+      ambient: const TextStyle(fontSize: 64, height: 1),
+    );
+
+    expect(
+      tester.getSize(find.byType(TextNodeView)).height,
+      closeTo(40, 1),
+    );
+  });
 }

@@ -93,7 +93,7 @@ class _TextNodeViewState extends State<TextNodeView> {
       _endsWithLineBreak = drawn.endsWithLineBreak;
     }
 
-    final paragraph = Text.rich(_paragraph);
+    final paragraph = Text.rich(_paragraph, style: rootStyle);
     if (!_endsWithLineBreak) return paragraph;
     // A paragraph that ends in a line break gives its empty last line the
     // height of the line before, so that line is drawn apart, at body size.

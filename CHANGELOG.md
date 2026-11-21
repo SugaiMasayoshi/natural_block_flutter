@@ -1,3 +1,10 @@
+## Unreleased
+
+- A paragraph's empty lines are as high as its body text, set by
+  `NaturalBlockTheme.base`, where an empty first line took the height of the
+  text around the view. A text of `"\n"` alone was two lines of different
+  heights.
+
 ## 0.4.0
 
 - Breaking: built on the `material_ui` package, where Flutter 3.50
