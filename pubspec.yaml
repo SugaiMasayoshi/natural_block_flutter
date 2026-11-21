@@ -11,11 +11,12 @@ topics:
 
 environment:
   sdk: ^3.13.1
-  flutter: ">=3.35.0"
+  flutter: ">=3.47.0"
 
 dependencies:
   flutter:
     sdk: flutter
+  material_ui: ^1.11.1
   meta: ^1.19.0
   natural_block: ^0.3.0
 

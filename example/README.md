@@ -3,7 +3,7 @@
 ## The smallest use
 
 ```dart
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:natural_block_flutter/natural_block_flutter.dart';
 
 void main() => runApp(const MaterialApp(home: Scaffold(body: Notes())));

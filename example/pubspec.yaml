@@ -11,6 +11,7 @@ dependencies:
   flutter:
     sdk: flutter
 
+  material_ui: ^1.11.1
   natural_block_flutter:
     path: ../
 

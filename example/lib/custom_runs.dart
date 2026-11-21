@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:natural_block_flutter/natural_block_flutter.dart';
 
 import 'quiz.dart';
