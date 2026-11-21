@@ -6,6 +6,9 @@
   longer stands closer than its glyphs, so they stay off the next line.
 - Code inside a line is drawn with the decoration around it, as natural_block
   now gives it: at the line's size, in its tone and weight, in `raw`'s font.
+- The default `raw` falls back to Menlo, Consolas and Courier New where
+  `monospace` is missing, so code is monospaced on Windows, macOS and iOS
+  too, where it was drawn in the body font.
 
 ## 0.3.0
 

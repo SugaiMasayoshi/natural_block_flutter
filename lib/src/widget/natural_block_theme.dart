@@ -67,6 +67,9 @@ class NaturalBlockTheme {
   /// The band on every other row. Null takes the scheme's when [striped].
   final Color? tableStripe;
 
+  /// By default the first of `monospace`, Menlo, Consolas and Courier New
+  /// the platform has, since `monospace` alone is found only on Android and
+  /// Linux.
   final TextStyle raw;
 
   final EdgeInsets rawPadding;
@@ -91,7 +94,10 @@ class NaturalBlockTheme {
     this.tableBorder,
     this.striped = false,
     this.tableStripe,
-    this.raw = const TextStyle(fontFamily: 'monospace'),
+    this.raw = const TextStyle(
+      fontFamily: 'monospace',
+      fontFamilyFallback: ['Menlo', 'Consolas', 'Courier New'],
+    ),
     this.rawPadding = const EdgeInsets.all(12),
     this.rawDecoration,
     this.rawScrollsHorizontally = false,
