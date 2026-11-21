@@ -17,7 +17,7 @@ class TableNodeView extends StatelessWidget {
           ? row.children[i]
           : TableCellNode();
 
-      return Padding(
+      final cell = Padding(
         padding: scope.theme.tableCellPadding,
         child: scope.builders.tableCell(
           TableCellNode(
@@ -29,6 +29,13 @@ class TableNodeView extends StatelessWidget {
           scope,
         ),
       );
+      // An empty line sets its baseline apart from text's, so an empty cell
+      // stays out of the row's baseline, as an empty cell of a row does.
+      if (stated.children.isNotEmpty) return cell;
+      return TableCell(
+        verticalAlignment: TableCellVerticalAlignment.top,
+        child: cell,
+      );
     });
   }
 
@@ -38,6 +45,8 @@ class TableNodeView extends StatelessWidget {
 
     return Table(
       defaultColumnWidth: const IntrinsicColumnWidth(),
+      defaultVerticalAlignment: TableCellVerticalAlignment.baseline,
+      textBaseline: TextBaseline.alphabetic,
       border: scope.theme.tableBorder,
       children: List.generate(
         node.children.length,

@@ -4,6 +4,10 @@
   `NaturalBlockTheme.base`, where an empty first line took the height of the
   text around the view. A text of `"\n"` alone was two lines of different
   heights.
+- A table's cells line up on the baseline of their first lines, as a row's
+  do, where they lined up at the top, so `:++` text beside `:+` text no
+  longer floats above it. An empty cell stays at the top, and a table in a
+  row's cell gives the row its first line's baseline.
 
 ## 0.4.0
 
