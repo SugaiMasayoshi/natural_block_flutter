@@ -8,6 +8,10 @@
   do, where they lined up at the top, so `:++` text beside `:+` text no
   longer floats above it. An empty cell stays at the top, and a table in a
   row's cell gives the row its first line's baseline.
+- An image `NaturalBlockImages.localImage` reads from a `path` the app
+  resolved is labelled with the source as the document writes it, where it
+  was labelled with the resolved path: `image(photos/a.png)` stays
+  `photos/a.png`.
 
 ## 0.4.0
 

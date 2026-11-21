@@ -297,5 +297,27 @@ void main() {
         isNotNull,
       );
     });
+
+    testWidgets('an image read from a resolved path is labelled as written', (
+      tester,
+    ) async {
+      final run = CustomRun(
+        text: 'image(a.png)',
+        style: const TextStyle(fontSize: 30),
+        theme: const NaturalBlockTheme(),
+        decoration: const SpanDecoration(),
+        withContext: (_) {},
+      );
+      await tester.pumpWidget(
+        Directionality(
+          textDirection: TextDirection.ltr,
+          child: NaturalBlockImages.localImage(run, path: 'C:/talk/a.png')!,
+        ),
+      );
+
+      final image = tester.widget<Image>(find.byType(Image));
+      expect((image.image as FileImage).file.path, 'C:/talk/a.png');
+      expect(image.semanticLabel, 'a.png');
+    });
   });
 }

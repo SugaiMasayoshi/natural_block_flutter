@@ -47,11 +47,13 @@ abstract final class NaturalBlockImages {
   /// the app resolved from the payload, a relative one for instance; an image
   /// that cannot be drawn still shows the payload as written.
   static Widget? localImage(CustomRun run, {String? path}) {
-    final source = path ?? sourceOf(run.text);
+    final written = sourceOf(run.text);
+    final source = path ?? written;
     if (source == null || kindOf(source) != ImageSourceKind.file) return null;
 
     final image = localFileImage(
       source,
+      label: written ?? source,
       errorBuilder: (_, _, _) => Text(run.text, style: run.style),
     );
     return image == null ? null : _stepped(run, image);
