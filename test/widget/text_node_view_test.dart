@@ -209,9 +209,6 @@ void main() {
       ambient: const TextStyle(fontSize: 64, height: 1),
     );
 
-    expect(
-      tester.getSize(find.byType(TextNodeView)).height,
-      closeTo(40, 1),
-    );
+    expect(tester.getSize(find.byType(TextNodeView)).height, closeTo(40, 1));
   });
 }
