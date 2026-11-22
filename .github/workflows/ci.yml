@@ -6,8 +6,8 @@ on:
   pull_request:
 
 # natural_block's main, beside this checkout as the local ones are, stands in
-# for the published package until it is released. Publishing checks against
-# pub.dev on a tag.
+# for the published package until it is released. The checks against pub.dev
+# run on a tag, before publishing.
 jobs:
   check:
     # The goldens were drawn on Windows, and text edges differ by OS.
@@ -44,9 +44,9 @@ jobs:
       - run: flutter test
         working-directory: natural_block_flutter/example
 
-  # pub.dev scores with the newest stable Flutter, which can deprecate what
-  # the pinned one above still accepts.
-  score:
+  # The newest stable Flutter can deprecate what the pinned one above still
+  # accepts.
+  latest:
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -64,5 +64,5 @@ jobs:
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
-      - run: dart pub global activate pana
-      - run: dart pub global run pana --no-warning --exit-code-threshold 0 .
+      - run: flutter pub get
+      - run: flutter analyze --fatal-infos
