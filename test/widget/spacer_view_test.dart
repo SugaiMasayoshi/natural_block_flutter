@@ -27,8 +27,12 @@ void main() {
     ),
   );
 
-  Rect rectOf(WidgetTester tester, String text) =>
-      tester.getRect(find.textContaining(text, findRichText: true));
+  Rect rectOf(WidgetTester tester, String text) => tester.getRect(
+    find.ancestor(
+      of: find.textContaining(text, findRichText: true).first,
+      matching: find.byType(TextNodeView),
+    ),
+  );
 
   testWidgets('spacers above and below put a block in the middle', (
     tester,
@@ -96,9 +100,7 @@ void main() {
   ) async {
     await pumpIn(tester, '^Tall\nTall\nTall\nTall^|\nMiddle\n|^');
 
-    final tall = tester.getRect(
-      find.textContaining('Tall', findRichText: true),
-    );
+    final tall = rectOf(tester, 'Tall');
     final middle = rectOf(tester, 'Middle');
     expect(middle.center.dy, closeTo(tall.center.dy, 0.01));
   });
@@ -108,9 +110,7 @@ void main() {
   ) async {
     await pumpIn(tester, '^Tall\nTall\nTall^|\nLow^');
 
-    final tall = tester.getRect(
-      find.textContaining('Tall', findRichText: true),
-    );
+    final tall = rectOf(tester, 'Tall');
     expect(rectOf(tester, 'Low').bottom, closeTo(tall.bottom, 0.01));
   });
 

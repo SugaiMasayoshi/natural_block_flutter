@@ -8,15 +8,15 @@ void main() {
   TextSpanNode custom(String text) =>
       TextSpanNode(text: text, decoration: SpanDecoration(isCustom: true));
 
-  Future<void> pumpRuns(
+  Future<void> pumpLines(
     WidgetTester tester,
-    List<InlineNode> runs, {
+    List<LineNode> lines, {
     NaturalBlockTheme theme = const NaturalBlockTheme(),
     List<RunHandler> customs = const [],
     TextStyle? ambient,
   }) {
     final view = TextNodeView(
-      node: TextNode(children: runs),
+      node: TextNode(children: lines),
       scope: NaturalBlockScope(theme: theme, customs: customs),
     );
     return tester.pumpWidget(
@@ -30,6 +30,20 @@ void main() {
       ),
     );
   }
+
+  Future<void> pumpRuns(
+    WidgetTester tester,
+    List<InlineNode> runs, {
+    NaturalBlockTheme theme = const NaturalBlockTheme(),
+    List<RunHandler> customs = const [],
+    TextStyle? ambient,
+  }) => pumpLines(
+    tester,
+    [LineNode(children: runs)],
+    theme: theme,
+    customs: customs,
+    ambient: ambient,
+  );
 
   TextSpan onlySpan(WidgetTester tester) => renderedSpans(tester).single;
 
@@ -187,9 +201,13 @@ void main() {
     tester,
   ) async {
     const theme = NaturalBlockTheme(base: TextStyle(fontSize: 20, height: 1));
-    await pumpRuns(tester, [
-      TextSpanNode(text: 'A', decoration: SpanDecoration(sizeOffset: 3)),
-      TextSpanNode(text: '\n'),
+    await pumpLines(tester, [
+      LineNode(
+        children: [
+          TextSpanNode(text: 'A', decoration: SpanDecoration(sizeOffset: 3)),
+        ],
+      ),
+      LineNode(children: const []),
     ], theme: theme);
 
     final large = theme.styleFor(SpanDecoration(sizeOffset: 3), baseSize: 20);
@@ -202,9 +220,9 @@ void main() {
   testWidgets('empty lines are body lines, whatever the ambient size', (
     tester,
   ) async {
-    await pumpRuns(
+    await pumpLines(
       tester,
-      [TextSpanNode(text: '\n')],
+      [LineNode(children: const []), LineNode(children: const [])],
       theme: const NaturalBlockTheme(base: TextStyle(fontSize: 20, height: 1)),
       ambient: const TextStyle(fontSize: 64, height: 1),
     );

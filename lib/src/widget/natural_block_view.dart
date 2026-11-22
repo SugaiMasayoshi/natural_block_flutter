@@ -1,3 +1,4 @@
+import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
 import 'package:material_ui/material_ui.dart' show Theme;
 import 'package:meta/meta.dart';
@@ -91,6 +92,14 @@ class _NaturalBlockViewState extends State<NaturalBlockView> {
 
   late DocumentNode _document = _read();
 
+  final _selection = _LineBreakSelection();
+
+  @override
+  void dispose() {
+    _selection.dispose();
+    super.dispose();
+  }
+
   @override
   void didUpdateWidget(NaturalBlockView oldWidget) {
     super.didUpdateWidget(oldWidget);
@@ -139,6 +148,21 @@ class _NaturalBlockViewState extends State<NaturalBlockView> {
       );
     }
 
-    return _cached!;
+    return SelectionContainer(delegate: _selection, child: _cached!);
+  }
+}
+
+/// Copies each paragraph it holds on a line of its own: Flutter joins them
+/// with nothing between.
+class _LineBreakSelection extends StaticSelectionContainerDelegate {
+  @override
+  SelectedContent? getSelectedContent() {
+    final texts = [
+      for (final selectable in selectables)
+        if (selectable.getSelectedContent() case final content?)
+          content.plainText,
+    ];
+    if (texts.isEmpty) return null;
+    return SelectedContent(plainText: texts.join('\n'));
   }
 }

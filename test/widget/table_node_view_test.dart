@@ -1,13 +1,9 @@
-import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:natural_block_flutter/natural_block_flutter.dart';
 
 void main() {
-  Future<List<RenderParagraph>> cellsOf(
-    WidgetTester tester,
-    String source,
-  ) async {
+  Future<List<RenderBox>> cellsOf(WidgetTester tester, String source) async {
     await tester.pumpWidget(
       MaterialApp(
         home: Align(
@@ -17,7 +13,7 @@ void main() {
       ),
     );
     return tester
-        .renderObjectList<RenderParagraph>(find.byType(RichText))
+        .renderObjectList<RenderBox>(find.byType(TextNodeView))
         .toList();
   }
 

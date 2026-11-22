@@ -33,14 +33,45 @@ void main() {
         tester.getTopLeft(paragraphs.first) + const Offset(1, 1),
         kind: PointerDeviceKind.mouse,
       );
+      await tester.pump();
       await drag.moveTo(
         tester.getBottomRight(paragraphs.last) - const Offset(1, 1),
       );
+      await tester.pump();
       await drag.up();
       await tester.pump();
 
       expect(tester.takeException(), isNull);
       expect(selected!.plainText.replaceAll(RegExp(r'\s'), ''), 'abcdrawe');
+    });
+
+    testWidgets('a copy puts each line, block and cell on a line', (
+      tester,
+    ) async {
+      SelectedContent? selected;
+      await tester.pumpWidget(
+        MaterialApp(
+          home: SelectionArea(
+            onSelectionChanged: (content) => selected = content,
+            child: const NaturalBlockView(source: '上\n:+中\n=下\n^左^右^'),
+          ),
+        ),
+      );
+
+      final paragraphs = find.byType(RichText);
+      final drag = await tester.startGesture(
+        tester.getTopLeft(paragraphs.first) + const Offset(1, 1),
+        kind: PointerDeviceKind.mouse,
+      );
+      await tester.pump();
+      await drag.moveTo(
+        tester.getBottomRight(paragraphs.last) - const Offset(1, 1),
+      );
+      await tester.pump();
+      await drag.up();
+      await tester.pump();
+
+      expect(selected!.plainText, '上\n中\n下\n左\n右');
     });
   });
 
@@ -228,7 +259,9 @@ void main() {
       var builds = 0;
       Widget countingText(TextNode node, NaturalBlockScope scope) {
         builds++;
-        return Text(node.children.whereType<TextSpanNode>().single.text);
+        return Text(
+          node.children.single.children.whereType<TextSpanNode>().single.text,
+        );
       }
 
       Widget view(String source) => MaterialApp(

@@ -1,5 +1,12 @@
 ## Unreleased
 
+- Breaking: built on natural_block's `LineNode`. `TextNodeView` draws each
+  line of a text as its own `Text.rich`, so a blank line is a body line
+  with no special case, and a `text` builder reads a `TextNode`'s lines
+  where it read its runs.
+- A copy from a `SelectionArea` puts each line, block and cell on a line of
+  its own, where Flutter joined them with nothing between. Blank lines are
+  not copied.
 - A paragraph's empty lines are as high as its body text, set by
   `NaturalBlockTheme.base`, where an empty first line took the height of the
   text around the view. A text of `"\n"` alone was two lines of different

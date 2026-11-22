@@ -20,9 +20,7 @@ class TextNodeView extends StatefulWidget {
 class _TextNodeViewState extends State<TextNodeView> {
   List<VoidCallback> _disposes = const [];
 
-  TextSpan _paragraph = const TextSpan();
-
-  bool _endsWithLineBreak = false;
+  List<TextSpan> _lines = const [];
 
   _SpanInputs? _builtFrom;
 
@@ -51,7 +49,7 @@ class _TextNodeViewState extends State<TextNodeView> {
   void _release() {
     final disposes = _disposes;
     _disposes = const [];
-    _paragraph = const TextSpan();
+    _lines = const [];
     for (final dispose in disposes) {
       try {
         dispose();
@@ -89,21 +87,21 @@ class _TextNodeViewState extends State<TextNodeView> {
       final drawn = _runSpans(from, _withContext);
       _drawing = false;
       _disposes = drawn.disposes;
-      _paragraph = TextSpan(style: rootStyle, children: drawn.spans);
-      _endsWithLineBreak = drawn.endsWithLineBreak;
+      _lines = [
+        for (final spans in drawn.lines)
+          TextSpan(style: rootStyle, children: spans),
+      ];
     }
 
-    final paragraph = Text.rich(_paragraph, style: rootStyle);
-    if (!_endsWithLineBreak) return paragraph;
-    // A paragraph that ends in a line break gives its empty last line the
-    // height of the line before, so that line is drawn apart, at body size.
+    if (_lines case [final line]) return Text.rich(line, style: rootStyle);
     return Column(
       mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        paragraph,
-        Text('', style: rootStyle),
-      ],
+      crossAxisAlignment: switch (DefaultTextStyle.of(context).textAlign) {
+        TextAlign.center => CrossAxisAlignment.center,
+        TextAlign.end || TextAlign.right => CrossAxisAlignment.end,
+        _ => CrossAxisAlignment.start,
+      },
+      children: [for (final line in _lines) Text.rich(line, style: rootStyle)],
     );
   }
 }
@@ -116,28 +114,18 @@ typedef _SpanInputs = ({
   List<RunHandler> customs,
 });
 
-({List<InlineSpan> spans, List<VoidCallback> disposes, bool endsWithLineBreak})
-_runSpans(
+({List<List<InlineSpan>> lines, List<VoidCallback> disposes}) _runSpans(
   _SpanInputs from,
   void Function(void Function(BuildContext context) action) withContext,
 ) {
   final theme = from.theme;
-  final runs = from.line.children;
-
-  final spans = List<InlineSpan>.filled(runs.length, const TextSpan());
   final disposes = <VoidCallback>[];
-  final endsWithLineBreak = switch (runs.last) {
-    TextSpanNode(:final text) => text.endsWith('\n'),
-    RawSpanNode() => false,
-  };
-
   final baseSize = from.rootStyle.fontSize ?? kDefaultFontSize;
-  for (var i = 0; i < runs.length; i++) {
-    final run = runs[i];
+  InlineSpan spanOf(InlineNode run) {
     final style = theme.styleFor(run.decoration, baseSize: baseSize);
     switch (run) {
       case RawSpanNode():
-        spans[i] = TextSpan(
+        return TextSpan(
           text: run.text,
           style: style
               .merge(theme.raw)
@@ -148,15 +136,10 @@ _runSpans(
         );
 
       case TextSpanNode():
-        final isLast = i == runs.length - 1;
-        final text = isLast && endsWithLineBreak
-            ? run.text.substring(0, run.text.length - 1)
-            : run.text;
-
         RunRendering? claimed;
         if (run.decoration.isCustom) {
           final custom = CustomRun(
-            text: text,
+            text: run.text,
             style: style,
             theme: theme,
             decoration: run.decoration,
@@ -171,7 +154,9 @@ _runSpans(
                   exception: exception,
                   stack: stack,
                   library: 'natural_block_flutter',
-                  context: ErrorDescription('while a RunHandler drew "$text"'),
+                  context: ErrorDescription(
+                    'while a RunHandler drew "${run.text}"',
+                  ),
                 ),
               );
               claimed = null;
@@ -180,14 +165,16 @@ _runSpans(
           }
         }
 
-        spans[i] = claimed?.span ?? TextSpan(text: text, style: style);
         if (claimed != null) disposes.add(claimed.dispose);
+        return claimed?.span ?? TextSpan(text: run.text, style: style);
     }
   }
 
   return (
-    spans: spans,
+    lines: [
+      for (final line in from.line.children)
+        [for (final run in line.children) spanOf(run)],
+    ],
     disposes: disposes,
-    endsWithLineBreak: endsWithLineBreak,
   );
 }
