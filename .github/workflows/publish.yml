@@ -17,4 +17,5 @@ jobs:
         with:
           flutter-version: 3.47.3
       - run: flutter pub get
+      - run: flutter pub publish --dry-run
       - run: flutter pub publish --force

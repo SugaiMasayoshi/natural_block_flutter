@@ -5,12 +5,28 @@ on:
     branches: [main]
   pull_request:
 
+# natural_block's main, beside this checkout as the local ones are, stands in
+# for the published package until it is released. Publishing checks against
+# pub.dev on a tag.
 jobs:
   check:
     # The goldens were drawn on Windows, and text edges differ by OS.
     runs-on: windows-latest
+    defaults:
+      run:
+        shell: bash
+        working-directory: natural_block_flutter
     steps:
       - uses: actions/checkout@v5
+        with:
+          path: natural_block_flutter
+      - uses: actions/checkout@v5
+        with:
+          repository: SugaiMasayoshi/natural_block
+          path: natural_block
+      - run: |
+          printf 'dependency_overrides:\n  natural_block:\n    path: ../natural_block\n' > pubspec_overrides.yaml
+          printf 'dependency_overrides:\n  natural_block:\n    path: ../../natural_block\n' > example/pubspec_overrides.yaml
       - uses: subosito/flutter-action@v2
         with:
           flutter-version: 3.47.3
@@ -22,19 +38,29 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: golden-failures
-          path: test/**/failures/
+          path: natural_block_flutter/test/**/failures/
       - run: flutter analyze --fatal-infos
-        working-directory: example
+        working-directory: natural_block_flutter/example
       - run: flutter test
-        working-directory: example
-      - run: flutter pub publish --dry-run
+        working-directory: natural_block_flutter/example
 
   # pub.dev scores with the newest stable Flutter, which can deprecate what
   # the pinned one above still accepts.
   score:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: natural_block_flutter
     steps:
       - uses: actions/checkout@v5
+        with:
+          path: natural_block_flutter
+      - uses: actions/checkout@v5
+        with:
+          repository: SugaiMasayoshi/natural_block
+          path: natural_block
+      - run: |
+          printf 'dependency_overrides:\n  natural_block:\n    path: ../natural_block\n' > pubspec_overrides.yaml
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
