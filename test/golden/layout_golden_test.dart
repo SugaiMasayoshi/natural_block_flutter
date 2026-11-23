@@ -94,17 +94,17 @@ void main() {
 
   testWidgets('tables', (tester) async {
     await _scene(tester, 'tables', [
-      ('~Item^Price^\nApple^200^\nBanana^1^\n~', null),
+      ('~\nItem^Price^\nApple^200^\nBanana^1^\n~', null),
       ('~\nA^>BBBB^\nC^D^\nE^<F^\n~', null),
-      ('~a^b^\nc^\n~', null),
-      ('~one cell\n~', null),
-      ('~^Item^Notes^\n^Apple^red\nsweet^\n^Lemon^sour^\n~', null),
-      ('~^^\n~', null),
-      ('=~A^B\n~', null),
-      ('~a^b^\nc^d^\ne^f^\n~', const NaturalBlockTheme(striped: true)),
-      ('~a^b^\nc^d^\n~', const NaturalBlockTheme(tableBorder: TableBorder())),
+      ('~\na^b^\nc^\n~', null),
+      ('~\none cell\n~', null),
+      ('~\n^Item^Notes^\n^Apple^red\nsweet^\n^Lemon^sour^\n~', null),
+      ('~\n^^\n~', null),
+      ('=~\nA^B\n~', null),
+      ('~\na^b^\nc^d^\ne^f^\n~', const NaturalBlockTheme(striped: true)),
+      ('~\na^b^\nc^d^\n~', const NaturalBlockTheme(tableBorder: TableBorder())),
       (
-        '~a^b^\nc^d^\n~',
+        '~\na^b^\nc^d^\n~',
         const NaturalBlockTheme(
           tableCellPadding: EdgeInsets.symmetric(horizontal: 24),
         ),
@@ -152,8 +152,8 @@ void main() {
             ':@apple:@^>200^\n'
             '`banana`^>1^\n'
             '~\n'
-            '^a cell beside a table^~x^y^\nz^w^\n~^\n'
-            '=~A^B\n~\n'
+            '^a cell beside a table^~\nx^y^\nz^w^\n~\n^\n'
+            '=~\nA^B\n~\n'
             '^intro\n'
             '```\n'
             'if (x) {\n'

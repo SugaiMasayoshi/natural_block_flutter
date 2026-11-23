@@ -63,7 +63,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: NaturalBlockView(
-            source: '^x^:@a:@^\n~:@b:@^c\n~',
+            source: '^x^:@a:@^\n~\n:@b:@^c\n~',
             // ignore: non_const_argument_for_const_parameter
             customs: [(run) => tappableText(run, onTap: (_) {})],
           ),
@@ -105,7 +105,7 @@ void main() {
     testWidgets('a table cell is a tableCell', (tester) async {
       await pump(
         tester,
-        '~a^b\n~',
+        '~\na^b\n~',
         NaturalBlockBuilders(tableCell: (node, scope) => const Placeholder()),
       );
 

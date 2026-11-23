@@ -341,7 +341,7 @@ void main() {
         '>A',
         '`code here`',
         '^a^b^',
-        '=~A^B^\nC^D^\n~',
+        '=~\nA^B^\nC^D^\n~',
         '   ',
       ]) {
         await tester.pumpWidget(
