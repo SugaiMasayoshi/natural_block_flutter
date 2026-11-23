@@ -100,7 +100,7 @@ void main() {
   testWidgets('a cell with spacers places its content in the row height', (
     tester,
   ) async {
-    await pumpIn(tester, '^Tall\nTall\nTall\nTall^|\nMiddle\n|^');
+    await pumpIn(tester, '^Tall\nTall\nTall\nTall^|\nMiddle\n|\n^');
 
     final tall = rectOf(tester, 'Tall');
     final middle = rectOf(tester, 'Middle');
@@ -130,7 +130,7 @@ void main() {
   });
 
   testWidgets('cells without spacers still share a baseline', (tester) async {
-    await pumpIn(tester, '^:++A^B^|\nC\n|^');
+    await pumpIn(tester, '^:++A^B^|\nC\n|\n^');
 
     final [large, small, _] = tester
         .renderObjectList<RenderParagraph>(find.byType(RichText))
