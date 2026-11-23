@@ -20,7 +20,7 @@ class TextNodeView extends StatefulWidget {
 class _TextNodeViewState extends State<TextNodeView> {
   List<VoidCallback> _disposes = const [];
 
-  List<TextSpan> _lines = const [];
+  TextSpan _line = const TextSpan();
 
   _SpanInputs? _builtFrom;
 
@@ -49,7 +49,7 @@ class _TextNodeViewState extends State<TextNodeView> {
   void _release() {
     final disposes = _disposes;
     _disposes = const [];
-    _lines = const [];
+    _line = const TextSpan();
     for (final dispose in disposes) {
       try {
         dispose();
@@ -87,22 +87,10 @@ class _TextNodeViewState extends State<TextNodeView> {
       final drawn = _runSpans(from, _withContext);
       _drawing = false;
       _disposes = drawn.disposes;
-      _lines = [
-        for (final spans in drawn.lines)
-          TextSpan(style: rootStyle, children: spans),
-      ];
+      _line = TextSpan(style: rootStyle, children: drawn.spans);
     }
 
-    if (_lines case [final line]) return Text.rich(line, style: rootStyle);
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: switch (DefaultTextStyle.of(context).textAlign) {
-        TextAlign.center => CrossAxisAlignment.center,
-        TextAlign.end || TextAlign.right => CrossAxisAlignment.end,
-        _ => CrossAxisAlignment.start,
-      },
-      children: [for (final line in _lines) Text.rich(line, style: rootStyle)],
-    );
+    return Text.rich(_line, style: rootStyle);
   }
 }
 
@@ -114,7 +102,7 @@ typedef _SpanInputs = ({
   List<RunHandler> customs,
 });
 
-({List<List<InlineSpan>> lines, List<VoidCallback> disposes}) _runSpans(
+({List<InlineSpan> spans, List<VoidCallback> disposes}) _runSpans(
   _SpanInputs from,
   void Function(void Function(BuildContext context) action) withContext,
 ) {
@@ -171,10 +159,7 @@ typedef _SpanInputs = ({
   }
 
   return (
-    lines: [
-      for (final line in from.line.children)
-        [for (final run in line.children) spanOf(run)],
-    ],
+    spans: [for (final run in from.line.children) spanOf(run)],
     disposes: disposes,
   );
 }

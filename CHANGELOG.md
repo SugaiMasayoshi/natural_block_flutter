@@ -1,9 +1,8 @@
 ## Unreleased
 
-- Breaking: built on natural_block's `LineNode`. `TextNodeView` draws each
-  line of a text as its own `Text.rich`, so a blank line is a body line
-  with no special case, and a `text` builder reads a `TextNode`'s lines
-  where it read its runs.
+- Breaking: built on natural_block's one-line `TextNode`. `TextNodeView`
+  draws one line as one `Text.rich`, so a blank line is a body line with no
+  special case, and a `text` builder is called once for each line.
 - A copy from a `SelectionArea` puts each line, block and cell on a line of
   its own, where Flutter joined them with nothing between. Blank lines are
   not copied.

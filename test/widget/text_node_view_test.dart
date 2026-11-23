@@ -8,15 +8,15 @@ void main() {
   TextSpanNode custom(String text) =>
       TextSpanNode(text: text, decoration: SpanDecoration(isCustom: true));
 
-  Future<void> pumpLines(
+  Future<void> pumpRuns(
     WidgetTester tester,
-    List<LineNode> lines, {
+    List<InlineNode> runs, {
     NaturalBlockTheme theme = const NaturalBlockTheme(),
     List<RunHandler> customs = const [],
     TextStyle? ambient,
   }) {
     final view = TextNodeView(
-      node: TextNode(children: lines),
+      node: TextNode(children: runs),
       scope: NaturalBlockScope(theme: theme, customs: customs),
     );
     return tester.pumpWidget(
@@ -30,20 +30,6 @@ void main() {
       ),
     );
   }
-
-  Future<void> pumpRuns(
-    WidgetTester tester,
-    List<InlineNode> runs, {
-    NaturalBlockTheme theme = const NaturalBlockTheme(),
-    List<RunHandler> customs = const [],
-    TextStyle? ambient,
-  }) => pumpLines(
-    tester,
-    [LineNode(children: runs)],
-    theme: theme,
-    customs: customs,
-    ambient: ambient,
-  );
 
   TextSpan onlySpan(WidgetTester tester) => renderedSpans(tester).single;
 
@@ -197,36 +183,16 @@ void main() {
     ], reason: 'the tap must survive a rebuild between down and up');
   });
 
-  testWidgets('a blank line ending a block is a body line, after any size', (
+  testWidgets('an empty line is a body line, whatever the ambient size', (
     tester,
   ) async {
-    const theme = NaturalBlockTheme(base: TextStyle(fontSize: 20, height: 1));
-    await pumpLines(tester, [
-      LineNode(
-        children: [
-          TextSpanNode(text: 'A', decoration: SpanDecoration(sizeOffset: 3)),
-        ],
-      ),
-      LineNode(children: const []),
-    ], theme: theme);
-
-    final large = theme.styleFor(SpanDecoration(sizeOffset: 3), baseSize: 20);
-    expect(
-      tester.getSize(find.byType(TextNodeView)).height,
-      closeTo(large.fontSize! + 20, 1),
-    );
-  });
-
-  testWidgets('empty lines are body lines, whatever the ambient size', (
-    tester,
-  ) async {
-    await pumpLines(
+    await pumpRuns(
       tester,
-      [LineNode(children: const []), LineNode(children: const [])],
+      const [],
       theme: const NaturalBlockTheme(base: TextStyle(fontSize: 20, height: 1)),
       ambient: const TextStyle(fontSize: 64, height: 1),
     );
 
-    expect(tester.getSize(find.byType(TextNodeView)).height, closeTo(40, 1));
+    expect(tester.getSize(find.byType(TextNodeView)).height, closeTo(20, 1));
   });
 }

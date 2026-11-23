@@ -33,13 +33,13 @@ void main() {
   testWidgets('cells whose first lines match start at the same height', (
     tester,
   ) async {
-    final [tall, short] = await cellsOf(tester, '^a\nb\nc^d^');
+    final [tall, _, _, short] = await cellsOf(tester, '^a\nb\nc^d^');
 
     expect(top(short), top(tall));
   });
 
   testWidgets('an aligned cell still lines up on the baseline', (tester) async {
-    final [tall, short] = await cellsOf(tester, '=^:++A\nb\nc^d^');
+    final [tall, _, _, short] = await cellsOf(tester, '=^:++A\nb\nc^d^');
 
     expect(baseline(short), baseline(tall));
   });
@@ -47,7 +47,7 @@ void main() {
   testWidgets('the first line of a tall cell is the one that lines up', (
     tester,
   ) async {
-    final [tall, small] = await cellsOf(tester, '^:++A\nb\nc^d^');
+    final [tall, _, _, small] = await cellsOf(tester, '^:++A\nb\nc^d^');
 
     expect(baseline(small), baseline(tall));
   });

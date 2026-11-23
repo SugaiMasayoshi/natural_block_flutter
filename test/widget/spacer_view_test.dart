@@ -28,10 +28,12 @@ void main() {
   );
 
   Rect rectOf(WidgetTester tester, String text) => tester.getRect(
-    find.ancestor(
-      of: find.textContaining(text, findRichText: true).first,
-      matching: find.byType(TextNodeView),
-    ),
+    find
+        .ancestor(
+          of: find.textContaining(text, findRichText: true).first,
+          matching: find.byType(ColumnNodeView),
+        )
+        .first,
   );
 
   testWidgets('spacers above and below put a block in the middle', (

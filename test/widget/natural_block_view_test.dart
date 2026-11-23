@@ -259,9 +259,7 @@ void main() {
       var builds = 0;
       Widget countingText(TextNode node, NaturalBlockScope scope) {
         builds++;
-        return Text(
-          node.children.single.children.whereType<TextSpanNode>().single.text,
-        );
+        return Text(node.children.whereType<TextSpanNode>().single.text);
       }
 
       Widget view(String source) => MaterialApp(

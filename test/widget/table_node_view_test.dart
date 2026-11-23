@@ -33,7 +33,7 @@ void main() {
   });
 
   testWidgets('a cell of several lines lines up on its first', (tester) async {
-    final [tall, short] = await cellsOf(tester, '~\n:++A\nb\nc^d^\n~');
+    final [tall, _, _, short] = await cellsOf(tester, '~\n:++A\nb\nc^d^\n~');
 
     expect(baseline(short), baseline(tall));
   });
