@@ -73,9 +73,9 @@ void main() {
       ('<start', null),
       ('=center', null),
       ('>end', null),
-      ('>a line, then a raw block\n`\nx\n`', null),
+      ('>a line, then a raw block\n```\nx\n```', null),
       ('=a centred paragraph long enough to wrap onto a second line', null),
-      ('=intro\n`\nif (x) {\n    y();\n}\n`', null),
+      ('=intro\n```\nif (x) {\n    y();\n}\n```', null),
     ]);
   });
 
@@ -113,15 +113,18 @@ void main() {
   });
 
   testWidgets('raw regions', (tester) async {
-    final long = '`\n${'word ' * 30}\n`';
+    final long = '```\n${'word ' * 30}\n```';
     await _scene(tester, 'raw', [
-      ('`\nif (x) {\n    y();\n}\n`', null),
+      ('```\nif (x) {\n    y();\n}\n```', null),
       ('inline `a ^^ b` run', null),
       (long, null),
       (long, const NaturalBlockTheme(rawScrollsHorizontally: true)),
-      ('`\nno box\n`', const NaturalBlockTheme(rawDecoration: BoxDecoration())),
-      ('`\nx\n`', const NaturalBlockTheme(base: TextStyle(fontSize: 24))),
-      ('`\nx\n`', const NaturalBlockTheme(raw: TextStyle(fontSize: 24))),
+      (
+        '```\nno box\n```',
+        const NaturalBlockTheme(rawDecoration: BoxDecoration()),
+      ),
+      ('```\nx\n```', const NaturalBlockTheme(base: TextStyle(fontSize: 24))),
+      ('```\nx\n```', const NaturalBlockTheme(raw: TextStyle(fontSize: 24))),
     ]);
   });
 
@@ -152,11 +155,11 @@ void main() {
             '^a cell beside a table^~x^y^\nz^w^\n~^\n'
             '=~A^B\n~\n'
             '^intro\n'
-            '`\n'
+            '```\n'
             'if (x) {\n'
             '    y();\n'
             '}\n'
-            '`^>:-side note^',
+            '```^>:-side note^',
         null,
       ),
     ]);

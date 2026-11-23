@@ -11,12 +11,18 @@ class RawNodeView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final rootStyle = DefaultTextStyle.of(context).style.merge(theme.base);
+    final style = theme.styleFor(
+      node.decoration,
+      baseSize: theme.raw.fontSize ?? rootStyle.fontSize ?? kDefaultFontSize,
+    );
     final content = Text.rich(
       TextSpan(
         text: node.text,
-        style: DefaultTextStyle.of(context).style
-            .merge(theme.base)
-            .merge(theme.raw),
+        style: rootStyle
+            .merge(style)
+            .merge(theme.raw)
+            .copyWith(fontSize: style.fontSize),
       ),
       // Not the block's alignment: centring each line would undo indentation.
       textAlign: TextAlign.start,

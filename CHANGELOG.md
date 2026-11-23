@@ -19,6 +19,9 @@
   resolved is labelled with the source as the document writes it, where it
   was labelled with the resolved path: `image(photos/a.png)` stays
   `photos/a.png`.
+- A raw block is drawn with its decoration, as a raw run is: ```` :++``` ````
+  makes its code two steps larger, from `raw`'s size when it sets one, and a
+  tone or emphasis colours or bolds it.
 
 ## 0.4.0
 

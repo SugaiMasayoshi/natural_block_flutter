@@ -87,7 +87,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: NaturalBlockView(
-            source: ':@x:@\n`\nr\n`',
+            source: ':@x:@\n```\nr\n```',
             // ignore: non_const_argument_for_const_parameter
             builders: NaturalBlockBuilders(raw: raw),
             // ignore: non_const_argument_for_const_parameter
