@@ -6,10 +6,10 @@
 - A copy from a `SelectionArea` puts each line, block and cell on a line of
   its own, where Flutter joined them with nothing between. Blank lines are
   not copied.
-- A paragraph's empty lines are as high as its body text, set by
-  `NaturalBlockTheme.base`, where an empty first line took the height of the
-  text around the view. A text of `"\n"` alone was two lines of different
-  heights.
+- A blank line is as high as a line of body text, set by
+  `NaturalBlockTheme.base`, where a blank line at the top of a block took
+  the height of the text around the view, so two blank lines could differ
+  in height.
 - A table's cells line up on the baseline of their first lines, as a row's
   do, where they lined up at the top, so `:++` text beside `:+` text no
   longer floats above it. An empty cell stays at the top, and a table in a
