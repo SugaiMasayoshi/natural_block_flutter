@@ -125,7 +125,10 @@ than the app's, take the colors from it first with `resolve(scheme)`.
 With a `height` in `base`, the space it adds around a line stays the same
 number of pixels at every `:+` and `:-` size, so a large line carries no
 wider gap than a body line.
-The color of `rawDecoration` also backs code inside a line. To turn a border
+The color of `rawDecoration` also backs code inside a line. The default `raw`
+fonts have no Japanese, so Japanese in code is drawn in another font and its
+backing stands taller than the Latin beside it; for such text, set `raw` to
+a monospace font that has both, such as BIZ UDGothic. To turn a border
 or box off, pass `const TableBorder()` or `const BoxDecoration()`.
 
 ## Custom runs
